@@ -17,7 +17,6 @@ app = Flask(__name__)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 HTML_PATH = os.path.join(BASE_DIR, 'index.html')
 
-# Core Application Global Volatile Cache Vault
 GLOBAL_CACHE_REGISTRY = {}
 
 def decompress_stream(data: bytes) -> bytes:
@@ -29,18 +28,25 @@ def decompress_stream(data: bytes) -> bytes:
     return data
 
 def extract_clean_name(obj, data, default_type: str) -> str:
-    """Extracts internal asset metadata identifiers safely."""
+    """
+    Extracts true configuration identity strings by testing internal 
+    Unity engine parameters before resorting to fallbacks.
+    """
     if hasattr(obj, 'container') and obj.container:
         base_mapped_path = os.path.basename(obj.container)
         if base_mapped_path:
             return os.path.splitext(base_mapped_path)[0]
-    name = getattr(data, "name", "")
-    if isinstance(name, str) and name.strip():
-        return name.strip()
+            
+    # Test for structural m_Name parameters across varying class declarations
+    for attr in ["name", "m_Name", "m_name"]:
+        val = getattr(data, attr, "")
+        if isinstance(val, str) and val.strip():
+            return val.strip()
+            
     return f"{default_type}_{obj.path_id}"
 
 def process_object_unrestricted(obj, raw_env_data: bytes):
-    """Processes binary stream chunks matching valid object class definitions."""
+    """Processes binary data structures matching valid target definitions."""
     try:
         t = obj.type.name
         data = obj.read()
@@ -49,7 +55,7 @@ def process_object_unrestricted(obj, raw_env_data: bytes):
 
         if t == "TextAsset":
             raw = getattr(data, "m_Script", b"")
-            if isinstance(raw, str): raw = raw.encode()
+            if isinstance(raw, str): raw = raw.encode('utf-8', errors='replace')
             ext = ".json" if raw.startswith((b"{", b"[")) else ".txt"
             return f"{safe_name}{ext}", raw, f"Text/{safe_name}{ext}"
 
@@ -99,7 +105,6 @@ def handle_direct_extraction_stream():
     
     download_type = request.args.get('download_type', '')
 
-    # --- ZIP MANIFEST DOWNLOAD ---
     if download_type == 'zip':
         if not GLOBAL_CACHE_REGISTRY.get('extracted'):
             return jsonify({"error": "Cache layer context missing. Re-stream source bundle."}), 400
@@ -111,7 +116,6 @@ def handle_direct_extraction_stream():
         zip_io.seek(0)
         return send_file(zip_io, mimetype='application/zip', as_attachment=True, download_name="extracted_assets.zip")
 
-    # --- SINGLE OBJECT ROW DIRECT LOOKUP ---
     elif download_type == 'single':
         file_idx = int(request.args.get('file_index', -1))
         if not GLOBAL_CACHE_REGISTRY.get('extracted') or file_idx < 0 or file_idx >= len(GLOBAL_CACHE_REGISTRY['extracted']):
@@ -120,7 +124,6 @@ def handle_direct_extraction_stream():
         item = GLOBAL_CACHE_REGISTRY['extracted'][file_idx]
         return send_file(io.BytesIO(item['bytes']), mimetype='application/octet-stream', as_attachment=True, download_name=item['name'])
 
-    # --- DIRECT INGESTION SINGLE STREAM ENTRY ---
     if 'asset_bundle' not in request.files:
         return jsonify({"error": "Incoming multipart file data payload buffer missing."}), 400
 
@@ -160,7 +163,6 @@ def handle_direct_extraction_stream():
                     })
                     tracking_index_counter += 1
 
-        # Drop allocation references and flush the server footprint immediately
         del env
         gc.collect()
 
