@@ -263,7 +263,7 @@ class UnityBundleExtractor {
         }
 
         // Disable button if no main file is selected
-        this.elements.uploadButton.disabled = (!primaryFile || this.isOperationInProgress);
+        this.elements.uploadButton.disabled = this.isOperationInProgress;
 
         if (primaryFile && this.elements.statusMessage.style.display !== 'none') {
             this.hideStatusMessage();
@@ -753,7 +753,6 @@ class UnityBundleExtractor {
     }
 }
 
-// Instantiate extractor when document is fully parsed
 // Fix upload button enable issue
 document.addEventListener('change', function(e) {
 
@@ -774,5 +773,8 @@ document.addEventListener('change', function(e) {
     }
 
 });
+
+// Instantiate extractor when document is fully parsed
+document.addEventListener('DOMContentLoaded', () => {
     window.extractorApp = new UnityBundleExtractor();
 });
