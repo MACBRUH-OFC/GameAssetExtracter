@@ -8,19 +8,19 @@ import re
 import hashlib
 from flask import Flask, request, send_file, jsonify
 
-# Force UnityPy to load in headless/system environments
+# Force UnityPy configuration environments to operate safely in serverless headers
 os.environ["UNITYPY_NO_GUI"] = "1"
 import UnityPy
 import lz4.frame
 
 app = Flask(__name__)
 
-# Locate the index.html template file cleanly inside the serverless folder
+# Absolute asset pathing maps inside the Vercel Lambda deployment container
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 HTML_PATH = os.path.join(BASE_DIR, 'index.html')
 
 def decompress_stream(data: bytes) -> bytes:
-    """Brute-force decompression: strips compression layers."""
+    """Brute-force decompression engine matching the original bot.py specifications."""
     try:
         if data.startswith(b'\x1f\x8b'): return decompress_stream(gzip.decompress(data))
         if data.startswith(b'\x04\x22\x4d\x18'): return decompress_stream(lz4.frame.decompress(data))
@@ -29,6 +29,7 @@ def decompress_stream(data: bytes) -> bytes:
     return data
 
 def process_object_unrestricted(obj, raw_env_data: bytes):
+    """Processes, filters, and formats extensionless files into asset trees."""
     try:
         t = obj.type.name
         data = obj.read()
@@ -54,7 +55,7 @@ def process_object_unrestricted(obj, raw_env_data: bytes):
             raw = obj.get_raw_data()
             if len(raw) < 500:
                 match = raw_env_data.find(b'ftyp')
-                if match != -1: raw = raw_env_data[match:match+30_000_000]
+                if match != -1: raw = raw_env_data[match:match+30_000_000] # Kept memory safe for serverless thresholds
             return f"Video/{name}.mp4", raw
 
         elif t == "Mesh":
@@ -68,31 +69,32 @@ def process_object_unrestricted(obj, raw_env_data: bytes):
     except: pass
     return None
 
-# Root route serving the web application dashboard
+# Combined router rendering frontend from memory directly to avoid routing 404s
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
-def serve_frontend(path):
-    if path == "api/extract" or path == "api/extract/":
-        return "Please use POST method", 405
+def serve_application_cockpit(path):
+    if path in ["api/extract", "api/extract/"]:
+        return jsonify({"error": "Method not allowed. Execute POST request."}), 405
     try:
         with open(HTML_PATH, 'r', encoding='utf-8') as f:
             return f.read()
     except Exception as e:
-        return f"Dashboard file layout missing or unreadable: {str(e)}", 500
+        return f"System failed to render cockpit console files: {str(e)}", 500
 
-# Backend core extractor route
+# Unified extractor execution route
 @app.route('/api/extract', methods=['POST'])
-def extract_assets():
+def run_extraction_pipeline():
     try:
         if 'file' not in request.files:
-            return jsonify({"error": "No file stream detected in payload."}), 400
+            return jsonify({"error": "No data stream chunk discovered in the request multipart headers."}), 400
             
         uploaded_file = request.files['file']
         raw_bytes = uploaded_file.read()
 
         if not raw_bytes:
-            return jsonify({"error": "Uploaded binary stream is empty."}), 400
+            return jsonify({"error": "The uploaded payload contains an empty byte sequence."}), 400
 
+        # Execute Core Asset Recovery Stream
         final_data = decompress_stream(bytes(raw_bytes))
         env = UnityPy.load(final_data)
         
@@ -112,14 +114,14 @@ def extract_assets():
                         extracted_count += 1
 
         if extracted_count == 0:
-            return jsonify({"error": "No recognizable Unity assets found in file."}), 400
+            return jsonify({"error": "No recognizable Unity structures found within the target file cluster."}), 400
 
         zip_io.seek(0)
         return send_file(
             zip_io,
             mimetype='application/zip',
             as_attachment=True,
-            download_name="extracted_assets.zip"
+            download_name="recovered_assets.zip"
         )
 
     except Exception as e:
