@@ -8,19 +8,18 @@ import re
 import hashlib
 from flask import Flask, request, send_file, jsonify
 
-# Force UnityPy configuration environments to operate safely in serverless headers
+# Force UnityPy configuration to run cleanly inside isolated Vercel layers
 os.environ["UNITYPY_NO_GUI"] = "1"
 import UnityPy
 import lz4.frame
 
 app = Flask(__name__)
 
-# Absolute asset pathing maps inside the Vercel Lambda deployment container
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 HTML_PATH = os.path.join(BASE_DIR, 'index.html')
 
 def decompress_stream(data: bytes) -> bytes:
-    """Brute-force decompression engine matching the original bot.py specifications."""
+    """Deep brute-force layer decompressor."""
     try:
         if data.startswith(b'\x1f\x8b'): return decompress_stream(gzip.decompress(data))
         if data.startswith(b'\x04\x22\x4d\x18'): return decompress_stream(lz4.frame.decompress(data))
@@ -29,11 +28,18 @@ def decompress_stream(data: bytes) -> bytes:
     return data
 
 def process_object_unrestricted(obj, raw_env_data: bytes):
-    """Processes, filters, and formats extensionless files into asset trees."""
+    """Upgraded asset extractor keeping complete pristine original naming mappings."""
     try:
         t = obj.type.name
         data = obj.read()
-        name = re.sub(r'[<>:"/\\|?*\x00-\x1f]', "_", getattr(data, "name", f"{t}_{obj.path_id}"))
+        
+        # Pull original pristine internal layout track names exactly
+        raw_name = getattr(data, "name", "")
+        if not raw_name:
+            raw_name = f"{t}_{obj.path_id}"
+            
+        # Clean path execution hazards only while maintaining complete string mapping layout
+        name = re.sub(r'[<>:"/\\|?*\x00-\x1f]', "_", raw_name)
 
         if t == "TextAsset":
             raw = getattr(data, "m_Script", b"")
@@ -55,11 +61,11 @@ def process_object_unrestricted(obj, raw_env_data: bytes):
             raw = obj.get_raw_data()
             if len(raw) < 500:
                 match = raw_env_data.find(b'ftyp')
-                if match != -1: raw = raw_env_data[match:match+30_000_000] # Kept memory safe for serverless thresholds
+                if match != -1: raw = raw_env_data[match:match+30_000_000]
             return f"Video/{name}.mp4", raw
 
         elif t == "Mesh":
-            lines = [f"g {name}", "# Unrestricted Web Engine v4.0"]
+            lines = [f"g {name}", "# Extraction Struct Node v4.1"]
             if hasattr(data, 'm_Vertices'):
                 for v in data.m_Vertices: lines.append(f"v {v.x} {v.y} {v.z}")
             if hasattr(data, 'm_Indices'):
@@ -69,32 +75,32 @@ def process_object_unrestricted(obj, raw_env_data: bytes):
     except: pass
     return None
 
-# Combined router rendering frontend from memory directly to avoid routing 404s
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
-def serve_application_cockpit(path):
+def serve_ui_layout(path):
     if path in ["api/extract", "api/extract/"]:
-        return jsonify({"error": "Method not allowed. Execute POST request."}), 405
+        return jsonify({"error": "Method not allowed."}), 405
     try:
         with open(HTML_PATH, 'r', encoding='utf-8') as f:
             return f.read()
     except Exception as e:
-        return f"System failed to render cockpit console files: {str(e)}", 500
+        return f"Unable to fetch UI dashboard layouts: {str(e)}", 500
 
-# Unified extractor execution route
 @app.route('/api/extract', methods=['POST'])
-def run_extraction_pipeline():
+def process_upload_pipeline():
     try:
         if 'file' not in request.files:
-            return jsonify({"error": "No data stream chunk discovered in the request multipart headers."}), 400
+            return jsonify({"error": "No valid multipart upload detected."}), 400
             
         uploaded_file = request.files['file']
+        
+        # Read the raw byte array safely out of Flask's request wrapper
         raw_bytes = uploaded_file.read()
 
-        if not raw_bytes:
-            return jsonify({"error": "The uploaded payload contains an empty byte sequence."}), 400
+        if not raw_bytes or len(raw_bytes) == 0:
+            return jsonify({"error": "Payload data context is unreadable or zero-byte."}), 400
 
-        # Execute Core Asset Recovery Stream
+        # Run stream extraction algorithms securely
         final_data = decompress_stream(bytes(raw_bytes))
         env = UnityPy.load(final_data)
         
@@ -114,7 +120,7 @@ def run_extraction_pipeline():
                         extracted_count += 1
 
         if extracted_count == 0:
-            return jsonify({"error": "No recognizable Unity structures found within the target file cluster."}), 400
+            return jsonify({"error": "No extractable Unity assets discovered inside file headers."}), 400
 
         zip_io.seek(0)
         return send_file(
@@ -125,4 +131,4 @@ def run_extraction_pipeline():
         )
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": f"Internal process failure: {str(e)}"}), 500
