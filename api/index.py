@@ -8,7 +8,6 @@ import re
 import hashlib
 from flask import Flask, request, send_file, jsonify
 
-# Prevent UnityPy from attempting to initialize any desktop GUI windows
 os.environ["UNITYPY_NO_GUI"] = "1"
 import UnityPy
 import lz4.frame
@@ -18,8 +17,11 @@ app = Flask(__name__)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 HTML_PATH = os.path.join(BASE_DIR, 'index.html')
 
+# In-Memory Cache Store to hold elements safely inside serverless executions
+GLOBAL_RAM_CACHE_MANIFEST = {}
+
 def decompress_stream(data: bytes) -> bytes:
-    """Deep brute-force compression stripping layer."""
+    """Deep brute-force compression layer stripping."""
     try:
         if data.startswith(b'\x1f\x8b'): return decompress_stream(gzip.decompress(data))
         if data.startswith(b'\x04\x22\x4d\x18'): return decompress_stream(lz4.frame.decompress(data))
@@ -27,101 +29,69 @@ def decompress_stream(data: bytes) -> bytes:
     except: pass
     return data
 
-def carve_raw_video(raw_env_data: bytes) -> bytes:
-    """Low-level byte scanner to carve uncorrupted raw mp4 stream data blocks."""
-    match = raw_env_data.find(b'ftyp')
-    if match != -1:
-        start_pos = max(0, match - 4)
-        return raw_env_data[start_pos:start_pos + 45_000_000]
-    return b""
-
 def extract_pristine_name(obj, data, default_type: str) -> str:
-    """
-    Advanced Name Extraction: Resolves the exact built-in game asset identifier.
-    Prioritizes raw internal object mappings over fallback naming arrays.
-    """
-    # 1. Check for standard structural container paths first
+    """Resolves exact structural asset name keys natively without mutations."""
     if hasattr(obj, 'container') and obj.container:
-        # Extracts 'shared_asset_name' out of 'assets/resources/shared_asset_name.png'
-        extracted_path_name = os.path.basename(obj.container)
-        if extracted_path_name:
-            return os.path.splitext(extracted_path_name)[0]
+        base_mapped_path = os.path.basename(obj.container)
+        if base_mapped_path:
+            return os.path.splitext(base_mapped_path)[0]
 
-    # 2. Extract standard internal engine string name property
     name = getattr(data, "name", "")
     if isinstance(name, str) and name.strip():
         return name.strip()
 
-    # 3. Check for specific internal asset descriptor structures
     for attr in ["m_Name", "m_Container", "m_PathID"]:
         val = getattr(data, attr, None)
         if val and isinstance(val, str) and val.strip():
             return val.strip()
 
-    # 4. Strict structural fallback tracking
     return f"{default_type}_{obj.path_id}"
 
 def process_object_unrestricted(obj, raw_env_data: bytes):
-    """
-    Upgraded extraction pipeline maintaining pristine, un-renamed 
-    in-game built resource file nomenclature.
-    """
+    """Parses structural assets keeping exact internal built file naming maps."""
     try:
         t = obj.type.name
         data = obj.read()
-        
-        # Isolate pristine internal identity name without mutations
         pristine_name = extract_pristine_name(obj, data, t)
-        
-        # Sanitize OS specific path hazards exclusively while maintaining literal name strings
         safe_name = re.sub(r'[<>:"/\\|?*\x00-\x1f]', "_", pristine_name)
 
-        # 1. Text Assets / Configurations
         if t == "TextAsset":
             raw = getattr(data, "m_Script", b"")
             if isinstance(raw, str): raw = raw.encode()
             ext = ".json" if raw.startswith((b"{", b"[")) else ".txt"
-            return f"Text/{safe_name}{ext}", raw
+            return f"{safe_name}{ext}", raw, f"Text/{safe_name}{ext}"
 
-        # 2. High-Fidelity Textures & Visual Sprites
         elif t in ["Texture2D", "Sprite"] and hasattr(data, 'image'):
             buf = io.BytesIO()
             data.image.save(buf, format="PNG", optimize=False)
-            return f"Textures/{safe_name}.png", buf.getvalue()
+            return f"{safe_name}.png", buf.getvalue(), f"Textures/{safe_name}.png"
 
-        # 3. Audio Asset Infrastructure (PCM/Vorbis Rebuilding fix)
         elif t == "AudioClip":
             samples = getattr(data, "samples", None)
-            if samples:
-                # Extracts raw wave data dictionaries directly from memory frames
-                audio_filenames = list(samples.keys())
-                if audio_filenames:
-                    return f"Audio/{audio_filenames[0]}", samples[audio_filenames[0]]
-            
-            # Binary byte dump array recovery fallback
+            if samples and list(samples.keys()):
+                audio_filename = list(samples.keys())[0]
+                return audio_filename, samples[audio_filename], f"Audio/{audio_filename}"
             raw = obj.get_raw_data()
             ext = ".ogg" if raw.startswith(b'OggS') else ".wav"
-            return f"Audio/{safe_name}{ext}", raw
+            return f"{safe_name}{ext}", raw, f"Audio/{safe_name}{ext}"
 
-        # 4. Unrestricted Video Streams Carving
         elif t == "VideoClip":
             raw = obj.get_raw_data()
-            # Handle hidden streaming pointer structures
             if len(raw) < 1024:
-                carved_video = carve_raw_video(raw_env_data)
-                if carved_video:
-                    raw = carved_video
-            return f"Video/{safe_name}.mp4", raw
+                match = raw_env_data.find(b'ftyp')
+                if match != -1:
+                    start_pos = max(0, match - 4)
+                    raw = raw_env_data[start_pos:start_pos + 45_000_000]
+            return f"{safe_name}.mp4", raw, f"Video/{safe_name}.mp4"
 
-        # 5. 3D Meshes Model Coordinate Export
         elif t == "Mesh":
-            lines = [f"g {safe_name}", "# Enterprise Asset Recovery Struct Node v4.3"]
+            lines = [f"g {safe_name}", "# Studio Core Asset v4.4"]
             if hasattr(data, 'm_Vertices'):
                 for v in data.m_Vertices: lines.append(f"v {v.x} {v.y} {v.z}")
             if hasattr(data, 'm_Indices'):
                 idx = data.m_Indices
                 for i in range(0, len(idx), 3): lines.append(f"f {idx[i]+1} {idx[i+1]+1} {idx[i+2]+1}")
-            return f"Models/{safe_name}.obj", "\n".join(lines).encode()
+            return f"{safe_name}.obj", "\n".join(lines).encode(), f"Models/{safe_name}.obj"
             
     except Exception:
         pass
@@ -130,57 +100,95 @@ def process_object_unrestricted(obj, raw_env_data: bytes):
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def serve_ui_layout(path):
-    if path in ["api/extract", "api/extract/"]:
-        return jsonify({"error": "Method execution blocked."}), 405
+    if path in ["api/extract", "api/extract/"] and request.method == "POST":
+        return "Route handling POST payload context inside specific controllers.", 405
     try:
         with open(HTML_PATH, 'r', encoding='utf-8') as f:
             return f.read()
     except Exception as e:
-        return f"Unable to fetch web dashboard layers: {str(e)}", 500
+        return f"Dashboard configuration read error: {str(e)}", 500
 
 @app.route('/api/extract', methods=['POST'])
 def process_upload_pipeline():
+    global GLOBAL_RAM_CACHE_MANIFEST
+    
+    # URL parameters control alternative download tracks
+    download_type = request.args.get('download_type', '')
+
+    # --- TRACK B: Zip Multi-Download Trigger ---
+    if download_type == 'zip':
+        if not GLOBAL_RAM_CACHE_MANIFEST.get('extracted'):
+            return jsonify({"error": "Cache layer cleared. Please re-upload stream."}), 400
+        
+        zip_io = io.BytesIO()
+        with zipfile.ZipFile(zip_io, "w", zipfile.ZIP_DEFLATED, compresslevel=1) as zf:
+            for item in GLOBAL_RAM_CACHE_MANIFEST['extracted']:
+                zf.writestr(item['zip_path'], item['bytes'])
+        zip_io.seek(0)
+        return send_file(zip_io, mimetype='application/zip', as_attachment=True, download_name="studio_manifest_assets.zip")
+
+    # --- TRACK C: Single Selective Asset Download Trigger ---
+    elif download_type == 'single':
+        file_idx = int(request.args.get('file_index', -1))
+        if not GLOBAL_RAM_CACHE_MANIFEST.get('extracted') or file_idx < 0 or file_idx >= len(GLOBAL_RAM_CACHE_MANIFEST['extracted']):
+            return jsonify({"error": "Target resource tracking index identifier missing."}), 400
+        
+        target_file_element = GLOBAL_RAM_CACHE_MANIFEST['extracted'][file_idx]
+        return send_file(
+            io.BytesIO(target_file_element['bytes']),
+            mimetype='application/octet-stream',
+            as_attachment=True,
+            download_name=target_file_element['name']
+        )
+
+    # --- TRACK A: Standard Asset Mapping Manifest Generation Pipeline ---
     try:
         if 'file' not in request.files:
-            return jsonify({"error": "No valid file stream container found."}), 400
+            return jsonify({"error": "No file stream discovered in payload parameters."}), 400
             
         uploaded_file = request.files['file']
         raw_bytes = uploaded_file.read()
 
-        if not raw_bytes or len(raw_bytes) == 0:
-            return jsonify({"error": "The uploaded payload contains an empty sequence."}), 400
+        if not raw_bytes:
+            return jsonify({"error": "Payload byte sequence is empty."}), 400
 
-        # Execute Deep Stream Reconstruction
         final_data = decompress_stream(bytes(raw_bytes))
         env = UnityPy.load(final_data)
         
-        zip_io = io.BytesIO()
-        seen = set()
-        extracted_count = 0
+        seen_md5 = set()
+        extracted_list = []
+        json_metadata_manifest = []
+        tracking_index_counter = 0
 
-        # Build production delivery container using maximum speed configuration
-        with zipfile.ZipFile(zip_io, "w", zipfile.ZIP_DEFLATED, compresslevel=1) as zf:
-            for obj in env.objects:
-                res = process_object_unrestricted(obj, final_data)
-                if res:
-                    path, data = res
-                    # Eliminate duplicated internal structures safely using MD5 hashes
-                    h = hashlib.md5(data).hexdigest()
-                    if h not in seen:
-                        seen.add(h)
-                        zf.writestr(path, data)
-                        extracted_count += 1
+        for obj in env.objects:
+            res = process_object_unrestricted(obj, final_data)
+            if res:
+                filename, file_bytes, zip_folder_path = res
+                h = hashlib.md5(file_bytes).hexdigest()
+                if h not in seen_md5:
+                    seen_md5.add(h)
+                    
+                    # Store variables into secure RAM mapping arrays
+                    extracted_list.append({
+                        'name': filename,
+                        'zip_path': zip_folder_path,
+                        'bytes': file_bytes
+                    })
+                    
+                    # Store references to send back to client dashboard interface components
+                    json_metadata_manifest.append({
+                        'index': tracking_index_counter,
+                        'name': filename,
+                        'path': zip_folder_path
+                    })
+                    tracking_index_counter += 1
 
-        if extracted_count == 0:
-            return jsonify({"error": "No valid assets could be recovered from this specific container cluster."}), 400
+        if tracking_index_counter == 0:
+            return jsonify({"error": "No valid resource parameters discovered inside stream headers."}), 400
 
-        zip_io.seek(0)
-        return send_file(
-            zip_io,
-            mimetype='application/zip',
-            as_attachment=True,
-            download_name="recovered_original_assets.zip"
-        )
+        # Cache variables inside runtime layers
+        GLOBAL_RAM_CACHE_MANIFEST['extracted'] = extracted_list
+        return jsonify({"files": json_metadata_manifest})
 
     except Exception as e:
-        return jsonify({"error": f"Internal system tracking fault: {str(e)}"}), 500
+        return jsonify({"error": f"Internal mapping failure: {str(e)}"}), 500
