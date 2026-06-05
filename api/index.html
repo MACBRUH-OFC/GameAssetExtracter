@@ -27,7 +27,7 @@
             background-color: #ffffff;
         }
 
-        /* Fixed Console-Row Layout Structure */
+        /* Fixed Logs Row Structural Layout Matrix */
         .log-row {
             display: flex;
             align-items: flex-start;
@@ -105,11 +105,11 @@
                         <span class="w-2 h-2 rounded-full bg-rose-500/80"></span>
                         <span class="w-2 h-2 rounded-full bg-amber-500/80"></span>
                         <span class="w-2 h-2 rounded-full bg-emerald-500/80"></span>
-                        <span class="text-[9px] font-bold uppercase tracking-wider text-slate-400 pl-1 font-mono">terminal.log</span>
+                        <span class="text-[9px] font-bold uppercase tracking-wider text-slate-400 pl-1 font-mono">system_activity.log</span>
                     </div>
-                    <button onclick="document.getElementById('terminalLog').innerHTML=''" class="text-[9px] font-medium text-slate-500 hover:text-slate-300 uppercase font-mono">Clear</button>
+                    <button onclick="document.getElementById('sysActivityLogs').innerHTML=''" class="text-[9px] font-medium text-slate-500 hover:text-slate-300 uppercase font-mono">Clear</button>
                 </div>
-                <div id="terminalLog" class="flex-1 font-mono text-[10px] text-slate-300 overflow-y-auto custom-scroll pr-0.5 select-text">
+                <div id="sysActivityLogs" class="flex-1 font-mono text-[10px] text-slate-300 overflow-y-auto custom-scroll pr-0.5 select-text">
                     <div class="log-row text-slate-500">
                         <span class="shrink-0 text-slate-600">00:00:00</span>
                         <span class="shrink-0 text-cyan-500">[SYS]</span>
@@ -171,14 +171,14 @@
         const downloadAllBtn = document.getElementById('downloadAllBtn');
         const manifestSummaryCount = document.getElementById('manifestSummaryCount');
         const manifestViewerDeck = document.getElementById('manifestViewerDeck');
-        const terminalLog = document.getElementById('terminalLog');
+        const sysActivityLogs = document.getElementById('sysActivityLogs');
         const previewAssetMeta = document.getElementById('previewAssetMeta');
         const previewOutputViewport = document.getElementById('previewOutputViewport');
 
         let selectedFile = null;
         const ABSOLUTE_SAFEGUARD_LIMIT = 5.0 * 1024 * 1024; // Strict 5.00 MB Safeguard Ceiling
 
-        // Refened console output structure
+        // Refened layout stream log writer with small text layout structural definitions
         function appendLog(tag, msg, mode = "info") {
             const now = new Date().toTimeString().split(' ')[0];
             let variantClass = "text-cyan-400";
@@ -193,8 +193,8 @@
                 <span class="shrink-0 ${variantClass}">[${tag.toUpperCase()}]</span>
                 <span class="break-all text-slate-200">${msg}</span>
             `;
-            terminalLog.appendChild(row);
-            terminalLog.scrollTop = terminalLog.scrollHeight;
+            sysActivityLogs.appendChild(row);
+            sysActivityLogs.scrollTop = sysActivityLogs.scrollHeight;
         }
 
         ['dragenter', 'dragover'].forEach(name => {
@@ -210,8 +210,8 @@
 
         function processFileInputStaging(file) {
             if (file.size > ABSOLUTE_SAFEGUARD_LIMIT) {
-                appendLog("fail", `Upload dropped: ${file.name} violates execution limits.`, "error");
-                alert(`File Rejected: Size exceeds the safe 5.00 MB framework ceiling.`);
+                appendLog("fail", "Upload dropped: " + file.name + " violates execution limits.", "error");
+                alert("File Rejected: Size exceeds the safe 5.00 MB framework ceiling.");
                 selectedFile = null;
                 extractBtn.disabled = true;
                 filePanel.classList.add('hidden');
@@ -223,7 +223,7 @@
             fileSize.textContent = (file.size / (1024 * 1024)).toFixed(2) + " MB";
             filePanel.classList.remove('hidden');
             extractBtn.disabled = false;
-            appendLog("file", `Target loaded cleanly: ${file.name} (${(file.size / (1024 * 1024)).toFixed(2)} MB)`, "success");
+            appendLog("file", "Target loaded cleanly: " + file.name + " (" + (file.size / (1024 * 1024)).toFixed(2) + " MB)", "success");
         }
 
         extractBtn.addEventListener('click', async () => {
@@ -258,7 +258,7 @@
                 const result = await response.json();
                 if (!response.ok) throw new Error(result.error || "Unhandled pipeline process failure.");
 
-                appendLog("done", `Extraction mapping finished smoothly. Discovered ${result.files.length} instances.`, "success");
+                appendLog("done", "Extraction mapping finished smoothly. Discovered " + result.files.length + " instances.", "success");
                 renderManifestCatalogDeck(result.files);
                 
                 statusText.textContent = "COMPLETED SUCCESSFULLY";
@@ -277,7 +277,7 @@
         });
 
         function renderManifestCatalogDeck(files) {
-            manifestSummaryCount.textContent = `Cataloged ${files.length} active mappings.`;
+            manifestSummaryCount.textContent = "Cataloged " + files.length + " active mappings.";
             manifestViewerDeck.className = "flex-1 w-full overflow-y-auto border border-slate-200/60 bg-white rounded-xl custom-scroll p-1.5 space-y-1 max-h-[460px]";
             manifestViewerDeck.innerHTML = "";
 
@@ -316,7 +316,7 @@
         }
 
         async function triggerAssetInspectionViewport(name, index, categoryPath) {
-            previewAssetMeta.textContent = `Reading element pointer target: ${name}`;
+            previewAssetMeta.textContent = "Reading element pointer target: " + name;
             previewOutputViewport.innerHTML = `
                 <div class="flex flex-col items-center space-y-1.5 text-slate-400 font-mono text-[10px]">
                     <span class="w-3.5 h-3.5 border-2 border-slate-900 border-t-transparent rounded-full animate-spin"></span>
@@ -325,7 +325,7 @@
             `;
 
             try {
-                const res = await fetch(`/api/extract?download_type=single&file_index=${index}`, { method: 'POST' });
+                const res = await fetch("/api/extract?download_type=single&file_index=" + index, { method: 'POST' });
                 if(!res.ok) throw new Error("Object cluster index pointer transmission broken.");
                 
                 const blob = await res.blob();
@@ -374,7 +374,7 @@
                     previewOutputViewport.innerHTML = `<div class="font-mono text-[10px] text-slate-400">Preview rendering not supported for this type</div>`;
                 }
 
-                previewAssetMeta.textContent = `Inspecting: ${name}`;
+                previewAssetMeta.textContent = "Inspecting: " + name;
 
             } catch(e) {
                 previewOutputViewport.innerHTML = `<div class="text-[10px] font-mono text-rose-500 p-2">${e.message}</div>`;
@@ -383,7 +383,7 @@
 
         async function downloadSingleDirectAsset(name, index) {
             try {
-                const response = await fetch(`/api/extract?download_type=single&file_index=${index}`, { method: 'POST' });
+                const response = await fetch("/api/extract?download_type=single&file_index=" + index, { method: 'POST' });
                 if (!response.ok) throw new Error("Direct object registry connection failure.");
                 const blob = await response.blob();
                 const url = window.URL.createObjectURL(blob);
@@ -395,7 +395,7 @@
                 window.URL.revokeObjectURL(url);
                 a.remove();
             } catch (err) {
-                alert(`Download Error: ${err.message}`);
+                alert("Download Error: " + err.message);
             }
         }
 
@@ -407,13 +407,13 @@
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `extracted_assets.zip`;
+                a.download = "extracted_assets.zip";
                 document.body.appendChild(a);
                 a.click();
                 window.URL.revokeObjectURL(url);
                 a.remove();
             } catch (err) {
-                alert(`ZIP Package Error: ${err.message}`);
+                alert("ZIP Package Error: " + err.message);
             }
         }
     </script>
