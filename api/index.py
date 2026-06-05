@@ -17,12 +17,12 @@ app = Flask(__name__)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 HTML_PATH = os.path.join(BASE_DIR, 'index.html')
 
-# Low-Impact Volatile Global RAM Registries
+# Core Application Global Memory Caches
 CHUNKS_MEMORY_VAULT = {}
 GLOBAL_RAM_CACHE_MANIFEST = {}
 
 def decompress_stream(data: bytes) -> bytes:
-    """Brute-force compression stripper optimized for fast termination."""
+    """Unpacks brute compression headers from underlying files safely."""
     try:
         if data.startswith(b'\x1f\x8b'): return decompress_stream(gzip.decompress(data))
         if data.startswith((b'\x78\x9c', b'\x78\x01', b'\x78\xda')): return decompress_stream(zlib.decompress(data))
@@ -30,7 +30,7 @@ def decompress_stream(data: bytes) -> bytes:
     return data
 
 def extract_pristine_name(obj, data, default_type: str) -> str:
-    """Resolves true build mapping names cleanly."""
+    """Extracts internal binary manifest file naming tags."""
     if hasattr(obj, 'container') and obj.container:
         base_mapped_path = os.path.basename(obj.container)
         if base_mapped_path:
@@ -41,7 +41,7 @@ def extract_pristine_name(obj, data, default_type: str) -> str:
     return f"{default_type}_{obj.path_id}"
 
 def process_object_unrestricted(obj, raw_env_data: bytes):
-    """Processes asset buffers with explicit object references to save serverless memory allocation."""
+    """Parses binary blocks keeping direct structure paths intact."""
     try:
         t = obj.type.name
         data = obj.read()
@@ -76,7 +76,7 @@ def process_object_unrestricted(obj, raw_env_data: bytes):
                 match = raw_env_data.find(b'ftyp')
                 if match != -1:
                     start_pos = max(0, match - 4)
-                    raw = raw_env_data[start_pos:start_pos + 15_000_000] # Cap size mapping limit to guard server limits
+                    raw = raw_env_data[start_pos:start_pos + 12_000_000]
             return f"{safe_name}.mp4", raw, f"Video/{safe_name}.mp4"
             
     except Exception:
@@ -92,7 +92,7 @@ def serve_ui_layout(path):
         with open(HTML_PATH, 'r', encoding='utf-8') as f:
             return f.read()
     except Exception as e:
-        return f"Dashboard configuration read error: {str(e)}", 500
+        return f"Interface layout read error: {str(e)}", 500
 
 @app.route('/api/extract', methods=['POST'])
 def process_upload_pipeline():
@@ -101,28 +101,28 @@ def process_upload_pipeline():
     action = request.args.get('action', '')
     download_type = request.args.get('download_type', '')
 
-    # --- TRACK C: ZIP Compilation Download (Memory-Clearing Strategy) ---
+    # --- ZIP MULTI-DOWNLOAD ENDPOINT ---
     if download_type == 'zip':
         if not GLOBAL_RAM_CACHE_MANIFEST.get('extracted'):
-            return jsonify({"error": "Cache layer cleared. Please re-upload stream."}), 400
+            return jsonify({"error": "Cache layer empty. Please process a valid bundle file."}), 400
         
         zip_io = io.BytesIO()
         with zipfile.ZipFile(zip_io, "w", zipfile.ZIP_DEFLATED, compresslevel=1) as zf:
             for item in GLOBAL_RAM_CACHE_MANIFEST['extracted']:
                 zf.writestr(item['zip_path'], item['bytes'])
         zip_io.seek(0)
-        return send_file(zip_io, mimetype='application/zip', as_attachment=True, download_name="studio_manifest_assets.zip")
+        return send_file(zip_io, mimetype='application/zip', as_attachment=True, download_name="assets_manifest.zip")
 
-    # --- TRACK D: Single Asset Selective Preview Engine Stream ---
+    # --- SINGLE LIVE VIEW / DOWNLOAD PREVIEW ENDPOINT ---
     elif download_type == 'single':
         file_idx = int(request.args.get('file_index', -1))
         if not GLOBAL_RAM_CACHE_MANIFEST.get('extracted') or file_idx < 0 or file_idx >= len(GLOBAL_RAM_CACHE_MANIFEST['extracted']):
-            return jsonify({"error": "Target tracking index identifier error."}), 400
+            return jsonify({"error": "Tracking item index identifier missing."}), 400
         
         item = GLOBAL_RAM_CACHE_MANIFEST['extracted'][file_idx]
         return send_file(io.BytesIO(item['bytes']), mimetype='application/octet-stream', as_attachment=True, download_name=item['name'])
 
-    # --- TRACK A: Block Slice Ingestion ---
+    # --- INCOMING SEGMENT CHUNK HOOK ---
     if action == 'upload_chunk':
         try:
             session_id = request.form['session_id']
@@ -134,19 +134,19 @@ def process_upload_pipeline():
                 CHUNKS_MEMORY_VAULT[session_id] = [None] * total_chunks
 
             CHUNKS_MEMORY_VAULT[session_id][chunk_index] = slice_blob
-            return "Slice chunk cached safely.", 200
+            return "Block segment cached safely.", 200
         except Exception as e:
-            return f"Chunk write error: {str(e)}", 500
+            return f"Segment chunk mapping error: {str(e)}", 500
 
-    # --- TRACK B: Final Reassembly & Aggressive Garbage Cleanup Execution ---
+    # --- FINAL RECONSTRUCTION & METADATA BINDING ENGINE ---
     elif action == 'finalize_assembly':
         try:
             session_id = request.args.get('session_id', '')
             if session_id not in CHUNKS_MEMORY_VAULT or None in CHUNKS_MEMORY_VAULT[session_id]:
-                return jsonify({"error": "Missing slices inside structural delivery maps."}), 400
+                return jsonify({"error": "Slices missing inside delivery maps."}), 400
 
             full_reconstructed_bytes = b"".join(CHUNKS_MEMORY_VAULT[session_id])
-            del CHUNKS_MEMORY_VAULT[session_id] # Free sliced block immediately
+            del CHUNKS_MEMORY_VAULT[session_id]
 
             final_data = decompress_stream(full_reconstructed_bytes)
             
@@ -154,7 +154,7 @@ def process_upload_pipeline():
                 env = UnityPy.load(final_data)
                 objects_array = env.objects
             except Exception:
-                return jsonify({"error": "NO VALID RESOURCE PARAMETERS DISCOVERED INSIDE STREAM HEADERS."}), 400
+                return jsonify({"error": "No structural game data found within asset headers."}), 400
             
             seen_md5 = set()
             extracted_list = []
@@ -182,17 +182,17 @@ def process_upload_pipeline():
                         })
                         tracking_index_counter += 1
 
-            # CRITICAL SERVERLESS RECOVERY UPGRADE: Hard clean object reference layers to force OS memory reclaim
+            # Garbage collect to instantly release memory back to Vercel host
             del env
             gc.collect()
 
             if tracking_index_counter == 0:
-                return jsonify({"error": "NO VALID RESOURCE PARAMETERS DISCOVERED INSIDE HEADERS."}), 400
+                return jsonify({"error": "No unpackable asset classes detected inside file headers."}), 400
 
             GLOBAL_RAM_CACHE_MANIFEST['extracted'] = extracted_list
             return jsonify({"files": json_metadata_manifest})
 
         except Exception as e:
-            return jsonify({"error": f"Internal mapping failure during finalization: {str(e)}"}), 500
+            return jsonify({"error": f"Internal pipeline compilation abort: {str(e)}"}), 500
 
-    return jsonify({"error": "Invalid engine execution pathway strategy."}), 400
+    return jsonify({"error": "Invalid strategy execution pathway path."}), 400
