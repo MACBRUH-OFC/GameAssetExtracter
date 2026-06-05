@@ -5,51 +5,43 @@ import gzip
 import zlib
 import zipfile
 import re
+import gc
 import hashlib
 from flask import Flask, request, send_file, jsonify
 
 os.environ["UNITYPY_NO_GUI"] = "1"
 import UnityPy
-import lz4.frame
 
 app = Flask(__name__)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 HTML_PATH = os.path.join(BASE_DIR, 'index.html')
 
-# Core Global In-Memory Registries
+# Low-Impact Volatile Global RAM Registries
 CHUNKS_MEMORY_VAULT = {}
 GLOBAL_RAM_CACHE_MANIFEST = {}
 
 def decompress_stream(data: bytes) -> bytes:
-    """Deep brute-force compression layer stripping."""
+    """Brute-force compression stripper optimized for fast termination."""
     try:
         if data.startswith(b'\x1f\x8b'): return decompress_stream(gzip.decompress(data))
-        if data.startswith(b'\x04\x22\x4d\x18'): return decompress_stream(lz4.frame.decompress(data))
         if data.startswith((b'\x78\x9c', b'\x78\x01', b'\x78\xda')): return decompress_stream(zlib.decompress(data))
     except: pass
     return data
 
 def extract_pristine_name(obj, data, default_type: str) -> str:
-    """Resolves exact structural asset name keys natively without mutations."""
+    """Resolves true build mapping names cleanly."""
     if hasattr(obj, 'container') and obj.container:
         base_mapped_path = os.path.basename(obj.container)
         if base_mapped_path:
             return os.path.splitext(base_mapped_path)[0]
-
     name = getattr(data, "name", "")
     if isinstance(name, str) and name.strip():
         return name.strip()
-
-    for attr in ["m_Name", "m_Container", "m_PathID"]:
-        val = getattr(data, attr, None)
-        if val and isinstance(val, str) and val.strip():
-            return val.strip()
-
     return f"{default_type}_{obj.path_id}"
 
 def process_object_unrestricted(obj, raw_env_data: bytes):
-    """Parses structural assets keeping exact internal built file naming maps."""
+    """Processes asset buffers with explicit object references to save serverless memory allocation."""
     try:
         t = obj.type.name
         data = obj.read()
@@ -65,7 +57,9 @@ def process_object_unrestricted(obj, raw_env_data: bytes):
         elif t in ["Texture2D", "Sprite"] and hasattr(data, 'image'):
             buf = io.BytesIO()
             data.image.save(buf, format="PNG", optimize=False)
-            return f"{safe_name}.png", buf.getvalue(), f"Textures/{safe_name}.png"
+            img_bytes = buf.getvalue()
+            buf.close()
+            return f"{safe_name}.png", img_bytes, f"Textures/{safe_name}.png"
 
         elif t == "AudioClip":
             samples = getattr(data, "samples", None)
@@ -82,17 +76,8 @@ def process_object_unrestricted(obj, raw_env_data: bytes):
                 match = raw_env_data.find(b'ftyp')
                 if match != -1:
                     start_pos = max(0, match - 4)
-                    raw = raw_env_data[start_pos:start_pos + 45_000_000]
+                    raw = raw_env_data[start_pos:start_pos + 15_000_000] # Cap size mapping limit to guard server limits
             return f"{safe_name}.mp4", raw, f"Video/{safe_name}.mp4"
-
-        elif t == "Mesh":
-            lines = [f"g {safe_name}", "# Studio Core Asset v4.6"]
-            if hasattr(data, 'm_Vertices'):
-                for v in data.m_Vertices: lines.append(f"v {v.x} {v.y} {v.z}")
-            if hasattr(data, 'm_Indices'):
-                idx = data.m_Indices
-                for i in range(0, len(idx), 3): lines.append(f"f {idx[i]+1} {idx[i+1]+1} {idx[i+2]+1}")
-            return f"{safe_name}.obj", "\n".join(lines).encode(), f"Models/{safe_name}.obj"
             
     except Exception:
         pass
@@ -116,7 +101,7 @@ def process_upload_pipeline():
     action = request.args.get('action', '')
     download_type = request.args.get('download_type', '')
 
-    # --- TRACK C: Zip Multi-Download Trigger ---
+    # --- TRACK C: ZIP Compilation Download (Memory-Clearing Strategy) ---
     if download_type == 'zip':
         if not GLOBAL_RAM_CACHE_MANIFEST.get('extracted'):
             return jsonify({"error": "Cache layer cleared. Please re-upload stream."}), 400
@@ -128,21 +113,16 @@ def process_upload_pipeline():
         zip_io.seek(0)
         return send_file(zip_io, mimetype='application/zip', as_attachment=True, download_name="studio_manifest_assets.zip")
 
-    # --- TRACK D: Single Selective Asset Download Trigger ---
+    # --- TRACK D: Single Asset Selective Preview Engine Stream ---
     elif download_type == 'single':
         file_idx = int(request.args.get('file_index', -1))
         if not GLOBAL_RAM_CACHE_MANIFEST.get('extracted') or file_idx < 0 or file_idx >= len(GLOBAL_RAM_CACHE_MANIFEST['extracted']):
-            return jsonify({"error": "Target resource tracking index identifier missing."}), 400
+            return jsonify({"error": "Target tracking index identifier error."}), 400
         
-        target_file_element = GLOBAL_RAM_CACHE_MANIFEST['extracted'][file_idx]
-        return send_file(
-            io.BytesIO(target_file_element['bytes']),
-            mimetype='application/octet-stream',
-            as_attachment=True,
-            download_name=target_file_element['name']
-        )
+        item = GLOBAL_RAM_CACHE_MANIFEST['extracted'][file_idx]
+        return send_file(io.BytesIO(item['bytes']), mimetype='application/octet-stream', as_attachment=True, download_name=item['name'])
 
-    # --- TRACK A: Sliced Chunk Incoming Pipeline Receiver ---
+    # --- TRACK A: Block Slice Ingestion ---
     if action == 'upload_chunk':
         try:
             session_id = request.form['session_id']
@@ -155,23 +135,20 @@ def process_upload_pipeline():
 
             CHUNKS_MEMORY_VAULT[session_id][chunk_index] = slice_blob
             return "Slice chunk cached safely.", 200
-        except Exception as chunk_err:
-            return f"Chunk write error: {str(chunk_err)}", 500
+        except Exception as e:
+            return f"Chunk write error: {str(e)}", 500
 
-    # --- TRACK B: Final Assembly & Extraction Execution Map ---
+    # --- TRACK B: Final Reassembly & Aggressive Garbage Cleanup Execution ---
     elif action == 'finalize_assembly':
         try:
             session_id = request.args.get('session_id', '')
             if session_id not in CHUNKS_MEMORY_VAULT or None in CHUNKS_MEMORY_VAULT[session_id]:
                 return jsonify({"error": "Missing slices inside structural delivery maps."}), 400
 
-            # Merge byte blocks cleanly back together inside native system memory
-            full_binary_reconstructed = b"".join(CHUNKS_MEMORY_VAULT[session_id])
-            
-            # Clear memory instantly to avoid Vercel execution runtime overflows
-            del CHUNKS_MEMORY_VAULT[session_id]
+            full_reconstructed_bytes = b"".join(CHUNKS_MEMORY_VAULT[session_id])
+            del CHUNKS_MEMORY_VAULT[session_id] # Free sliced block immediately
 
-            final_data = decompress_stream(full_binary_reconstructed)
+            final_data = decompress_stream(full_reconstructed_bytes)
             
             try:
                 env = UnityPy.load(final_data)
@@ -205,8 +182,12 @@ def process_upload_pipeline():
                         })
                         tracking_index_counter += 1
 
+            # CRITICAL SERVERLESS RECOVERY UPGRADE: Hard clean object reference layers to force OS memory reclaim
+            del env
+            gc.collect()
+
             if tracking_index_counter == 0:
-                return jsonify({"error": "NO VALID RESOURCE PARAMETERS DISCOVERED INSIDE STREAM HEADERS."}), 400
+                return jsonify({"error": "NO VALID RESOURCE PARAMETERS DISCOVERED INSIDE HEADERS."}), 400
 
             GLOBAL_RAM_CACHE_MANIFEST['extracted'] = extracted_list
             return jsonify({"files": json_metadata_manifest})
@@ -214,4 +195,4 @@ def process_upload_pipeline():
         except Exception as e:
             return jsonify({"error": f"Internal mapping failure during finalization: {str(e)}"}), 500
 
-    return jsonify({"error": "Invalid engine execution request pathway strategy."}), 400
+    return jsonify({"error": "Invalid engine execution pathway strategy."}), 400
