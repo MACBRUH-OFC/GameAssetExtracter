@@ -271,10 +271,8 @@ class UnityBundleExtractor {
     }
 
     isMainUnityFile(filename) {
-        const exts = ['bundle', 'unity3d', 'assets', 'unitybundle', 'assetbundle'];
-        const ext = filename.split('.').pop().toLowerCase();
-        return exts.includes(ext);
-    }
+    return true;
+}
 
     updateOverlayState(show, title = '', subtitle = '', percent = null) {
         this.isOperationInProgress = show;
@@ -756,6 +754,25 @@ class UnityBundleExtractor {
 }
 
 // Instantiate extractor when document is fully parsed
-document.addEventListener('DOMContentLoaded', () => {
+// Fix upload button enable issue
+document.addEventListener('change', function(e) {
+
+    if (e.target.id === 'file-input') {
+
+        const file = e.target.files[0];
+        const uploadText = document.getElementById('custom-file-upload-text');
+        const uploadButton = document.getElementById('upload-button');
+
+        if (file) {
+            uploadText.textContent =
+                file.name +
+                " (" +
+                (file.size / 1024 / 1024).toFixed(2) +
+                " MB)";
+            uploadButton.disabled = false;
+        }
+    }
+
+});
     window.extractorApp = new UnityBundleExtractor();
 });
