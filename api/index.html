@@ -144,7 +144,6 @@
         const manifestViewerDeck = document.getElementById('manifestViewerDeck');
 
         let selectedFile = null;
-        let globalProcessedArchiveData = null; // Stash backend response map variables globally
 
         ['dragenter', 'dragover'].forEach(eventName => {
             dropzone.addEventListener(eventName, (e) => {
@@ -181,8 +180,8 @@
             progressContainer.classList.add('hidden');
             progressBar.style.width = '0%';
             progressPercent.textContent = '0%';
+            progressBar.className = "bg-slate-900 h-full rounded-full transition-all duration-300";
             
-            // Re-initialize default viewer placeholder layout state views
             downloadAllBtn.classList.add('hidden');
             manifestSummaryCount.textContent = "Awaiting core pipeline processing execution...";
             manifestViewerDeck.className = "flex-1 overflow-y-auto border border-slate-200/60 bg-slate-50/50 rounded-xl custom-scrollbar flex flex-col items-center justify-center p-6 text-center text-slate-400 space-y-2";
@@ -198,6 +197,7 @@
 
             extractBtn.disabled = true;
             progressContainer.classList.remove('hidden');
+            progressBar.className = "bg-slate-900 h-full rounded-full transition-all duration-300";
             updateStatus("STREAMING CONTAINER TO PIPELINE INTERNALS...", 20);
 
             const formData = new FormData();
@@ -211,24 +211,37 @@
                     body: formData
                 });
 
+                // HIGH-LEVEL SECURITY UPGRADE: Guard against raw Vercel HTML string payloads (4.5MB Payload Errors)
+                const contentType = response.headers.get("content-type");
+                if (!contentType || !contentType.includes("application/json")) {
+                    const rawTextLog = await response.text();
+                    if (rawTextLog.includes("Payload Too Large") || response.status === 413) {
+                        throw new Error("FILE WEIGHT EXCEEDS VERCEL'S SERVERLESS LIMIT (4.5MB Max). Please drop a smaller patch cluster segment.");
+                    }
+                    throw new Error("The target data stream triggered an invalid structural crash inside engine headers.");
+                }
+
                 if (!response.ok) {
                     const errData = await response.json();
                     throw new Error(errData.error || "The target pipeline execution generated an unhandled data fault.");
                 }
 
                 updateStatus("RESOLVING EXTRACTED ASSET DICTIONARIES...", 85);
-                
                 const dataResultJson = await response.json();
-                globalProcessedArchiveData = dataResultJson; // Save asset map to global variables safely
                 
                 renderExtractedManifestList(dataResultJson.files);
                 updateStatus("PROCESSING MAP RESOLVED COMPLETELY", 100);
 
             } catch (error) {
-                manifestSummaryCount.innerHTML = `<span class="text-rose-600 font-bold">ENGINE FAULT: ${error.message.toUpperCase()}</span>`;
+                manifestSummaryCount.innerHTML = `<span class="text-rose-600 font-bold">ENGINE FAULT:</span>`;
+                manifestViewerDeck.className = "flex-1 overflow-y-auto border border-rose-200 bg-rose-50/30 rounded-xl p-6 text-center flex flex-col items-center justify-center space-y-2";
+                manifestViewerDeck.innerHTML = `
+                    <svg class="w-8 h-8 text-rose-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0-10.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.152c-3.196 0-6.1-1.249-8.25-3.286zm0 13.036h.008v.008H12v-.008z"></path></svg>
+                    <div class="text-xs font-bold text-rose-900 uppercase">Execution Framework Aborted</div>
+                    <div class="text-[11px] text-rose-700 font-medium max-w-md leading-relaxed">${error.message}</div>
+                `;
                 statusText.textContent = "CORE PROCESSING PIPELINE ABORTED";
-                progressBar.classList.remove('bg-slate-900');
-                progressBar.classList.add('bg-rose-600');
+                progressBar.className = "bg-rose-600 h-full rounded-full";
             } finally {
                 extractBtn.disabled = false;
             }
@@ -244,7 +257,6 @@
             const count = filesListArray.length;
             manifestSummaryCount.textContent = `Successfully isolated ${count} distinct native asset resource elements.`;
             
-            // Reconfigure main viewer styling from center placeholder to top-aligned flex container view lists
             manifestViewerDeck.className = "flex-1 overflow-y-auto border border-slate-200/60 bg-white rounded-xl custom-scrollbar p-2 space-y-1";
             manifestViewerDeck.innerHTML = "";
 
@@ -252,7 +264,6 @@
                 const row = document.createElement('div');
                 row.className = "flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100/80 rounded-lg border border-slate-200/30 transition-all group";
                 
-                // Establish proper vector iconography design layouts mapped to categories
                 let iconSvg = `<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5-3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"></path></svg>`;
                 if (fileItem.path.startsWith("Textures/")) {
                     iconSvg = `<svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"></path></svg>`;
@@ -274,17 +285,14 @@
                 manifestViewerDeck.appendChild(row);
             });
 
-            // If there are multiple extracted assets, reveal the 'Download All (ZIP)' button container element
             if (count > 1) {
                 downloadAllBtn.classList.remove('hidden');
                 downloadAllBtn.onclick = triggerUnifiedZipDownload;
             } else if (count === 1) {
-                // If only one file exists, bind the download all button click to just fetch that single lone item directly
                 downloadAllBtn.classList.remove('hidden');
                 downloadAllBtn.onclick = () => downloadSingleDirectAsset(filesListArray[0].name, filesListArray[0].index);
             }
 
-            // Bind individual singular selective single download triggers
             document.querySelectorAll('.single-dl-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     const idx = e.target.getAttribute('data-index');
@@ -296,7 +304,6 @@
 
         async function downloadSingleDirectAsset(targetFilenameStr, rawTrackingIndexId) {
             try {
-                // Submit specific target query trackers back into execution layers
                 const response = await fetch(`/api/extract?download_type=single&file_index=${rawTrackingIndexId}`, {
                     method: 'POST',
                     body: JSON.stringify({ 'target': selectedFile ? selectedFile.name : 'stream_cluster' }),

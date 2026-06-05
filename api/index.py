@@ -85,7 +85,7 @@ def process_object_unrestricted(obj, raw_env_data: bytes):
             return f"{safe_name}.mp4", raw, f"Video/{safe_name}.mp4"
 
         elif t == "Mesh":
-            lines = [f"g {safe_name}", "# Studio Core Asset v4.4"]
+            lines = [f"g {safe_name}", "# Studio Core Asset v4.5"]
             if hasattr(data, 'm_Vertices'):
                 for v in data.m_Vertices: lines.append(f"v {v.x} {v.y} {v.z}")
             if hasattr(data, 'm_Indices'):
@@ -112,7 +112,6 @@ def serve_ui_layout(path):
 def process_upload_pipeline():
     global GLOBAL_RAM_CACHE_MANIFEST
     
-    # URL parameters control alternative download tracks
     download_type = request.args.get('download_type', '')
 
     # --- TRACK B: Zip Multi-Download Trigger ---
@@ -153,14 +152,20 @@ def process_upload_pipeline():
             return jsonify({"error": "Payload byte sequence is empty."}), 400
 
         final_data = decompress_stream(bytes(raw_bytes))
-        env = UnityPy.load(final_data)
+        
+        # HIGH-LEVEL UPGRADE: Safely isolate malformed initialization files
+        try:
+            env = UnityPy.load(final_data)
+            objects_array = env.objects
+        except Exception:
+            return jsonify({"error": "NO VALID RESOURCE PARAMETERS DISCOVERED INSIDE STREAM HEADERS. This block utilizes custom obfuscation headers unsupported by standard environment layouts."}), 400
         
         seen_md5 = set()
         extracted_list = []
         json_metadata_manifest = []
         tracking_index_counter = 0
 
-        for obj in env.objects:
+        for obj in objects_array:
             res = process_object_unrestricted(obj, final_data)
             if res:
                 filename, file_bytes, zip_folder_path = res
@@ -168,14 +173,12 @@ def process_upload_pipeline():
                 if h not in seen_md5:
                     seen_md5.add(h)
                     
-                    # Store variables into secure RAM mapping arrays
                     extracted_list.append({
                         'name': filename,
                         'zip_path': zip_folder_path,
                         'bytes': file_bytes
                     })
                     
-                    # Store references to send back to client dashboard interface components
                     json_metadata_manifest.append({
                         'index': tracking_index_counter,
                         'name': filename,
@@ -184,9 +187,8 @@ def process_upload_pipeline():
                     tracking_index_counter += 1
 
         if tracking_index_counter == 0:
-            return jsonify({"error": "No valid resource parameters discovered inside stream headers."}), 400
+            return jsonify({"error": "NO VALID RESOURCE PARAMETERS DISCOVERED INSIDE STREAM HEADERS. The metadata table maps are either empty or stripped during build production."}), 400
 
-        # Cache variables inside runtime layers
         GLOBAL_RAM_CACHE_MANIFEST['extracted'] = extracted_list
         return jsonify({"files": json_metadata_manifest})
 
