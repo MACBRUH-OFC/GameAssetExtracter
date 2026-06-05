@@ -17,11 +17,11 @@ app = Flask(__name__)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 HTML_PATH = os.path.join(BASE_DIR, 'index.html')
 
-# Core Volatile Global Memory Layer Cache
+# Core Application Global Volatile Cache Vault
 GLOBAL_CACHE_REGISTRY = {}
 
 def decompress_stream(data: bytes) -> bytes:
-    """Strips compression layers from underlying stream files instantly."""
+    """Strips compression wrappers from the underlying file object instantly."""
     try:
         if data.startswith(b'\x1f\x8b'): return decompress_stream(gzip.decompress(data))
         if data.startswith((b'\x78\x9c', b'\x78\x01', b'\x78\xda')): return decompress_stream(zlib.decompress(data))
@@ -29,7 +29,7 @@ def decompress_stream(data: bytes) -> bytes:
     return data
 
 def extract_clean_name(obj, data, default_type: str) -> str:
-    """Extracts pristine layout filenames from file block mapping paths."""
+    """Extracts internal asset metadata identifiers safely."""
     if hasattr(obj, 'container') and obj.container:
         base_mapped_path = os.path.basename(obj.container)
         if base_mapped_path:
@@ -40,7 +40,7 @@ def extract_clean_name(obj, data, default_type: str) -> str:
     return f"{default_type}_{obj.path_id}"
 
 def process_object_unrestricted(obj, raw_env_data: bytes):
-    """Parses binary asset blocks keeping direct structures clean and intact."""
+    """Processes binary stream chunks matching valid object class definitions."""
     try:
         t = obj.type.name
         data = obj.read()
@@ -86,12 +86,12 @@ def process_object_unrestricted(obj, raw_env_data: bytes):
 @app.route('/<path:path>')
 def serve_ui_layout(path):
     if path in ["api/extract", "api/extract/"] and request.method == "POST":
-        return "Route handles execution payloads via direct POST configurations.", 405
+        return "Direct ingestion pipeline operates exclusively via specific POST streams.", 405
     try:
         with open(HTML_PATH, 'r', encoding='utf-8') as f:
             return f.read()
     except Exception as e:
-        return f"Interface configuration layout read error: {str(e)}", 500
+        return f"Interface layout resource stream missing: {str(e)}", 500
 
 @app.route('/api/extract', methods=['POST'])
 def handle_direct_extraction_stream():
@@ -99,10 +99,10 @@ def handle_direct_extraction_stream():
     
     download_type = request.args.get('download_type', '')
 
-    # --- TRACK B: MASTER ZIP MULTI-DOWNLOAD ENDPOINT ---
+    # --- ZIP MANIFEST DOWNLOAD ---
     if download_type == 'zip':
         if not GLOBAL_CACHE_REGISTRY.get('extracted'):
-            return jsonify({"error": "Cache layer context empty. Please re-stream the file asset bundle."}), 400
+            return jsonify({"error": "Cache layer context missing. Re-stream source bundle."}), 400
         
         zip_io = io.BytesIO()
         with zipfile.ZipFile(zip_io, "w", zipfile.ZIP_DEFLATED, compresslevel=1) as zf:
@@ -111,18 +111,18 @@ def handle_direct_extraction_stream():
         zip_io.seek(0)
         return send_file(zip_io, mimetype='application/zip', as_attachment=True, download_name="extracted_assets.zip")
 
-    # --- TRACK C: SINGLE LIVE PREVIEW / TARGET LOOKUP SELECTION ---
+    # --- SINGLE OBJECT ROW DIRECT LOOKUP ---
     elif download_type == 'single':
         file_idx = int(request.args.get('file_index', -1))
         if not GLOBAL_CACHE_REGISTRY.get('extracted') or file_idx < 0 or file_idx >= len(GLOBAL_CACHE_REGISTRY['extracted']):
-            return jsonify({"error": "Tracking item index target pointer error."}), 400
+            return jsonify({"error": "Target layout index value dropped."}), 400
         
         item = GLOBAL_CACHE_REGISTRY['extracted'][file_idx]
         return send_file(io.BytesIO(item['bytes']), mimetype='application/octet-stream', as_attachment=True, download_name=item['name'])
 
-    # --- TRACK A: DIRECT STRAIGHT SINGLE-STREAM INGESTION ENGINE ---
+    # --- DIRECT INGESTION SINGLE STREAM ENTRY ---
     if 'asset_bundle' not in request.files:
-        return jsonify({"error": "No incoming file byte array found within request context parameters."}), 400
+        return jsonify({"error": "Incoming multipart file data payload buffer missing."}), 400
 
     try:
         raw_bundle_bytes = request.files['asset_bundle'].read()
@@ -132,7 +132,7 @@ def handle_direct_extraction_stream():
             env = UnityPy.load(final_data)
             objects_array = env.objects
         except Exception:
-            return jsonify({"error": "No structural data found within headers. Ensure this is a valid bundle file asset."}), 400
+            return jsonify({"error": "No pack structures found. Ensure format matches file standard rules."}), 400
         
         seen_md5 = set()
         extracted_list = []
@@ -160,15 +160,15 @@ def handle_direct_extraction_stream():
                     })
                     tracking_index_counter += 1
 
-        # Drop allocation context loops immediately and force GC tracking reclaim
+        # Drop allocation references and flush the server footprint immediately
         del env
         gc.collect()
 
         if tracking_index_counter == 0:
-            return jsonify({"error": "No extractable classes detected within file assets header metadata paths."}), 400
+            return jsonify({"error": "No valid supported asset data definitions found inside headers."}), 400
 
         GLOBAL_CACHE_REGISTRY['extracted'] = extracted_list
         return jsonify({"files": json_metadata_manifest})
 
     except Exception as e:
-        return jsonify({"error": f"Internal pipeline compilation crash: {str(e)}"}), 500
+        return jsonify({"error": f"Internal process thread abort failure: {str(e)}"}), 500
