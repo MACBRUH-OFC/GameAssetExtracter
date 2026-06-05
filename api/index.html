@@ -7,130 +7,153 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+        
         body {
-            background-color: #f8fafc;
+            background-color: #f1f5f9;
             font-family: 'Plus Jakarta Sans', sans-serif;
         }
         .mono { font-family: 'JetBrains Mono', monospace; }
+        
+        /* Custom Fine Scrollbar */
         .custom-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
-        .custom-scroll::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        .transparency-grid {
+
+        /* Checkerboard background for texture alpha channels */
+        .texture-grid {
             background-size: 12px 12px;
             background-image: linear-gradient(to right, #e2e8f0 1px, transparent 1px), linear-gradient(to bottom, #e2e8f0 1px, transparent 1px);
             background-color: #ffffff;
+        }
+
+        /* IDE Style Terminal Customization */
+        .log-line {
+            display: grid;
+            grid-template-columns: 75px 55px 1fr;
+            gap: 8px;
+            line-height: 1.6;
+            padding: 2px 0;
+            border-bottom: 1px solid #1e293b;
         }
     </style>
 </head>
 <body class="text-slate-800 min-h-screen flex flex-col justify-between antialiased">
 
-    <header class="w-full border-b border-slate-200 bg-white px-6 py-4 flex items-center justify-between sticky top-0 z-50">
+    <header class="w-full border-b border-slate-200 bg-white px-6 py-4 flex items-center justify-between sticky top-0 z-50 shadow-xs">
         <div class="flex items-center space-x-3">
-            <div class="p-2 bg-slate-900 text-white rounded-xl shadow-sm">
+            <div class="p-2.5 bg-slate-900 text-white rounded-xl shadow-xs">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-5.25v9"></path>
                 </svg>
             </div>
             <div>
                 <span class="font-bold text-slate-900 tracking-tight block text-sm">Assets Extractor</span>
-                <span class="text-[10px] text-slate-400 font-medium uppercase tracking-wider">File Unpacker</span>
+                <span class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Unpack game files instantly</span>
             </div>
         </div>
-        <div class="flex items-center space-x-2 bg-emerald-50 border border-emerald-200/60 px-3 py-1 rounded-full text-[11px] font-medium text-emerald-700">
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-            <span>Ready</span>
+        <div class="flex items-center space-x-2 bg-emerald-50 border border-emerald-200/60 px-3 py-1.5 rounded-full text-[11px] font-semibold text-emerald-700 shadow-2xs">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>System Active</span>
         </div>
     </header>
 
-    <main class="flex-1 w-full max-w-6xl mx-auto p-4 md:p-6 grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+    <main class="flex-1 w-full max-w-[1500px] mx-auto p-4 md:p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
-        <div class="md:col-span-4 flex flex-col space-y-5 w-full">
-            <div class="bg-white border border-slate-200 rounded-xl p-5 flex flex-col space-y-4 shadow-sm">
+        <div class="lg:col-span-4 flex flex-col space-y-5 w-full">
+            
+            <div class="bg-white border border-slate-200/80 rounded-2xl p-5 flex flex-col space-y-4 shadow-xs">
                 <div>
-                    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400">File Ingestion</h2>
-                    <p class="text-[11px] text-slate-500 mt-0.5 leading-relaxed">Upload your asset bundle package below to unpack its contents.</p>
+                    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400">Target Selector</h2>
+                    <p class="text-[11px] text-slate-500 mt-0.5 leading-relaxed">Select a file to unpack its contents. Files are processed over a direct connection stream.</p>
                 </div>
 
-                <div id="dropzone" class="border-2 border-dashed border-slate-200 hover:border-slate-400 bg-slate-50/50 hover:bg-slate-50/80 rounded-xl p-6 text-center cursor-pointer transition-all duration-200 group">
+                <div id="dropzone" class="border-2 border-dashed border-slate-200 hover:border-slate-900 bg-slate-50/50 hover:bg-slate-50 rounded-xl p-6 text-center cursor-pointer transition-all duration-200 group">
                     <input type="file" id="fileInput" class="hidden">
                     <div class="flex flex-col items-center space-y-2.5">
-                        <div class="p-2 bg-white rounded-lg border border-slate-200 text-slate-400 group-hover:text-slate-700 shadow-sm transition-colors">
+                        <div class="p-2 bg-white rounded-xl border border-slate-200 text-slate-400 group-hover:text-slate-900 transition-colors shadow-2xs">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z"></path></svg>
                         </div>
-                        <div class="text-[11px] font-medium text-slate-600">Drag file here or <span class="text-slate-900 underline font-semibold">browse</span></div>
-                        <div class="text-[10px] text-slate-400">File capacity ceiling: <span class="text-rose-500 font-semibold font-mono">5.00 MB</span></div>
+                        <div class="text-[11px] font-semibold text-slate-700">Drop file here or <span class="text-slate-900 underline font-bold">browse</span></div>
+                        <div class="text-[10px] text-slate-400 font-medium">MAX LIMIT: <span class="text-rose-600 font-bold font-mono">5.00 MB</span></div>
                     </div>
                 </div>
 
-                <div id="filePanel" class="hidden bg-slate-50 border border-slate-200 rounded-lg p-3 space-y-1.5 font-mono text-[10px]">
-                    <div class="flex justify-between items-center"><span class="text-slate-400">FILE:</span><span id="fileName" class="text-slate-800 font-semibold truncate max-w-[150px]">None</span></div>
-                    <div class="flex justify-between items-center"><span class="text-slate-400">SIZE:</span><span id="fileSize" class="text-slate-800 font-bold">0.00 MB</span></div>
+                <div id="filePanel" class="hidden bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-2 font-mono text-[10px] shadow-2xs">
+                    <div class="flex justify-between items-center"><span class="text-slate-400">FILE_NAME:</span><span id="fileName" class="text-slate-800 font-semibold truncate max-w-[180px]">None</span></div>
+                    <div class="flex justify-between items-center"><span class="text-slate-400">FILE_SIZE:</span><span id="fileSize" class="text-slate-900 font-bold">0.00 MB</span></div>
                 </div>
 
-                <button id="extractBtn" disabled class="w-full bg-slate-900 hover:bg-slate-800 disabled:bg-slate-100 disabled:text-slate-400 text-white font-semibold py-2.5 px-4 rounded-lg text-[11px] uppercase tracking-wider transition-colors flex items-center justify-center gap-2 disabled:cursor-not-allowed shadow-sm">
+                <button id="extractBtn" disabled class="w-full bg-slate-900 hover:bg-slate-800 disabled:bg-slate-100 disabled:text-slate-400 text-white font-semibold py-3 px-4 rounded-xl text-[11px] tracking-wider uppercase transition-colors flex items-center justify-center gap-2 disabled:cursor-not-allowed shadow-xs">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"></path></svg>
-                    Extract File
+                    Extract Assets
                 </button>
                 
-                <div id="progressContainer" class="hidden bg-slate-50 border border-slate-200 rounded-lg p-3 space-y-1.5">
+                <div id="progressContainer" class="hidden bg-slate-50 border border-slate-200/80 rounded-xl p-3.5 space-y-2 shadow-2xs">
                     <div class="flex justify-between items-center font-mono text-[9px] tracking-wider">
-                        <span id="statusText" class="text-slate-500 truncate max-w-[150px]">INITIALIZING...</span>
-                        <span id="progressPercent" class="text-slate-800 font-bold">0%</span>
+                        <span id="statusText" class="text-slate-500 truncate max-w-[200px]">READING...</span>
+                        <span id="progressPercent" class="text-slate-900 font-bold">0%</span>
                     </div>
                     <div class="w-full bg-slate-200 rounded-full h-1 overflow-hidden">
-                        <div id="progressBar" class="bg-slate-900 h-full rounded-full transition-all duration-200" style="width: 0%"></div>
+                        <div id="progressBar" class="bg-slate-900 h-full rounded-full transition-all duration-150" style="width: 0%"></div>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-[#0b0f19] border border-slate-950 rounded-xl p-4 flex flex-col space-y-2 h-[180px] shadow-lg">
-                <div class="flex justify-between items-center border-b border-slate-800/80 pb-1.5">
-                    <span class="text-[9px] font-bold uppercase tracking-widest text-slate-400 mono">SYSTEM LOG CONSOLE</span>
-                    <button onclick="document.getElementById('terminalLog').innerHTML=''" class="text-[9px] font-semibold text-slate-500 hover:text-slate-400 uppercase tracking-wider">Clear</button>
+            <div class="bg-[#0f172a] border border-slate-950 rounded-2xl p-4 flex flex-col space-y-2 shadow-md h-[280px]">
+                <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                    <div class="flex items-center space-x-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-rose-500/80"></span>
+                        <span class="w-2.5 h-2.5 rounded-full bg-amber-500/80"></span>
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500/80"></span>
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 pl-1 font-mono">terminal.log</span>
+                    </div>
+                    <button onclick="document.getElementById('terminalLog').innerHTML=''" class="text-[9px] font-medium text-slate-500 hover:text-slate-300 uppercase font-mono">Clear</button>
                 </div>
-                <div id="terminalLog" class="flex-1 font-mono text-[10px] text-emerald-400/90 overflow-y-auto space-y-1 custom-scroll leading-relaxed">
-                    <div class="text-slate-500">SYSTEM: Idle. Awaiting user input parameters...</div>
+                <div id="terminalLog" class="flex-1 font-mono text-[11px] text-slate-300 overflow-y-auto custom-scroll pr-1">
+                    <div class="log-line text-slate-500">
+                        <span>00:00:00</span><span>[SYS]</span><span>Console initialized. Pipeline ready for data stream.</span>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="md:col-span-4 bg-white border border-slate-200 rounded-xl p-5 flex flex-col space-y-4 shadow-sm h-[480px] md:h-[580px]">
+        <div class="lg:col-span-4 bg-white border border-slate-200/80 rounded-2xl p-5 flex flex-col space-y-4 shadow-xs min-h-[450px] lg:h-[620px]">
             <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div>
-                    <span class="text-xs font-bold uppercase tracking-wider text-slate-400 block">Extracted Items</span>
-                    <span id="manifestSummaryCount" class="text-[11px] text-slate-400 block truncate max-w-[180px]">No active assets loaded inside localized view.</span>
+                    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400 block">Extracted Files</h2>
+                    <span id="manifestSummaryCount" class="text-[11px] text-slate-400 font-medium">Awaiting valid asset file stream.</span>
                 </div>
-                <button id="downloadAllBtn" class="hidden items-center gap-1 bg-slate-900 hover:bg-slate-800 text-white px-2.5 py-1.5 rounded-lg text-[10px] font-bold shadow-sm transition-colors">
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"></path></svg>
-                    Save All (ZIP)
+                <button id="downloadAllBtn" class="hidden items-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white px-3 py-1.5 rounded-xl text-[10px] font-bold shadow-xs transition-colors shrink-0">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"></path></svg>
+                    Download ZIP
                 </button>
             </div>
 
-            <div id="manifestViewerDeck" class="flex-1 overflow-y-auto border border-slate-100 bg-slate-50/50 rounded-xl custom-scroll flex flex-col items-center justify-center p-6 text-center text-slate-400">
-                <svg class="w-6 h-6 text-slate-300 mb-1.5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 13.5h3.86a2.25 2.25 0 012.008 1.24l.885 1.77a2.25 2.25 0 002.007 1.24h1.98a2.25 2.25 0 002.007-1.24l.885-1.77a2.25 2.25 0 012.007-1.24h3.86m-18 0h18m-18 0v-7.5A2.25 2.25 0 015.25 3h13.5A2.25 2.25 0 0121 5.25v7.5m-18 0v6a2.25 2.25 0 002.25 2.25h13.5A2.25 2.25 0 0021 18.75v-6M16.5 7.5h.008v.008h-.008V7.5zm0 3h.008v.008h-.008v-.008zm-3-3h.008v.008h-.008V7.5zm0 3h.008v.008h-.008v-.008z"></path></svg>
-                <div class="text-[11px] font-medium text-slate-400">Unpacked list empty</div>
+            <div id="manifestViewerDeck" class="flex-1 overflow-y-auto border border-slate-100 bg-slate-50/50 rounded-xl custom-scroll flex flex-col items-center justify-center p-6 text-center text-slate-400 space-y-2">
+                <svg class="w-6 h-6 text-slate-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 13.5h3.86a2.25 2.25 0 012.008 1.24l.885 1.77a2.25 2.25 0 002.007 1.24h1.98a2.25 2.25 0 002.007-1.24l.885-1.77a2.25 2.25 0 012.007-1.24h3.86m-18 0h18m-18 0v-7.5A2.25 2.25 0 015.25 3h13.5A2.25 2.25 0 0121 5.25v7.5m-18 0v6a2.25 2.25 0 002.25 2.25h13.5A2.25 2.25 0 0021 18.75v-6M16.5 7.5h.008v.008h-.008V7.5zm0 3h.008v.008h-.008v-.008zm-3-3h.008v.008h-.008V7.5zm0 3h.008v.008h-.008v-.008z"></path></svg>
+                <div class="text-[11px] font-medium text-slate-400">No assets extracted yet</div>
             </div>
         </div>
 
-        <div class="md:col-span-4 bg-white border border-slate-200 rounded-xl p-5 flex flex-col space-y-3 shadow-sm h-[480px] md:h-[580px]">
+        <div class="lg:col-span-4 bg-white border border-slate-200/80 rounded-2xl p-5 flex flex-col space-y-3 shadow-xs min-h-[450px] lg:h-[620px]">
             <div class="border-b border-slate-100 pb-2.5">
-                <span class="text-xs font-bold uppercase tracking-wider text-slate-400 block">Element Display Canvas</span>
-                <span id="previewAssetMeta" class="text-[10px] text-slate-400 font-mono truncate block max-w-full">Select a file from the list to preview metadata...</span>
+                <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400 block">Asset Preview</h2>
+                <span id="previewAssetMeta" class="text-[10px] text-slate-400 font-mono truncate block max-w-full">Select a row to preview contents...</span>
             </div>
 
             <div id="previewOutputViewport" class="flex-1 bg-slate-50 border border-slate-100 rounded-xl flex flex-col items-center justify-center p-4 overflow-hidden relative">
-                <div id="previewPlaceholder" class="text-center space-y-1 text-slate-400">
+                <div id="previewPlaceholder" class="text-center space-y-1.5 text-slate-400">
                     <svg class="w-6 h-6 mx-auto text-slate-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                    <div class="text-[10px] uppercase font-semibold text-slate-400 tracking-wider">Canvas Vacant</div>
+                    <div class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Canvas Standby</div>
                 </div>
             </div>
         </div>
 
     </main>
 
-    <footer class="w-full border-t border-slate-200 bg-white px-6 py-3.5 text-center font-mono text-[10px] text-slate-400">
-        Workspace Environment Matrix &bull; Localized Execution Interface
+    <footer class="w-full border-t border-slate-200 bg-white px-6 py-4 text-center font-mono text-[10px] text-slate-400">
+        Assets Extractor &bull; High-Performance Localized Parsing Deck
     </footer>
 
     <script>
@@ -152,41 +175,41 @@
         const previewOutputViewport = document.getElementById('previewOutputViewport');
 
         let selectedFile = null;
-        const ABSOLUTE_CEILING_LIMIT = 5.0 * 1024 * 1024; // Strict 5.00 MB execution cutoff limit
+        const STRICT_CEILING_LIMIT = 5.0 * 1024 * 1024; // Hard Safeguard Boundary
 
-        function appendLog(text, level = "INFO") {
-            const time = new Date().toISOString().split('T')[1].slice(0, 8);
-            const div = document.createElement('div');
-            if (level === "ERROR") {
-                div.className = "text-rose-400 font-semibold";
-                div.textContent = `[${time}] [ERR] ${text}`;
-            } else if (level === "SUCCESS") {
-                div.className = "text-emerald-400 font-semibold";
-                div.textContent = `[${time}] [OK]  ${text}`;
-            } else {
-                div.className = "text-slate-300";
-                div.textContent = `[${time}] [INF] ${text}`;
-            }
-            terminalLog.appendChild(div);
+        function appendLog(tag, message, type = "info") {
+            const time = new Date().toLocaleTimeString('en-US', { hour12: false });
+            let typeStyle = "text-cyan-400";
+            if (type === "success") typeStyle = "text-emerald-400 font-semibold";
+            if (type === "error") typeStyle = "text-rose-400 font-bold animate-pulse";
+            if (type === "process") typeStyle = "text-amber-400";
+
+            const row = document.createElement('div');
+            row.className = "log-line hover:bg-slate-800/40 px-1 transition-colors";
+            row.innerHTML = `
+                <span class="text-slate-500">${time}</span>
+                <span class="${typeStyle}">[${tag.toUpperCase()}]</span>
+                <span class="text-slate-200 select-text">${message}</span>
+            `;
+            terminalLog.appendChild(row);
             terminalLog.scrollTop = terminalLog.scrollHeight;
         }
 
         ['dragenter', 'dragover'].forEach(name => {
-            dropzone.addEventListener(name, (e) => { e.preventDefault(); dropzone.classList.add('border-slate-400', 'bg-slate-100/60'); });
+            dropzone.addEventListener(name, (e) => { e.preventDefault(); dropzone.classList.add('border-slate-900', 'bg-slate-100/50'); });
         });
         ['dragleave', 'drop'].forEach(name => {
-            dropzone.addEventListener(name, (e) => { e.preventDefault(); dropzone.classList.remove('border-slate-400', 'bg-slate-100/60'); });
+            dropzone.addEventListener(name, (e) => { e.preventDefault(); dropzone.classList.remove('border-slate-900', 'bg-slate-100/50'); });
         });
 
-        dropzone.addEventListener('drop', (e) => { if(e.dataTransfer.files.length) evaluateFileAsset(e.dataTransfer.files[0]); });
+        dropzone.addEventListener('drop', (e) => { if(e.dataTransfer.files.length) processFileStaging(e.dataTransfer.files[0]); });
         dropzone.addEventListener('click', () => fileInput.click());
-        fileInput.addEventListener('change', (e) => { if(e.target.files.length) evaluateFileAsset(e.target.files[0]); });
+        fileInput.addEventListener('change', (e) => { if(e.target.files.length) processFileStaging(e.target.files[0]); });
 
-        function evaluateFileAsset(file) {
-            if (file.size > ABSOLUTE_CEILING_LIMIT) {
-                appendLog(`Rejected: ${file.name} (${(file.size / (1024 * 1024)).toFixed(2)} MB) exceeds strict 5.00 MB execution limit.`, "ERROR");
-                alert(`Upload Dropped: This file size exceeds the strict 5.00 MB framework limit to prevent runtime crashes.`);
-                
+        function processFileStaging(file) {
+            if (file.size > STRICT_CEILING_LIMIT) {
+                appendLog("fail", `File rejected: ${file.name} (${(file.size / (1024 * 1024)).toFixed(2)} MB) exceeds 5.00 MB ceiling limit.`, "error");
+                alert(`File Rejected: Size exceeds the safe 5.00 MB framework ceiling.`);
                 selectedFile = null;
                 extractBtn.disabled = true;
                 filePanel.classList.add('hidden');
@@ -198,7 +221,7 @@
             fileSize.textContent = (file.size / (1024 * 1024)).toFixed(2) + " MB";
             filePanel.classList.remove('hidden');
             extractBtn.disabled = false;
-            appendLog(`File staged successfully: ${file.name} Verified.`);
+            appendLog("file", `Staged file safely: ${file.name} (${(file.size / (1024 * 1024)).toFixed(2)} MB)`, "success");
         }
 
         extractBtn.addEventListener('click', async () => {
@@ -206,67 +229,71 @@
             extractBtn.disabled = true;
             progressContainer.classList.remove('hidden');
             
-            statusText.textContent = "UPLOADING PACKET...";
-            progressBar.style.width = '30%';
-            progressPercent.textContent = '30%';
-            appendLog(`Transmitting container payload stream allocation array to server loop...`);
+            statusText.textContent = "STREAMING BYTES TO PIPELINE...";
+            progressBar.style.width = '35%';
+            progressPercent.textContent = '35%';
+            appendLog("core", "Opening direct binary stream payload context channel...", "process");
 
             try {
                 const formData = new FormData();
-                formData.append('bundle_file', selectedFile);
+                formData.append('asset_bundle', selectedFile);
 
-                const response = await fetch('/api/extract', { method: 'POST', body: formData });
-                
-                statusText.textContent = "READING METADATA...";
+                const response = await fetch('/api/extract', {
+                    method: 'POST',
+                    body: formData
+                });
+
                 progressBar.style.width = '75%';
                 progressPercent.textContent = '75%';
+                statusText.textContent = "UNPACKING BUFFER CORE...";
+                appendLog("core", "Binary payload delivered. Parsing binary tables...", "process");
 
                 const contentType = response.headers.get("content-type");
                 if (!contentType || !contentType.includes("application/json")) {
-                    throw new Error("Server compilation failure. File array structure triggered an internal memory abort.");
+                    throw new Error("Pipeline aborted. Server returned invalid non-JSON context mapping.");
                 }
 
                 const result = await response.json();
-                if (!response.ok) throw new Error(result.error || "Unhandled sequence error during runtime mapping loops.");
+                if (!response.ok) throw new Error(result.error || "Unhandled compilation abort error.");
 
-                appendLog(`Unpacked target cleanly. Cataloged ${result.files.length} native objects inside repository memory layer.`, "SUCCESS");
-                renderManifestLibrary(result.files);
+                appendLog("core", `Unpack complete. Verified ${result.files.length} unique asset classes.`, "success");
+                renderManifestView(result.files);
                 
-                statusText.textContent = "FINISHED EXTRACTING";
+                statusText.textContent = "COMPLETED SUCCESSFULLY";
                 progressBar.style.width = '100%';
                 progressPercent.textContent = '100%';
 
             } catch (err) {
-                appendLog(err.message, "ERROR");
-                manifestSummaryCount.innerHTML = `<span class="text-rose-500 font-semibold font-mono">EXTRACTION ABORTED</span>`;
-                manifestViewerDeck.innerHTML = `<div class="text-[11px] text-rose-600 font-medium p-3 bg-rose-50 border border-rose-100 rounded-lg text-left">${err.message}</div>`;
-                statusText.textContent = "CRITICAL FAILURE";
+                appendLog("err", err.message, "error");
+                manifestSummaryCount.innerHTML = `<span class="text-rose-600 font-bold">PIPELINE CRASHED</span>`;
+                manifestViewerDeck.innerHTML = `<div class="text-[11px] text-rose-600 font-semibold p-3 bg-rose-50 border border-rose-100 rounded-xl shadow-2xs">${err.message}</div>`;
+                statusText.textContent = "CRITICAL FAILURE ERROR";
                 progressBar.className = "bg-rose-500 h-full rounded-full";
             } finally {
                 extractBtn.disabled = false;
             }
         });
 
-        function renderManifestLibrary(files) {
-            manifestSummaryCount.textContent = `Found ${files.length} unpack items.`;
-            manifestViewerDeck.className = "flex-1 overflow-y-auto border border-slate-200 bg-white rounded-xl custom-scroll p-1.5 space-y-1 max-h-[500px]";
+        function renderManifestView(files) {
+            manifestSummaryCount.textContent = `Cataloged ${files.length} active entries.`;
+            manifestViewerDeck.className = "flex-1 w-full overflow-y-auto border border-slate-200/60 bg-white rounded-xl custom-scroll p-2 space-y-1";
             manifestViewerDeck.innerHTML = "";
 
             files.forEach(f => {
                 const row = document.createElement('div');
-                row.className = "flex items-center justify-between p-2 hover:bg-slate-50 border border-transparent hover:border-slate-200 rounded-lg transition-all group cursor-pointer";
+                row.className = "flex items-center justify-between p-2 hover:bg-slate-50 border border-transparent hover:border-slate-200/60 rounded-xl transition-all group cursor-pointer shadow-2xs";
                 row.setAttribute('data-index', f.index);
 
-                let badgeStyle = "text-slate-500 bg-slate-100 border border-slate-200";
-                if(f.path.startsWith("Textures/")) badgeStyle = "text-blue-600 bg-blue-50 border border-blue-100";
-                else if(f.path.startsWith("Audio/")) badgeStyle = "text-emerald-600 bg-emerald-50 border border-emerald-100";
-                else if(f.path.startsWith("Video/")) badgeStyle = "text-amber-600 bg-amber-50 border border-amber-100";
-                else if(f.path.startsWith("Text/")) badgeStyle = "text-cyan-600 bg-cyan-50 border border-cyan-100";
+                let labelStyle = "text-slate-500 bg-slate-100 border border-slate-200";
+                if(f.path.startsWith("Textures/")) labelStyle = "text-blue-600 bg-blue-50 border border-blue-100";
+                else if(f.path.startsWith("Audio/")) labelStyle = "text-emerald-600 bg-emerald-50 border border-emerald-100";
+                else if(f.path.startsWith("Video/")) labelStyle = "text-amber-600 bg-amber-50 border border-amber-100";
+                else if(f.path.startsWith("Text/")) labelStyle = "text-cyan-600 bg-cyan-50 border border-cyan-100";
 
                 row.innerHTML = `
                     <div class="flex items-center space-x-2.5 truncate mr-2 flex-1 min-w-0" onclick="triggerAssetPreview('${f.name}', ${f.index}, '${f.path}')">
-                        <span class="text-[9px] px-1.5 py-0.5 rounded uppercase font-bold tracking-wider shrink-0 ${badgeStyle}">${f.path.split('/')[0]}</span>
-                        <div class="text-[11px] text-slate-700 font-mono truncate tracking-tight">${f.name}</div>
+                        <span class="text-[9px] px-1.5 py-0.5 rounded-md uppercase font-bold tracking-wider shrink-0 ${labelStyle}">${f.path.split('/')[0]}</span>
+                        <div class="text-[11px] text-slate-700 font-mono truncate tracking-tight font-medium">${f.name}</div>
                     </div>
                     <button class="single-dl-btn text-slate-400 hover:text-slate-900 transition-colors p-1" data-index="${f.index}" data-name="${f.name}">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"></path></svg>
@@ -287,17 +314,17 @@
         }
 
         async function triggerAssetPreview(name, index, categoryPath) {
-            previewAssetMeta.textContent = `Loading: ${name}`;
+            previewAssetMeta.textContent = `Reading row index pointer: ${name}`;
             previewOutputViewport.innerHTML = `
-                <div class="flex flex-col items-center space-y-1 text-slate-400 font-mono text-[10px]">
+                <div class="flex flex-col items-center space-y-1.5 text-slate-400 font-mono text-[10px]">
                     <span class="w-3.5 h-3.5 border-2 border-slate-900 border-t-transparent rounded-full animate-spin"></span>
-                    <span>RETRIEVING BYTES...</span>
+                    <span>READING BYTES...</span>
                 </div>
             `;
 
             try {
                 const res = await fetch(`/api/extract?download_type=single&file_index=${index}`, { method: 'POST' });
-                if(!res.ok) throw new Error("Object chunk transmission failed.");
+                if(!res.ok) throw new Error("Object chunk transmission link lost.");
                 
                 const blob = await res.blob();
                 previewOutputViewport.innerHTML = "";
@@ -306,12 +333,12 @@
                     const imgUrl = URL.createObjectURL(blob);
                     previewOutputViewport.innerHTML = `
                         <div class="w-full h-full flex flex-col justify-between items-center space-y-3">
-                            <div class="flex-1 w-full rounded-lg border border-slate-200 transparency-grid p-2 overflow-auto flex items-center justify-center custom-scroll max-h-[280px]">
-                                <img src="${imgUrl}" class="max-w-full max-h-[250px] object-contain">
+                            <div class="flex-1 w-full rounded-xl border border-slate-200 texture-grid p-2 overflow-auto flex items-center justify-center custom-scroll max-h-[300px] shadow-inner">
+                                <img src="${imgUrl}" class="max-w-full max-h-[260px] object-contain drop-shadow-xs">
                             </div>
                             <div class="w-full flex justify-between items-center font-mono text-[9px] text-slate-400 px-0.5">
                                 <span>FORMAT: PNG IMAGE</span>
-                                <a href="${imgUrl}" download="${name}" class="text-slate-900 underline font-bold">SAVE RAW ELEMENT</a>
+                                <a href="${imgUrl}" download="${name}" class="text-slate-900 underline font-bold tracking-tight">SAVE ASSET</a>
                             </div>
                         </div>
                     `;
@@ -320,17 +347,17 @@
                     const audUrl = URL.createObjectURL(blob);
                     previewOutputViewport.innerHTML = `
                         <div class="w-full space-y-3 p-1 text-center">
-                            <div class="p-4 bg-white border border-slate-200 rounded-xl flex items-center justify-center shadow-sm">
+                            <div class="p-5 bg-white border border-slate-200 rounded-2xl flex items-center justify-center shadow-xs">
                                 <svg class="w-8 h-8 text-slate-700 animate-pulse" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z"></path></svg>
                             </div>
-                            <audio controls class="w-full accent-slate-900"><source src="${audUrl}"></audio>
+                            <audio controls class="w-full accent-slate-950 rounded-lg shadow-2xs"><source src="${audUrl}"></audio>
                         </div>
                     `;
                 }
                 else if(categoryPath.startsWith("Video/")) {
                     const vidUrl = URL.createObjectURL(blob);
                     previewOutputViewport.innerHTML = `
-                        <video controls class="w-full rounded-lg border border-slate-200 bg-black max-h-[260px]"><source src="${vidUrl}"></video>
+                        <video controls class="w-full rounded-xl border border-slate-200 bg-black max-h-[280px] shadow-sm"><source src="${vidUrl}"></video>
                     `;
                 }
                 else if(categoryPath.startsWith("Text/")) {
@@ -338,24 +365,25 @@
                     const safeText = textStr.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
                     previewOutputViewport.innerHTML = `
                         <div class="w-full h-full flex flex-col text-left">
-                            <pre class="flex-1 w-full bg-white border border-slate-200 p-3 rounded-lg font-mono text-[10px] text-slate-700 overflow-y-auto custom-scroll whitespace-pre-wrap max-h-[280px] shadow-inner">${safeText}</pre>
+                            <pre class="flex-1 w-full bg-white border border-slate-200 p-3.5 rounded-xl font-mono text-[10px] text-slate-700 overflow-y-auto custom-scroll whitespace-pre-wrap max-h-[300px] shadow-inner">${safeText}</pre>
                         </div>
                     `;
                 } else {
-                    previewOutputViewport.innerHTML = `<div class="font-mono text-[10px] text-slate-400">PREVIEW RENDER NOT SUPPORTED</div>`;
+                    previewOutputViewport.innerHTML = `<div class="font-mono text-[10px] text-slate-400">Preview representation unavailable for this type</div>`;
                 }
 
-                previewAssetMeta.textContent = `Active Element: ${name}`;
+                previewAssetMeta.textContent = `Inspecting: ${name}`;
+                appendLog("view", `Render loaded for row entry: ${name}`, "success");
 
             } catch(e) {
-                previewOutputViewport.innerHTML = `<div class="text-[10px] font-mono text-rose-500">${e.message}</div>`;
+                previewOutputViewport.innerHTML = `<div class="text-[10px] font-mono text-rose-500 p-2">${e.message}</div>`;
             }
         }
 
         async function downloadSingleDirectAsset(name, index) {
             try {
                 const response = await fetch(`/api/extract?download_type=single&file_index=${index}`, { method: 'POST' });
-                if (!response.ok) throw new Error("Resource lookup runtime failure.");
+                if (!response.ok) throw new Error("Direct object lookup network failure.");
                 const blob = await response.blob();
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
@@ -365,6 +393,7 @@
                 a.click();
                 window.URL.revokeObjectURL(url);
                 a.remove();
+                appendLog("save", `Asset element downloaded: ${name}`, "success");
             } catch (err) {
                 alert(`Download Error: ${err.message}`);
             }
@@ -372,19 +401,19 @@
 
         async function triggerUnifiedZipDownload() {
             try {
-                appendLog("Assembling master archive compression parameters...");
+                appendLog("core", "Packing elements into single master zip archive file format...", "process");
                 const response = await fetch('/api/extract?download_type=zip', { method: 'POST' });
-                if (!response.ok) throw new Error("ZIP compilation error.");
+                if (!response.ok) throw new Error("ZIP compilation failure on endpoint reference.");
                 const blob = await response.blob();
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `unpacked_assets_manifest.zip`;
+                a.download = `extracted_assets.zip`;
                 document.body.appendChild(a);
                 a.click();
                 window.URL.revokeObjectURL(url);
                 a.remove();
-                appendLog("Archive downloaded cleanly.", "SUCCESS");
+                appendLog("save", "Master ZIP archive written to disk.", "success");
             } catch (err) {
                 alert(`ZIP Package Error: ${err.message}`);
             }
