@@ -178,7 +178,7 @@
         let selectedFile = null;
         const ABSOLUTE_SAFEGUARD_LIMIT = 5.0 * 1024 * 1024; // Strict 5.00 MB Safeguard Ceiling
 
-        // Refined console output structure
+        // Refened console output structure
         function appendLog(tag, msg, mode = "info") {
             const now = new Date().toTimeString().split(' ')[0];
             let variantClass = "text-cyan-400";
@@ -210,7 +210,7 @@
 
         function processFileInputStaging(file) {
             if (file.size > ABSOLUTE_SAFEGUARD_LIMIT) {
-                appendLog("fail", f`Upload dropped: ${file.name} violates execution limits.`, "error");
+                appendLog("fail", `Upload dropped: ${file.name} violates execution limits.`, "error");
                 alert(`File Rejected: Size exceeds the safe 5.00 MB framework ceiling.`);
                 selectedFile = null;
                 extractBtn.disabled = true;
@@ -258,7 +258,7 @@
                 const result = await response.json();
                 if (!response.ok) throw new Error(result.error || "Unhandled pipeline process failure.");
 
-                appendLog("done", f`Extraction mapping finished smoothly. Discovered ${result.files.length} instances.`, "success");
+                appendLog("done", `Extraction mapping finished smoothly. Discovered ${result.files.length} instances.`, "success");
                 renderManifestCatalogDeck(result.files);
                 
                 statusText.textContent = "COMPLETED SUCCESSFULLY";
