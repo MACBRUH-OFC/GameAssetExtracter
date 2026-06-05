@@ -7,7 +7,14 @@ import logging
 from datetime import datetime
 from typing import Tuple
 
-from flask import Flask, request, jsonify, send_file, after_this_request
+from flask import (
+    Flask,
+    request,
+    jsonify,
+    send_file,
+    after_this_request,
+    send_from_directory
+)
 from werkzeug.utils import secure_filename
 from werkzeug.exceptions import RequestEntityTooLarge
 import UnityPy
@@ -16,7 +23,13 @@ from api.utils import is_allowed_file_extension, get_file_info
 from api.extractor import build_asset_inventory, extract_single_asset, create_zip_archive
 
 # Initialize Flask application
-app = Flask(__name__)
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+app = Flask(
+    __name__,
+    static_folder=os.path.join(BASE_DIR, "static"),
+    static_url_path="/static"
+)
 
 # Configure logs
 logging.basicConfig(level=logging.INFO)
@@ -32,6 +45,8 @@ ALLOWED_EXTENSIONS = {
 RATE_LIMIT_ENABLED = True
 RATE_LIMIT_PER_MINUTE = 20
 RATE_LIMIT_WINDOW_SECONDS = 60
+
+app.config['MAX_CONTENT_LENGTH'] = MAX_CONTENT_LENGTH
 
 # In-memory dictionary for rate limiting (local to serverless container instances)
 last_request_times = {}
@@ -56,7 +71,35 @@ def _check_rate_limit(ip_address: str) -> Tuple[bool, int]:
         
         last_request_times[ip_address].append(current_time)
         return False, 0
+@app.route('/')
+def serve_index():
+    try:
+        return send_from_directory(BASE_DIR, 'index.html')
+    except Exception as e:
+        logger.error(f"Failed to serve index.html: {e}")
+        return jsonify({
+            "error": "index.html not found",
+            "base_dir": BASE_DIR
+        }), 500
 
+
+@app.route('/index.html')
+def serve_index_html():
+    return send_from_directory(BASE_DIR, 'index.html')
+
+
+@app.route('/static/<path:filename>')
+def serve_static(filename):
+    return send_from_directory(
+        os.path.join(BASE_DIR, 'static'),
+        filename
+    )
+
+
+@app.route('/favicon.ico')
+def favicon():
+    return '', 204
+    
 @app.route('/api/upload', methods=['POST'])
 def upload_and_analyze():
     """
