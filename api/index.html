@@ -22,7 +22,6 @@
 <body class="text-gray-200 min-h-screen flex flex-col items-center justify-center p-4">
 
     <div class="w-full max-w-2xl bg-slate-900 neon-border rounded-xl p-6 md:p-8 space-y-6">
-        
         <div class="text-center space-y-2 border-b border-cyan-800 pb-4">
             <h1 class="text-2xl md:text-3xl font-extrabold tracking-widest text-cyan-400 glow-text">
                 💎 UNRESTRICTED CORE V4.0
@@ -74,7 +73,6 @@
                 <div id="progressBar" class="bg-cyan-400 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
             </div>
         </div>
-
     </div>
 
     <footer class="mt-6 text-[10px] text-slate-600 tracking-wider text-center">
@@ -95,7 +93,6 @@
 
         let selectedFile = null;
 
-        // Visual Drag Over Controls
         ['dragenter', 'dragover'].forEach(eventName => {
             dropzone.addEventListener(eventName, (e) => {
                 e.preventDefault();
@@ -110,7 +107,6 @@
             }, false);
         });
 
-        // Drop Handling
         dropzone.addEventListener('drop', (e) => {
             const dt = e.dataTransfer;
             if(dt.files.length) handleFileSelection(dt.files[0]);
@@ -125,24 +121,18 @@
             selectedFile = file;
             fileName.textContent = file.name || "EXTENSIONLESS_BINARY_STREAM";
             fileSize.textContent = (file.size / (1024 * 1024)).toFixed(2) + " MB";
-            
             filePanel.classList.remove('hidden');
             extractBtn.disabled = false;
-            
-            // Clean up old progress runs
             progressContainer.classList.add('hidden');
             progressBar.style.width = '0%';
             progressPercent.textContent = '0%';
         }
 
-        // Complete Server Execution Stream 
         extractBtn.addEventListener('click', async () => {
             if(!selectedFile) return;
 
             extractBtn.disabled = true;
             progressContainer.classList.remove('hidden');
-            
-            // Phase 1 Status Update
             updateStatus("🔓 CRACKING ENCRYPTION & STREAMING...", 25);
 
             const formData = new FormData();
@@ -163,12 +153,11 @@
 
                 updateStatus("📦 PACKAGING RECONSTRUCTED ASSETS...", 85);
 
-                // Convert payload stream cleanly into automatic save package
                 const blob = await response.blob();
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `NoLimit_Web_${selectedFile.name || 'extracted'}.zip`;
+                a.download = `Extracted_${selectedFile.name || 'assets'}.zip`;
                 document.body.appendChild(a);
                 a.click();
                 

@@ -1,3 +1,4 @@
+import os
 import io
 import json
 import gzip
@@ -6,10 +7,17 @@ import zipfile
 import re
 import hashlib
 from flask import Flask, request, send_file, jsonify
+
+# Force UnityPy to load in headless/system environments
+os.environ["UNITYPY_NO_GUI"] = "1"
 import UnityPy
 import lz4.frame
 
 app = Flask(__name__)
+
+# Locate the index.html template file cleanly inside the serverless folder
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+HTML_PATH = os.path.join(BASE_DIR, 'index.html')
 
 def decompress_stream(data: bytes) -> bytes:
     """Brute-force decompression: strips compression layers."""
@@ -60,10 +68,22 @@ def process_object_unrestricted(obj, raw_env_data: bytes):
     except: pass
     return None
 
+# Root route serving the web application dashboard
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def serve_frontend(path):
+    if path == "api/extract" or path == "api/extract/":
+        return "Please use POST method", 405
+    try:
+        with open(HTML_PATH, 'r', encoding='utf-8') as f:
+            return f.read()
+    except Exception as e:
+        return f"Dashboard file layout missing or unreadable: {str(e)}", 500
+
+# Backend core extractor route
 @app.route('/api/extract', methods=['POST'])
 def extract_assets():
     try:
-        # Check if a file was uploaded via multipart/form-data
         if 'file' not in request.files:
             return jsonify({"error": "No file stream detected in payload."}), 400
             
@@ -73,7 +93,6 @@ def extract_assets():
         if not raw_bytes:
             return jsonify({"error": "Uploaded binary stream is empty."}), 400
 
-        # Execute Core Engine Extraction
         final_data = decompress_stream(bytes(raw_bytes))
         env = UnityPy.load(final_data)
         
@@ -95,18 +114,13 @@ def extract_assets():
         if extracted_count == 0:
             return jsonify({"error": "No recognizable Unity assets found in file."}), 400
 
-        # Reset stream position and send download back to client
         zip_io.seek(0)
         return send_file(
             zip_io,
             mimetype='application/zip',
             as_attachment=True,
-            download_name=f"extracted_assets.zip"
+            download_name="extracted_assets.zip"
         )
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
-# Required for local testing or secondary routing fallback
-if __name__ == '__main__':
-    app.run(debug=True)
