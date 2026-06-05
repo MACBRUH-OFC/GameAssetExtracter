@@ -44,7 +44,7 @@
         </div>
         <div class="flex items-center space-x-2 bg-slate-100 px-3 py-1.5 rounded-full border border-slate-200/60 text-[11px] font-medium text-slate-600">
             <span class="w-2 h-2 rounded-full bg-emerald-500 shadow-sm animate-pulse"></span>
-            <span>Studio Engine Node Online</span>
+            <span>Chunk Stream Multiplexer Active</span>
         </div>
     </header>
 
@@ -56,7 +56,7 @@
                 <div class="space-y-5">
                     <div>
                         <h1 class="text-base font-bold text-slate-900 tracking-tight">Load Target Stream Data</h1>
-                        <p class="text-xs text-slate-400 mt-1 leading-relaxed">Provide raw, unstructured game clusters. The core platform interprets compilation maps natively to safely restore original names.</p>
+                        <p class="text-xs text-slate-400 mt-1 leading-relaxed">Provide raw, unstructured game clusters. The engine automatically bypasses gateway thresholds using slice streaming maps.</p>
                     </div>
 
                     <div id="dropzone" class="border-2 border-dashed border-slate-200 bg-white rounded-xl p-8 text-center cursor-pointer hover:border-slate-800 hover:bg-slate-50/50 transition-all duration-300 group shadow-sm">
@@ -66,7 +66,7 @@
                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z"></path></svg>
                             </div>
                             <div class="text-xs font-semibold text-slate-700">Drop target cluster file or <span class="text-slate-900 underline font-bold">browse storage</span></div>
-                            <div class="text-[10px] text-slate-400 uppercase tracking-widest font-medium">Original In-game Nomenclature Mapping</div>
+                            <div class="text-[10px] text-slate-400 uppercase tracking-widest font-medium">Bypass Engine Limit (supports 20mb+)</div>
                         </div>
                     </div>
 
@@ -85,12 +85,12 @@
                 <div class="space-y-4">
                     <button id="extractBtn" disabled class="w-full bg-slate-950 hover:bg-slate-800 disabled:bg-slate-100 disabled:text-slate-400 text-white font-semibold py-3.5 px-4 rounded-xl text-xs tracking-wider uppercase transition-all duration-300 flex items-center justify-center gap-2 shadow-sm disabled:cursor-not-allowed">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"></path></svg>
-                        Compile and Extract Assets
+                        Slice and Compile Stream
                     </button>
 
                     <div id="progressContainer" class="hidden space-y-2 bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
                         <div class="flex justify-between items-center text-[11px] font-semibold tracking-wide">
-                            <span id="statusText" class="text-slate-600">ISOLATING DATA CONTAINERS...</span>
+                            <span id="statusText" class="text-slate-600">PREPARING STREAM CHUNKS...</span>
                             <span id="progressPercent" class="text-slate-900 font-mono font-bold">0%</span>
                         </div>
                         <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden border border-slate-200/40">
@@ -105,7 +105,7 @@
                     <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                         <div>
                             <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Extracted Manifest Files</span>
-                            <span id="manifestSummaryCount" class="text-[11px] text-slate-500 font-medium">Awaiting core pipeline processing execution...</span>
+                            <span id="manifestSummaryCount" class="text-[11px] text-slate-500 font-medium">Awaiting cluster stream assembly...</span>
                         </div>
                         <button id="downloadAllBtn" class="hidden items-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white px-3 py-2 rounded-lg text-xs font-medium shadow-sm transition-all duration-300">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"></path></svg>
@@ -116,7 +116,7 @@
                     <div id="manifestViewerDeck" class="flex-1 overflow-y-auto border border-slate-200/60 bg-slate-50/50 rounded-xl custom-scrollbar flex flex-col items-center justify-center p-6 text-center text-slate-400 space-y-2">
                         <svg class="w-8 h-8 text-slate-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 13.5h3.86a2.25 2.25 0 012.008 1.24l.885 1.77a2.25 2.25 0 002.007 1.24h1.98a2.25 2.25 0 002.007-1.24l.885-1.77a2.25 2.25 0 012.007-1.24h3.86m-18 0h18m-18 0v-7.5A2.25 2.25 0 015.25 3h13.5A2.25 2.25 0 0121 5.25v7.5m-18 0v6a2.25 2.25 0 002.25 2.25h13.5A2.25 2.25 0 0021 18.75v-6M16.5 7.5h.008v.008h-.008V7.5zm0 3h.008v.008h-.008v-.008zm-3-3h.008v.008h-.008V7.5zm0 3h.008v.008h-.008v-.008z"></path></svg>
                         <div class="text-xs font-semibold text-slate-500">Inventory Empty</div>
-                        <div class="text-[11px] text-slate-400 max-w-xs leading-relaxed">Extracted parameters will list here individually with clear selective download functionality hooks.</div>
+                        <div class="text-[11px] text-slate-400 max-w-xs leading-relaxed">Extracted files will populate here right away after all sliced memory modules complete verification.</div>
                     </div>
                 </div>
             </div>
@@ -125,7 +125,7 @@
     </main>
 
     <footer class="w-full border-t border-slate-200 bg-white px-6 py-4 text-center text-xs font-medium text-slate-400">
-        Asset Core Studio Dashboard &bull; High-Performance File Parsing Infrastructure
+        Asset Core Studio Dashboard &bull; Sliced Memory Stream Delivery Engine
     </footer>
 
     <script>
@@ -144,6 +144,7 @@
         const manifestViewerDeck = document.getElementById('manifestViewerDeck');
 
         let selectedFile = null;
+        const CHUNK_SIZE = 2 * 1024 * 1024; // 2 MB Safe Slices (Well under Vercel's 4.5MB drop rule)
 
         ['dragenter', 'dragover'].forEach(eventName => {
             dropzone.addEventListener(eventName, (e) => {
@@ -183,12 +184,12 @@
             progressBar.className = "bg-slate-900 h-full rounded-full transition-all duration-300";
             
             downloadAllBtn.classList.add('hidden');
-            manifestSummaryCount.textContent = "Awaiting core pipeline processing execution...";
+            manifestSummaryCount.textContent = "Awaiting cluster stream assembly...";
             manifestViewerDeck.className = "flex-1 overflow-y-auto border border-slate-200/60 bg-slate-50/50 rounded-xl custom-scrollbar flex flex-col items-center justify-center p-6 text-center text-slate-400 space-y-2";
             manifestViewerDeck.innerHTML = `
                 <svg class="w-8 h-8 text-slate-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 13.5h3.86a2.25 2.25 0 012.008 1.24l.885 1.77a2.25 2.25 0 002.007 1.24h1.98a2.25 2.25 0 002.007-1.24l.885-1.77a2.25 2.25 0 012.007-1.24h3.86m-18 0h18m-18 0v-7.5A2.25 2.25 0 015.25 3h13.5A2.25 2.25 0 0121 5.25v7.5m-18 0v6a2.25 2.25 0 002.25 2.25h13.5A2.25 2.25 0 0021 18.75v-6M16.5 7.5h.008v.008h-.008V7.5zm0 3h.008v.008h-.008v-.008zm-3-3h.008v.008h-.008V7.5zm0 3h.008v.008h-.008v-.008z"></path></svg>
                 <div class="text-xs font-semibold text-slate-500">Inventory Empty</div>
-                <div class="text-[11px] text-slate-400 max-w-xs leading-relaxed">Extracted parameters will list here individually with clear selective download functionality hooks.</div>
+                <div class="text-[11px] text-slate-400 max-w-xs leading-relaxed">Extracted files will populate here right away after all sliced memory modules complete verification.</div>
             `;
         }
 
@@ -198,38 +199,51 @@
             extractBtn.disabled = true;
             progressContainer.classList.remove('hidden');
             progressBar.className = "bg-slate-900 h-full rounded-full transition-all duration-300";
-            updateStatus("STREAMING CONTAINER TO PIPELINE INTERNALS...", 20);
-
-            const formData = new FormData();
-            formData.append('file', selectedFile);
+            
+            const totalChunks = Math.ceil(selectedFile.size / CHUNK_SIZE);
+            const streamSessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
 
             try {
-                updateStatus("MAPPING COMPLEX SERIALIZATION BLOCKS...", 55);
-                
-                const response = await fetch('/api/extract', {
-                    method: 'POST',
-                    body: formData
+                // Step 1: Upload Chunks Sequentially
+                for (let currentChunkIdx = 0; currentChunkIdx < totalChunks; currentChunkIdx++) {
+                    const startByte = currentChunkIdx * CHUNK_SIZE;
+                    const endByte = Math.min(startByte + CHUNK_SIZE, selectedFile.size);
+                    const fileSliceBlob = selectedFile.slice(startByte, endByte);
+
+                    const percentage = Math.round((currentChunkIdx / totalChunks) * 70);
+                    updateStatus(`STREAMING SLICE LAYER [${currentChunkIdx + 1}/${totalChunks}]...`, percentage);
+
+                    const chunkFormData = new FormData();
+                    chunkFormData.append('slice_blob', fileSliceBlob);
+                    chunkFormData.append('session_id', streamSessionId);
+                    chunkFormData.append('chunk_index', currentChunkIdx);
+                    chunkFormData.append('total_chunks', totalChunks);
+
+                    const chunkResponse = await fetch('/api/extract?action=upload_chunk', {
+                        method: 'POST',
+                        body: chunkFormData
+                    });
+
+                    if (!chunkResponse.ok) {
+                        const errText = await chunkResponse.text();
+                        throw new Error(`Slice verification drop: ${errText}`);
+                    }
+                }
+
+                // Step 2: Assemble and Run the Asset Unrestricted Final Map Extraction
+                updateStatus("ASSEMBLING MEMORY MODULES & REBUILDING MANIFEST...", 85);
+
+                const finalAssemblyResponse = await fetch(`/api/extract?action=finalize_assembly&session_id=${streamSessionId}`, {
+                    method: 'POST'
                 });
 
-                // HIGH-LEVEL SECURITY UPGRADE: Guard against raw Vercel HTML string payloads (4.5MB Payload Errors)
-                const contentType = response.headers.get("content-type");
-                if (!contentType || !contentType.includes("application/json")) {
-                    const rawTextLog = await response.text();
-                    if (rawTextLog.includes("Payload Too Large") || response.status === 413) {
-                        throw new Error("FILE WEIGHT EXCEEDS VERCEL'S SERVERLESS LIMIT (4.5MB Max). Please drop a smaller patch cluster segment.");
-                    }
-                    throw new Error("The target data stream triggered an invalid structural crash inside engine headers.");
+                if (!finalAssemblyResponse.ok) {
+                    const errorMap = await finalAssemblyResponse.json();
+                    throw new Error(errorMap.error || "The assembly pipeline generated a layout compilation crash.");
                 }
 
-                if (!response.ok) {
-                    const errData = await response.json();
-                    throw new Error(errData.error || "The target pipeline execution generated an unhandled data fault.");
-                }
-
-                updateStatus("RESOLVING EXTRACTED ASSET DICTIONARIES...", 85);
-                const dataResultJson = await response.json();
-                
-                renderExtractedManifestList(dataResultJson.files);
+                const extractionResults = await finalAssemblyResponse.json();
+                renderExtractedManifestList(extractionResults.files);
                 updateStatus("PROCESSING MAP RESOLVED COMPLETELY", 100);
 
             } catch (error) {

@@ -17,7 +17,8 @@ app = Flask(__name__)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 HTML_PATH = os.path.join(BASE_DIR, 'index.html')
 
-# In-Memory Cache Store to hold elements safely inside serverless executions
+# Core Global In-Memory Registries
+CHUNKS_MEMORY_VAULT = {}
 GLOBAL_RAM_CACHE_MANIFEST = {}
 
 def decompress_stream(data: bytes) -> bytes:
@@ -85,7 +86,7 @@ def process_object_unrestricted(obj, raw_env_data: bytes):
             return f"{safe_name}.mp4", raw, f"Video/{safe_name}.mp4"
 
         elif t == "Mesh":
-            lines = [f"g {safe_name}", "# Studio Core Asset v4.5"]
+            lines = [f"g {safe_name}", "# Studio Core Asset v4.6"]
             if hasattr(data, 'm_Vertices'):
                 for v in data.m_Vertices: lines.append(f"v {v.x} {v.y} {v.z}")
             if hasattr(data, 'm_Indices'):
@@ -110,11 +111,12 @@ def serve_ui_layout(path):
 
 @app.route('/api/extract', methods=['POST'])
 def process_upload_pipeline():
-    global GLOBAL_RAM_CACHE_MANIFEST
+    global GLOBAL_RAM_CACHE_MANIFEST, CHUNKS_MEMORY_VAULT
     
+    action = request.args.get('action', '')
     download_type = request.args.get('download_type', '')
 
-    # --- TRACK B: Zip Multi-Download Trigger ---
+    # --- TRACK C: Zip Multi-Download Trigger ---
     if download_type == 'zip':
         if not GLOBAL_RAM_CACHE_MANIFEST.get('extracted'):
             return jsonify({"error": "Cache layer cleared. Please re-upload stream."}), 400
@@ -126,7 +128,7 @@ def process_upload_pipeline():
         zip_io.seek(0)
         return send_file(zip_io, mimetype='application/zip', as_attachment=True, download_name="studio_manifest_assets.zip")
 
-    # --- TRACK C: Single Selective Asset Download Trigger ---
+    # --- TRACK D: Single Selective Asset Download Trigger ---
     elif download_type == 'single':
         file_idx = int(request.args.get('file_index', -1))
         if not GLOBAL_RAM_CACHE_MANIFEST.get('extracted') or file_idx < 0 or file_idx >= len(GLOBAL_RAM_CACHE_MANIFEST['extracted']):
@@ -140,57 +142,76 @@ def process_upload_pipeline():
             download_name=target_file_element['name']
         )
 
-    # --- TRACK A: Standard Asset Mapping Manifest Generation Pipeline ---
-    try:
-        if 'file' not in request.files:
-            return jsonify({"error": "No file stream discovered in payload parameters."}), 400
-            
-        uploaded_file = request.files['file']
-        raw_bytes = uploaded_file.read()
-
-        if not raw_bytes:
-            return jsonify({"error": "Payload byte sequence is empty."}), 400
-
-        final_data = decompress_stream(bytes(raw_bytes))
-        
-        # HIGH-LEVEL UPGRADE: Safely isolate malformed initialization files
+    # --- TRACK A: Sliced Chunk Incoming Pipeline Receiver ---
+    if action == 'upload_chunk':
         try:
-            env = UnityPy.load(final_data)
-            objects_array = env.objects
-        except Exception:
-            return jsonify({"error": "NO VALID RESOURCE PARAMETERS DISCOVERED INSIDE STREAM HEADERS. This block utilizes custom obfuscation headers unsupported by standard environment layouts."}), 400
-        
-        seen_md5 = set()
-        extracted_list = []
-        json_metadata_manifest = []
-        tracking_index_counter = 0
+            session_id = request.form['session_id']
+            chunk_index = int(request.form['chunk_index'])
+            total_chunks = int(request.form['total_chunks'])
+            slice_blob = request.files['slice_blob'].read()
 
-        for obj in objects_array:
-            res = process_object_unrestricted(obj, final_data)
-            if res:
-                filename, file_bytes, zip_folder_path = res
-                h = hashlib.md5(file_bytes).hexdigest()
-                if h not in seen_md5:
-                    seen_md5.add(h)
-                    
-                    extracted_list.append({
-                        'name': filename,
-                        'zip_path': zip_folder_path,
-                        'bytes': file_bytes
-                    })
-                    
-                    json_metadata_manifest.append({
-                        'index': tracking_index_counter,
-                        'name': filename,
-                        'path': zip_folder_path
-                    })
-                    tracking_index_counter += 1
+            if session_id not in CHUNKS_MEMORY_VAULT:
+                CHUNKS_MEMORY_VAULT[session_id] = [None] * total_chunks
 
-        if tracking_index_counter == 0:
-            return jsonify({"error": "NO VALID RESOURCE PARAMETERS DISCOVERED INSIDE STREAM HEADERS. The metadata table maps are either empty or stripped during build production."}), 400
+            CHUNKS_MEMORY_VAULT[session_id][chunk_index] = slice_blob
+            return "Slice chunk cached safely.", 200
+        except Exception as chunk_err:
+            return f"Chunk write error: {str(chunk_err)}", 500
 
-        GLOBAL_RAM_CACHE_MANIFEST['extracted'] = extracted_list
-        return jsonify({"files": json_metadata_manifest})
+    # --- TRACK B: Final Assembly & Extraction Execution Map ---
+    elif action == 'finalize_assembly':
+        try:
+            session_id = request.args.get('session_id', '')
+            if session_id not in CHUNKS_MEMORY_VAULT or None in CHUNKS_MEMORY_VAULT[session_id]:
+                return jsonify({"error": "Missing slices inside structural delivery maps."}), 400
 
-    except Exception as e:
-        return jsonify({"error": f"Internal mapping failure: {str(e)}"}), 500
+            # Merge byte blocks cleanly back together inside native system memory
+            full_binary_reconstructed = b"".join(CHUNKS_MEMORY_VAULT[session_id])
+            
+            # Clear memory instantly to avoid Vercel execution runtime overflows
+            del CHUNKS_MEMORY_VAULT[session_id]
+
+            final_data = decompress_stream(full_binary_reconstructed)
+            
+            try:
+                env = UnityPy.load(final_data)
+                objects_array = env.objects
+            except Exception:
+                return jsonify({"error": "NO VALID RESOURCE PARAMETERS DISCOVERED INSIDE STREAM HEADERS."}), 400
+            
+            seen_md5 = set()
+            extracted_list = []
+            json_metadata_manifest = []
+            tracking_index_counter = 0
+
+            for obj in objects_array:
+                res = process_object_unrestricted(obj, final_data)
+                if res:
+                    filename, file_bytes, zip_folder_path = res
+                    h = hashlib.md5(file_bytes).hexdigest()
+                    if h not in seen_md5:
+                        seen_md5.add(h)
+                        
+                        extracted_list.append({
+                            'name': filename,
+                            'zip_path': zip_folder_path,
+                            'bytes': file_bytes
+                        })
+                        
+                        json_metadata_manifest.append({
+                            'index': tracking_index_counter,
+                            'name': filename,
+                            'path': zip_folder_path
+                        })
+                        tracking_index_counter += 1
+
+            if tracking_index_counter == 0:
+                return jsonify({"error": "NO VALID RESOURCE PARAMETERS DISCOVERED INSIDE STREAM HEADERS."}), 400
+
+            GLOBAL_RAM_CACHE_MANIFEST['extracted'] = extracted_list
+            return jsonify({"files": json_metadata_manifest})
+
+        except Exception as e:
+            return jsonify({"error": f"Internal mapping failure during finalization: {str(e)}"}), 500
+
+    return jsonify({"error": "Invalid engine execution request pathway strategy."}), 400
