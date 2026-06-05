@@ -3,7 +3,7 @@
   "rewrites": [
     {
       "source": "/api/extract",
-      "destination": "/api/extract.py"
+      "destination": "/api/index.py"
     },
     {
       "source": "/(.*)",
