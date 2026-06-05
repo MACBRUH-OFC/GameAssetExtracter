@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="static/css/style.css">
+    <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
     <div class="glass-bg"></div>
@@ -36,7 +36,10 @@
                                 <span id="custom-file-upload-text" class="drop-text">Drag & Drop or Choose Unity Main File (.bundle, .unity3d, .assets, .unitybundle)</span>
                                 <span class="drop-limit">Max file size: 500 MB (Vercel limits apply)</span>
                             </div>
-                            <input type="file" id="file-input" name="files" accept=".bundle,.unity3d,.assets,.unitybundle">
+                            <input
+    type="file"
+    id="file-input"
+    name="files">
                         </label>
                     </div>
                     
@@ -189,6 +192,6 @@
         </div>
     </div>
 
-    <script src="static/js/main.js"></script>
+    <script src="/static/js/main.js"></script>
 </body>
 </html>
