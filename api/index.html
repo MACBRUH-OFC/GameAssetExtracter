@@ -51,7 +51,6 @@
             font-family: 'GFF-Bold', sans-serif; 
         }
 
-        /* Glassmorphism Panel Matrices */
         .glass-card {
             background: rgba(13, 13, 17, 0.75);
             backdrop-filter: blur(16px);
@@ -61,7 +60,6 @@
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
         }
 
-        /* Cyberpunk Interactive Buttons */
         .btn-prime { 
             cursor: pointer; 
             font-family: 'GFF-Bold'; 
@@ -89,7 +87,6 @@
             transform: translateY(1px);
         }
 
-        /* Drag-Drop Zone Design */
         .interactive-deck {
             background: rgba(255, 255, 255, 0.02);
             border: 2px dashed rgba(255, 255, 255, 0.1);
@@ -99,10 +96,8 @@
         .interactive-deck:hover {
             border-color: var(--ff-yellow);
             background: rgba(255, 222, 0, 0.02);
-            box-shadow: inset 0 0 20px rgba(255, 222, 0, 0.02);
         }
 
-        /* Custom Dropdown Styling */
         .custom-select-head {
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(255, 255, 255, 0.08);
@@ -133,7 +128,6 @@
             transform: translateY(-10px);
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 100;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.8);
         }
 
         .dropdown-box.active .dropdown-menu-list {
@@ -152,7 +146,6 @@
             color: #000;
         }
 
-        /* Scanner Overlay Line */
         .laser-scanner {
             position: absolute;
             left: 0;
@@ -160,7 +153,7 @@
             height: 3px;
             background: linear-gradient(90deg, transparent, var(--ff-yellow), transparent);
             box-shadow: 0 0 15px var(--ff-yellow);
-            animation: hardwareScan 2.5s ease-in-out infinite;
+            animation: hardwareScan 2s ease-in-out infinite;
         }
 
         @keyframes hardwareScan {
@@ -169,7 +162,6 @@
             100% { top: 0%; opacity: 0.3; }
         }
 
-        /* Realtime Progress Bar Track */
         .progress-track {
             height: 6px;
             background: rgba(255, 255, 255, 0.05);
@@ -179,7 +171,7 @@
 
         .progress-thumb {
             height: 100%;
-            background: linear-gradient(90deg, #ffd700, #ffde00);
+            background: var(--ff-yellow);
             width: 0%;
             transition: width 0.3s ease;
         }
@@ -193,82 +185,99 @@
             0% { transform: translateX(-20%); }
             100% { transform: translateX(180%); }
         }
+
+        .loading-ring-container {
+            display: none;
+            position: relative;
+            width: 50px;
+            height: 50px;
+        }
+
+        .loading-ring-node {
+            position: absolute;
+            inset: 0;
+            border: 2px solid transparent;
+            border-top-color: var(--ff-yellow);
+            border-radius: 50%;
+            animation: spinning 1s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+        }
+        .loading-ring-node:nth-child(2) { animation-delay: -0.15s; border-top-color: #333; }
+
+        @keyframes spinning {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body class="antialiased">
 
-<!-- Top Brand Header Navigation -->
 <header class="w-full flex justify-center items-center h-20 bg-black/40 backdrop-blur-md border-b border-white/5 sticky top-0 z-50 px-6">
     <div class="w-full max-w-6xl flex justify-between items-center">
         <img src="https://dl.dir.freefiremobile.com/common/web_event/official2/dist/client/img/full_logo.969f536.png" class="h-6 sm:h-7" alt="Free Fire Logo">
         <div class="flex items-center gap-2 border border-white/10 px-3 py-1.5 rounded-full bg-white/5">
             <span class="w-2 h-2 rounded-full bg-yellow-400 animate-pulse"></span>
-            <span class="text-xs font-medium tracking-wide text-zinc-400 uppercase hidden sm:inline">Server Infrastructure Online</span>
-            <span class="text-xs font-medium tracking-wide text-zinc-400 uppercase sm:hidden">V2.4</span>
+            <span class="text-xs font-medium tracking-wide text-zinc-400 uppercase">System Online</span>
         </div>
     </div>
 </header>
 
-<!-- Main Functional Dashboard Workspace -->
 <main class="w-full max-w-6xl mx-auto px-4 lg:px-8 py-8 sm:py-12 flex-1 flex flex-col justify-center">
     
-    <!-- Hero Title Elements -->
     <div class="text-center mb-10 lg:mb-14">
         <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-yellow-400/10 border border-yellow-400/20 mb-4">
             <i class="fa-solid fa-bolt text-xs text-yellow-400"></i>
-            <span class="text-[11px] uppercase tracking-[0.2em] font-bold text-yellow-400">High-Speed Engine extraction Matrix</span>
+            <span class="text-[11px] uppercase tracking-[0.2em] font-bold text-yellow-400">High-Speed Engine Extraction Matrix</span>
         </div>
         <h1 class="gff text-4xl sm:text-5xl lg:text-6xl font-black italic tracking-tight leading-none text-white uppercase">
             Assets <span class="text-[#ffde00]">Extractor</span>
         </h1>
     </div>
 
-    <!-- Responsive Split Container Matrix Grid Layout -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         
-        <!-- Column 1: Config Elements Form (5 Cols Width) -->
         <div class="lg:col-span-5 w-full">
             <div class="glass-card rounded-3xl p-6 sm:p-8 space-y-6">
                 <div class="border-b border-white/5 pb-4">
                     <h3 class="gff text-lg italic uppercase text-white tracking-wide">Terminal Workspace</h3>
-                    <p class="text-xs text-zinc-400 mt-1">Configure your decompression package attributes below</p>
+                    <p class="text-xs text-zinc-400 mt-1">Configure your processing pipeline attributes</p>
                 </div>
 
                 <form id="extractorForm" class="space-y-5">
-                    <!-- Dropzone Input File Element -->
                     <div class="interactive-deck rounded-2xl p-6 text-center cursor-pointer relative" onclick="document.getElementById('fileInput').click()">
-                        <div class="w-14 h-14 bg-white/5 rounded-2xl mx-auto flex items-center justify-center mb-4 border border-white/5 transition-all" id="iconWrapper">
+                        <div class="w-14 h-14 bg-white/5 rounded-2xl mx-auto flex items-center justify-center mb-4 border border-white/5" id="iconWrapper">
                             <i id="uploadIcon" class="fa-solid fa-file-zipper text-2xl text-zinc-400"></i>
                         </div>
-                        <span id="fileStatusText" class="text-[10px] font-bold tracking-widest text-zinc-500 gff block mb-1 uppercase">Import Archive</span>
-                        <p id="fileLabel" class="text-sm font-medium text-zinc-300 truncate px-2">Click or Drop assets pack file</p>
+                        <span id="fileStatusText" class="text-[10px] font-bold tracking-widest text-zinc-500 gff block mb-1 uppercase">Import File Pack</span>
+                        <p id="fileLabel" class="text-sm font-medium text-zinc-300 truncate px-2">Click to load resource bundle</p>
                         <input type="file" id="fileInput" class="hidden" required>
                     </div>
 
-                    <!-- Pipeline Selection Dropdown Menu Component -->
                     <div class="dropdown-box" id="modeDropdown">
-                        <label class="block text-xs font-bold uppercase tracking-widest text-zinc-400 mb-2 gff">Extraction Matrix Pipeline</label>
+                        <label class="block text-xs font-bold uppercase tracking-widest text-zinc-400 mb-2 gff">Extraction Pipeline Mode</label>
                         <div class="custom-select-head h-14 px-5 rounded-2xl flex items-center justify-between cursor-pointer" onclick="toggleDropdown()">
                             <div class="flex items-center gap-3">
                                 <i class="fa-solid fa-gears text-sm text-yellow-400"></i>
-                                <span class="text-sm font-semibold text-white tracking-wide" id="selectedModeText">Extract Assets (Decompress)</span>
+                                <span class="text-sm font-semibold text-white tracking-wide" id="selectedModeText">Decompress Bundle (Extract Unity Pack)</span>
                             </div>
                             <div class="w-2 h-2 border-r-2 border-b-2 border-yellow-400 transform rotate-45 transition-transform duration-200" id="dropdownArrow"></div>
                         </div>
                         
                         <div class="dropdown-menu-list p-2 space-y-1">
-                            <div class="dropdown-menu-item p-4 rounded-xl text-sm font-medium cursor-pointer flex items-center justify-between" onclick="changeMode('extract', 'Extract Assets (Decompress)')">
-                                <span>Extract Assets (Decompress)</span>
+                            <div class="dropdown-menu-item p-4 rounded-xl text-sm font-medium cursor-pointer flex items-center justify-between" onclick="changeMode('extract', 'Decompress Bundle (Extract Unity Pack)')">
+                                <span>Decompress Bundle (Extract Unity Pack)</span>
                                 <i class="fa-solid fa-box-open text-xs opacity-60"></i>
                             </div>
-                            <div class="dropdown-menu-item p-4 rounded-xl text-sm font-medium cursor-pointer flex items-center justify-between" onclick="changeMode('pack', 'Pack Assets (Compress)')">
-                                <span>Pack Assets (Compress)</span>
-                                <i class="fa-solid fa-boxes-packing text-xs opacity-60"></i>
+                            <div class="dropdown-menu-item p-4 rounded-xl text-sm font-medium cursor-pointer flex items-center justify-between" onclick="changeMode('ktx_to_png', 'Convert Texture (KTX ⇆ PNG)')">
+                                <span>Convert Texture (KTX ⇆ PNG)</span>
+                                <i class="fa-solid fa-file-image text-xs opacity-60"></i>
+                            </div>
+                            <div class="dropdown-menu-item p-4 rounded-xl text-sm font-medium cursor-pointer flex items-center justify-between" onclick="changeMode('png_to_ktx', 'Compile Texture (PNG ⇆ KTX)')">
+                                <span>Compile Texture (PNG ⇆ KTX)</span>
+                                <i class="fa-solid fa-file-code text-xs opacity-60"></i>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Core Action Submission Button -->
                     <button type="submit" class="btn-prime w-full h-16 text-base font-bold italic tracking-wider">
                         <i class="fa-solid fa-terminal text-sm"></i>
                         Execute Pipeline Processing
@@ -277,25 +286,22 @@
             </div>
         </div>
 
-        <!-- Column 2: Logging Output Console Monitor Viewports (7 Cols Width) -->
         <div class="lg:col-span-7 w-full">
             <div class="glass-card rounded-3xl p-6 sm:p-8 space-y-6 relative overflow-hidden flex flex-col min-h-[465px]">
                 
-                <!-- Console Top Header Bar Status Elements -->
                 <div class="flex flex-wrap items-center justify-between gap-4 border-b border-white/5 pb-4">
                     <div class="flex items-center gap-3">
                         <div class="w-3 h-3 rounded-full bg-zinc-700 flex items-center justify-center" id="monitorStatusDot">
                             <div class="w-1.5 h-1.5 rounded-full bg-zinc-500"></div>
                         </div>
-                        <span class="gff text-sm uppercase tracking-widest text-zinc-300 italic">Live Stream Terminal</span>
+                        <span class="gff text-sm uppercase tracking-widest text-zinc-300 italic">Live Console Monitor</span>
                     </div>
                     <span id="statusBadge" class="text-[10px] font-bold uppercase text-zinc-400 bg-white/5 px-3 py-1.5 rounded-lg border border-white/5 gff tracking-wider">Idle Matrix</span>
                 </div>
 
-                <!-- Processing Diagnostics Log Outputs Tracking Component -->
                 <div class="space-y-2">
                     <div class="flex justify-between items-center text-xs text-zinc-400 font-medium">
-                        <span id="statusText">Awaiting file submission sequence...</span>
+                        <span id="statusText">Awaiting input submission block...</span>
                         <span id="percentageCounter" class="hidden font-mono text-yellow-400">0%</span>
                     </div>
                     <div class="progress-track">
@@ -303,40 +309,35 @@
                     </div>
                 </div>
 
-                <!-- Live Stream Rendering Dynamic Viewports Container Box -->
                 <div class="flex-1 w-full bg-black/40 border border-white/5 rounded-2xl p-6 flex flex-col items-center justify-center relative min-h-[220px]">
                     <div class="laser-scanner hidden" id="scannerLine"></div>
 
-                    <!-- State Box Variant A: Standard Idle Stream Empty View -->
-                    <div class="text-center space-y-3 p-4 transition-all duration-300" id="outputEmptyState">
+                    <div class="text-center space-y-3 p-4" id="outputEmptyState">
                         <div class="w-16 h-16 bg-white/[0.02] border border-white/5 rounded-2xl mx-auto flex items-center justify-center">
                             <i class="fa-solid fa-folder-tree text-2xl text-zinc-700"></i>
                         </div>
-                        <div class="gff text-xs text-zinc-500 uppercase tracking-widest">Output data visualization stream unmapped</div>
+                        <div class="gff text-xs text-zinc-500 uppercase tracking-widest">Output channel unmapped</div>
                     </div>
 
-                    <!-- State Box Variant B: System Processing Spinning Ring Loader View -->
                     <div class="loading-ring-container" id="outputLoader">
                         <div class="loading-ring-node"></div>
                         <div class="loading-ring-node"></div>
-                        <div class="loading-ring-node"></div>
                     </div>
 
-                    <!-- State Box Variant C: Core Task Successful Complete Layout Display -->
                     <div class="w-full hidden text-center space-y-6 p-2" id="outputResultView">
                         <div class="max-w-md mx-auto p-5 bg-yellow-400/5 border border-yellow-400/10 rounded-2xl flex items-center gap-4 text-left">
                             <div class="w-12 h-12 rounded-xl bg-yellow-400/10 flex items-center justify-center flex-shrink-0 text-yellow-400">
                                 <i class="fa-solid fa-file-shield text-xl"></i>
                             </div>
                             <div class="truncate">
-                                <h4 class="gff text-sm text-white uppercase tracking-wide italic">Operation Terminated Successfully</h4>
-                                <p id="resultMetaText" class="text-xs text-zinc-400 truncate mt-0.5">file_payload_package.zip</p>
+                                <h4 class="gff text-sm text-white uppercase tracking-wide italic">Operation Completed</h4>
+                                <p id="resultMetaText" class="text-xs text-zinc-400 truncate mt-0.5">output_payload.zip</p>
                             </div>
                         </div>
                         
                         <div class="flex justify-center">
                             <a id="fileDownloadAnchor" href="#" download class="btn-prime w-full max-w-xs h-14 text-sm font-bold italic tracking-widest">
-                                <i class="fa-solid fa-download text-sm"></i> Download Output Assets
+                                <i class="fa-solid fa-download text-sm"></i> Download Extracted Assets
                             </a>
                         </div>
                     </div>
@@ -380,7 +381,6 @@
         document.getElementById("dropdownArrow").classList.remove("rotate-[225deg]");
     }
 
-    // Handles global pointer input click down maps to remove active dropdown popups overlay safely
     document.addEventListener("click", function(event) {
         const dropBox = document.getElementById("modeDropdown");
         if (!dropBox.contains(event.target)) {
@@ -395,8 +395,7 @@
         fileLabel.style.color = "var(--ff-yellow)";
         uploadIcon.className = "fa-solid fa-file-circle-check text-2xl text-[#ffde00]";
         iconWrapper.style.borderColor = "rgba(255, 222, 0, 0.2)";
-        iconWrapper.style.background = "rgba(255, 222, 0, 0.03)";
-        fileStatusText.innerText = "ARCHIVE MOUNTED";
+        fileStatusText.innerText = "DATA STORAGE LINKED";
         fileStatusText.style.color = "var(--ff-yellow)";
     });
 
@@ -408,34 +407,21 @@
         progressFill.classList.add("scanning");
         percentageCounter.classList.remove("hidden");
 
-        statusBadge.innerText = "EXECUTING";
+        statusBadge.innerText = "PROCESSING";
         statusBadge.style.color = "#000";
         statusBadge.style.background = "var(--ff-yellow)";
         statusBadge.style.borderColor = "var(--ff-yellow)";
         
-        monitorStatusDot.innerHTML = `<div class="w-1.5 h-1.5 rounded-full bg-[#ffde00]"></div>`;
-        monitorStatusDot.className = "w-3 h-3 rounded-full bg-yellow-400/20 flex items-center justify-center animate-ping";
+        monitorStatusDot.className = "w-3 h-3 rounded-full bg-yellow-400/20 flex items-center justify-center animate-pulse";
 
-        animateTerminalDiagnostics(fileName);
-    }
-
-    function animateTerminalDiagnostics(fileName) {
-        const extension = extractionMode === "extract" ? "_extracted.zip" : "_packed.bin";
-        const cleanName = fileName.replace(/\.[^/.]+$/, "");
-        let dots = 0;
         let count = 0;
-
-        const interval = setInterval(() => {
-            dots = (dots + 1) % 4;
-            if (count < 95) {
-                count += Math.floor(Math.random() * 7) + 2;
-                if (count > 95) count = 95;
+        window.processingInterval = setInterval(() => {
+            if (count < 92) {
+                count += Math.floor(Math.random() * 6) + 2;
+                percentageCounter.innerText = `${count}%`;
             }
-            percentageCounter.innerText = `${count}%`;
-            statusText.innerText = `Parsing manifest block metrics lines ${cleanName}${extension}${".".repeat(dots)}`;
+            statusText.innerText = `Streaming and analyzing indices context blocks...`;
         }, 150);
-
-        window.processingInterval = interval;
     }
 
     function finishProcessingState(finalFileName) {
@@ -446,19 +432,15 @@
         outputLoader.style.display = "none";
         scannerLine.classList.add("hidden");
 
-        statusBadge.innerText = "SUCCESSFUL";
+        statusBadge.innerText = "SUCCESS";
         statusBadge.style.color = "#ffde00";
         statusBadge.style.background = "rgba(255, 222, 0, 0.05)";
-        statusBadge.style.borderColor = "rgba(255, 222, 0, 0.1)";
         
-        statusText.innerText = "Package extraction deployment complete.";
+        statusText.innerText = "Pipeline task executed successfully.";
         resultMetaText.innerText = finalFileName;
-        
-        monitorStatusDot.innerHTML = `<div class="w-1.5 h-1.5 rounded-full bg-yellow-400"></div>`;
-        monitorStatusDot.className = "w-3 h-3 rounded-full bg-yellow-400/10 flex items-center justify-center";
     }
 
-    function failProcessingState() {
+    function failProcessingState(errorMsg = "Compilation validation loop error.") {
         clearInterval(window.processingInterval);
         progressFill.classList.remove("scanning");
         progressFill.style.width = "0%";
@@ -467,15 +449,10 @@
         scannerLine.classList.add("hidden");
         outputEmptyState.style.display = "flex";
 
-        statusBadge.innerText = "TERMINATED";
+        statusBadge.innerText = "CRASHED";
         statusBadge.style.color = "var(--ff-red)";
         statusBadge.style.background = "rgba(255, 62, 62, 0.05)";
-        statusBadge.style.borderColor = "rgba(255, 62, 62, 0.1)";
-        
-        statusText.innerText = "Process aborted due to internal validation exception loop.";
-        
-        monitorStatusDot.innerHTML = `<div class="w-1.5 h-1.5 rounded-full bg-red-500"></div>`;
-        monitorStatusDot.className = "w-3 h-3 rounded-full bg-red-500/10 flex items-center justify-center";
+        statusText.innerText = errorMsg;
     }
 
     document.getElementById("extractorForm").addEventListener("submit", async function(event) {
@@ -486,36 +463,58 @@
         beginProcessingState(uploadedFile.name);
 
         const multiFormPayload = new FormData();
-        multiFormPayload.append("file", uploadedFile);
-        multiFormPayload.append("mode", extractionMode);
+        
+        let targetEndpoint = "/api/convert";
+        let targetDownloadName = "converted_output";
+
+        if (extractionMode === "extract") {
+            targetEndpoint = "/api/extract";
+            multiFormPayload.append("asset_bundle", uploadedFile);
+        } else {
+            targetEndpoint = "/api/convert";
+            multiFormPayload.append("file", uploadedFile);
+            multiFormPayload.append("mode", extractionMode);
+        }
 
         try {
-            // Simulated computational execution runtime buffer
-            await new Promise(resolve => setTimeout(resolve, 2200));
-
-            const response = await fetch("/api/convert", { 
+            const response = await fetch(targetEndpoint, { 
                 method: "POST",
                 body: multiFormPayload
             });
 
-            if (!response.ok) throw new Error("Server extraction matrix runtime mapping failed");
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({}));
+                throw new Error(errData.error || "Server workspace compilation mapping failed");
+            }
 
-            const blob = await response.blob();
-            const blobURL = URL.createObjectURL(blob);
+            if (extractionMode === "extract") {
+                // For bundle parsing, request zip generation from the direct cache mapping pipeline
+                const zipResponse = await fetch("/api/extract?download_type=zip", { method: "POST" });
+                if (!zipResponse.ok) throw new Error("Could not download extracted zip mapping library.");
+                
+                const blob = await zipResponse.blob();
+                const blobURL = URL.createObjectURL(blob);
+                targetDownloadName = uploadedFile.name.replace(/\.[^/.]+$/, "") + "_extracted.zip";
 
-            const finalName = extractionMode === "extract"
-                ? uploadedFile.name.replace(/\.[^/.]+$/, "_extracted.zip")
-                : uploadedFile.name.replace(/\.[^/.]+$/, "_packed.bin");
+                finishProcessingState(targetDownloadName);
+                outputResultView.classList.remove("hidden");
+                fileDownloadAnchor.href = blobURL;
+                fileDownloadAnchor.download = targetDownloadName;
+            } else {
+                // For direct texture processing conversion paths
+                const blob = await response.blob();
+                const blobURL = URL.createObjectURL(blob);
+                targetDownloadName = extractionMode === "ktx_to_png" ? "converted.png" : "converted.ktx";
 
-            finishProcessingState(finalName);
-            outputResultView.classList.remove("hidden");
-
-            fileDownloadAnchor.href = blobURL;
-            fileDownloadAnchor.download = finalName;
+                finishProcessingState(targetDownloadName);
+                outputResultView.classList.remove("hidden");
+                fileDownloadAnchor.href = blobURL;
+                fileDownloadAnchor.download = targetDownloadName;
+            }
 
         } catch (error) {
             console.error(error);
-            failProcessingState();
+            failProcessingState(error.message);
         }
     });
 </script>

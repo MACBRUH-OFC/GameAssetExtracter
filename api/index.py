@@ -156,18 +156,7 @@ def convert_png_to_ktx(file_bytes):
     output.seek(0)
     return output
 
-@app.route('/', defaults={'path': ''})
-@app.route('/<path:path>')
-def serve_ui_layout(path):
-    if path in ["api/extract", "api/extract/", "api/convert", "api/convert/"] and request.method == "POST":
-        return "POST stream pathways execute on specific backend routes exclusively.", 405
-    try:
-        with open(HTML_PATH, 'r', encoding='utf-8') as f:
-            return f.read()
-    except Exception as e:
-        return f"Interface layout missing or broken: {str(e)}", 500
-
-@app.route('/api/extract', methods=['POST'])
+@app.route('/api/extract', methods=['GET', 'POST'])
 def handle_direct_extraction_stream():
     global GLOBAL_CACHE_REGISTRY
     download_type = request.args.get('download_type', '')
@@ -243,9 +232,18 @@ def api_convert():
             output = convert_png_to_ktx(file_bytes)
             return send_file(output, mimetype="application/octet-stream", as_attachment=True, download_name="converted.ktx")
         else:
-            return jsonify({"success": False, "error": "Invalid mode"}), 400
+            return jsonify({"success": False, "error": "Invalid mode mode configuration option string parameter passed"}), 400
     except Exception as e:
         return jsonify({"success": False, "error": str(e), "traceback": traceback.format_exc()}), 500
+
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def serve_ui_layout(path):
+    try:
+        with open(HTML_PATH, 'r', encoding='utf-8') as f:
+            return f.read()
+    except Exception as e:
+        return f"Interface layout missing or broken: {str(e)}", 500
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=10000, debug=True)
