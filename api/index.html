@@ -19,14 +19,14 @@
             content: "";
             position: fixed;
             inset: 0;
-            background: rgba(6, 6, 6, 0.94);
+            background: rgba(6, 6, 6, 0.96);
             z-index: -1;
         }
         .premium-panel {
             background: #0f0f12;
-            border: 1px solid #1f1f24;
-            border-top: 3px solid #ffde00;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
+            border: 2px solid #222229;
+            border-top: 4px solid #ffde00;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
         }
         .btn-elite {
             font-weight: 900;
@@ -46,6 +46,7 @@
         }
         .custom-scrollbar::-webkit-scrollbar {
             width: 6px;
+            height: 6px;
         }
         .custom-scrollbar::-webkit-scrollbar-track {
             background: #0a0a0c;
@@ -61,10 +62,10 @@
 </head>
 <body class="min-h-screen flex flex-col justify-between">
 
-    <header class="w-full bg-[#0a0a0c]/80 backdrop-blur border-b-2 border-[#ffde00] py-4 px-6 sticky top-0 z-50">
+    <header class="w-full bg-[#0a0a0c]/90 backdrop-blur border-b-2 border-[#ffde00] py-4 px-6 sticky top-0 z-50">
         <div class="max-w-6xl mx-auto flex justify-between items-center">
             <h1 class="text-xl font-black tracking-wider text-white italic">ASSETS EXTRACTOR</h1>
-            <div class="flex items-center gap-2 text-[11px] font-bold text-[#ffde00] bg-[#141419] px-3 py-1.5 rounded border border-[#222229] uppercase tracking-widest">
+            <div id="runtimeBadge" class="flex items-center gap-2 text-[11px] font-bold text-[#ffde00] bg-[#141419] px-3 py-1.5 rounded border border-[#222229] uppercase tracking-widest">
                 <span class="w-2 h-2 rounded-full bg-[#ffde00] animate-pulse"></span> Ready
             </div>
         </div>
@@ -76,31 +77,27 @@
             <div class="lg:col-span-5 flex flex-col">
                 <div class="premium-panel rounded-xl p-6 flex flex-col justify-between h-full space-y-6">
                     <div>
-                        <h2 class="text-sm font-black text-white uppercase tracking-wider mb-1">Upload Source</h2>
-                        <p class="text-xs text-zinc-500">Drop a game file or image to extract and convert.</p>
+                        <h2 class="text-sm font-black text-white uppercase tracking-wider mb-1">Source Interface</h2>
+                        <p class="text-xs text-zinc-500">Drop your file directly into the deck. Mode will automatically adjust.</p>
                     </div>
 
-                    <form id="extractorForm" class="space-y-5">
-                        <div class="border border-[#222229] rounded-xl p-6 text-center cursor-pointer transition-all bg-[#0a0a0c] hover:border-[#ffde00]/50" onclick="document.getElementById('fileInput').click()">
-                            <div class="w-12 h-12 bg-[#131317] rounded-xl flex items-center justify-center mx-auto mb-3 border border-[#222229]" id="uploadIconWrapper">
-                                <svg class="w-5 h-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v1m-4-8l-4-4m0 0l-4 4m4-4v12"/></svg>
+                    <form id="extractorForm" class="space-y-6">
+                        <div class="border border-[#222229] rounded-xl p-8 text-center cursor-pointer transition-all bg-[#0a0a0c] hover:border-[#ffde00]/50" onclick="document.getElementById('fileInput').click()">
+                            <div class="w-14 h-14 bg-[#131317] rounded-xl flex items-center justify-center mx-auto mb-4 border border-[#222229]" id="uploadIconWrapper">
+                                <svg class="w-6 h-6 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v1m-4-8l-4-4m0 0l-4 4m4-4v12"/></svg>
                             </div>
                             <p id="fileLabel" class="text-xs font-bold text-zinc-300 uppercase tracking-wide truncate px-2">Select Target File</p>
-                            <p id="fileSubLabel" class="text-[10px] text-zinc-600 uppercase tracking-widest mt-1">Bundle, KTX, or PNG</p>
+                            <p id="fileSubLabel" class="text-[10px] text-zinc-600 uppercase tracking-widest mt-1">Automatic System Routing</p>
                         </div>
                         <input type="file" id="fileInput" class="hidden" required>
 
-                        <div class="space-y-1.5">
-                            <label class="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider">Operation Mode</label>
-                            <div class="relative">
-                                <select id="actionSelect" class="w-full h-12 bg-[#0a0a0c] border border-[#222229] rounded-xl px-4 text-xs font-bold uppercase tracking-wider text-white focus:outline-none focus:border-[#ffde00] appearance-none cursor-pointer">
-                                    <option value="extract">Extract Files (Decompress Bundle)</option>
-                                    <option value="ktx_to_png">Convert KTX to PNG Image</option>
-                                    <option value="png_to_ktx">Convert PNG to KTX Texture</option>
-                                </select>
-                                <div class="absolute inset-y-0 right-4 flex items-center pointer-events-none text-[#ffde00]">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                                </div>
+                        <div class="bg-[#0a0a0c] p-4 rounded-xl border border-[#222229] flex items-center justify-between">
+                            <div>
+                                <span class="block text-[10px] font-bold text-zinc-600 uppercase tracking-wider">Detected Routing Mode</span>
+                                <span id="routingLabel" class="text-xs font-bold text-zinc-400 uppercase tracking-wider">Awaiting Stream Input</span>
+                            </div>
+                            <div id="routingIcon" class="text-zinc-600">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.381-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
                             </div>
                         </div>
 
@@ -117,10 +114,10 @@
                     
                     <div class="flex items-center justify-between border-b border-[#1f1f24] pb-4">
                         <div>
-                            <h2 class="text-sm font-black text-white uppercase tracking-wider">Storage Index</h2>
+                            <h2 id="manifestTitle" class="text-sm font-black text-white uppercase tracking-wider">Storage Index</h2>
                             <p id="statusText" class="text-xs text-zinc-500">No active extraction registry cached.</p>
                         </div>
-                        <button id="downloadAllBtn" class="hidden text-xs bg-[#0a0a0c] border border-[#222229] hover:border-[#ffde00] text-[#ffde00] p-2.5 rounded-xl font-bold uppercase tracking-wider transition-colors flex items-center gap-2">
+                        <button id="downloadAllBtn" class="hidden text-xs bg-[#0a0a0c] border border-[#222229] hover:border-[#ffde00] text-[#ffde00] p-2.5 rounded-xl font-bold uppercase tracking-wider transition-colors">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                         </button>
                     </div>
@@ -140,7 +137,7 @@
                             <div class="border border-[#1f1f24] rounded-lg bg-[#060608] p-4 flex flex-col items-center justify-between relative max-h-[340px]">
                                 <div id="previewFallback" class="my-auto text-center text-zinc-600 space-y-1">
                                     <svg class="w-5 h-5 mx-auto text-zinc-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                                    <p class="text-[10px] font-bold uppercase tracking-wider">Select a node node link</p>
+                                    <p class="text-[10px] font-bold uppercase tracking-wider">Select asset item</p>
                                 </div>
 
                                 <div id="previewContentBox" class="hidden w-full h-full flex flex-col justify-between items-center space-y-3">
@@ -171,14 +168,19 @@
 
 <script>
     let activeCache = [];
+    let detectedMode = "extract";
+
     const fileInput = document.getElementById("fileInput");
     const fileLabel = document.getElementById("fileLabel");
-    const actionSelect = document.getElementById("actionSelect");
+    const routingLabel = document.getElementById("routingLabel");
+    const routingIcon = document.getElementById("routingIcon");
     const emptyState = document.getElementById("emptyState");
     const resultsGrid = document.getElementById("resultsGrid");
     const fileList = document.getElementById("fileList");
     const downloadAllBtn = document.getElementById("downloadAllBtn");
     const statusText = document.getElementById("statusText");
+    const runtimeBadge = document.getElementById("runtimeBadge");
+    const manifestTitle = document.getElementById("manifestTitle");
     const uploadIconWrapper = document.getElementById("uploadIconWrapper");
 
     const previewFallback = document.getElementById("previewFallback");
@@ -187,13 +189,13 @@
     const mediaTitle = document.getElementById("mediaTitle");
     const singleSaveBtn = document.getElementById("singleSaveBtn");
 
-    // Predefined Type SVGs
+    // Content Type SVGs
     const SVG_TEXT = `<svg class="w-3.5 h-3.5 text-zinc-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>`;
     const SVG_IMAGE = `<svg class="w-3.5 h-3.5 text-[#ffde00] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>`;
     const SVG_AUDIO = `<svg class="w-3.5 h-3.5 text-cyan-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/></svg>`;
     const SVG_VIDEO = `<svg class="w-3.5 h-3.5 text-red-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>`;
 
-    // Extension File Watcher Engine to Auto Detect Operations Selection Targets Mode
+    // File Input Routing Analysis Hook
     fileInput.addEventListener("change", function() {
         if (!this.files[0]) return;
         const name = this.files[0].name;
@@ -204,15 +206,19 @@
         uploadIconWrapper.innerHTML = `<svg class="w-5 h-5 text-[#ffde00]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>`;
 
         if (ext === "ktx") {
-            actionSelect.value = "ktx_to_png";
-        } else if (ext === "png") {
-            actionSelect.value = "png_to_ktx";
+            detectedMode = "ktx_to_png";
+            routingLabel.innerText = "Convert KTX Image";
+            routingLabel.style.color = "#ffde00";
+            routingIcon.innerHTML = `<svg class="w-5 h-5 text-[#ffde00]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>`;
         } else {
-            actionSelect.value = "extract";
+            detectedMode = "extract";
+            routingLabel.innerText = "Extract Game Bundle";
+            routingLabel.style.color = "#a1a1aa";
+            routingIcon.innerHTML = `<svg class="w-5 h-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>`;
         }
     });
 
-    function selectFileNode(index) {
+    async function selectFileNode(index) {
         const item = activeCache[index];
         if (!item) return;
 
@@ -231,6 +237,15 @@
             mediaBox.innerHTML = `<img src="${fileUrl}" class="max-w-full max-h-[160px] object-contain rounded drop-shadow">`;
         } else if (["mp3", "wav", "ogg"].includes(ext)) {
             mediaBox.innerHTML = `<audio controls src="${fileUrl}" class="w-full px-2"></audio>`;
+        } else if (["txt", "json", "xml", "yaml", "ini", "csv"].includes(ext)) {
+            mediaBox.innerHTML = `<div class="w-full h-[160px] flex items-center justify-center"><div class="w-6 h-6 border-2 border-[#ffde00] border-t-transparent rounded-full animate-spin"></div></div>`;
+            try {
+                const textRes = await fetch(fileUrl);
+                const rawText = await textRes.text();
+                mediaBox.innerHTML = `<pre class="w-full h-full text-[10px] text-zinc-400 font-mono text-left bg-[#060608] border border-[#1f1f24] p-2 rounded overflow-auto custom-scrollbar whitespace-pre-wrap select-text">${escapeHtml(rawText)}</pre>`;
+            } catch {
+                mediaBox.innerHTML = `<span class="text-xs text-red-400 font-bold uppercase tracking-wider">Failed to load string array buffer</span>`;
+            }
         } else {
             mediaBox.innerHTML = `
                 <div class="text-center text-zinc-600 space-y-1">
@@ -240,12 +255,15 @@
         }
     }
 
+    function escapeHtml(text) {
+        return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    }
+
     document.getElementById("extractorForm").addEventListener("submit", async function(e) {
         e.preventDefault();
         const file = fileInput.files[0];
         if (!file) return;
 
-        const mode = actionSelect.value;
         emptyState.innerHTML = `
             <div class="text-center space-y-2">
                 <div class="w-5 h-5 border-2 border-[#ffde00] border-t-transparent rounded-full animate-spin mx-auto"></div>
@@ -259,7 +277,7 @@
 
         const formData = new FormData();
 
-        if (mode === "extract") {
+        if (detectedMode === "extract") {
             formData.append("asset_bundle", file);
             try {
                 const response = await fetch("/api/extract", { method: "POST", body: formData });
@@ -274,7 +292,6 @@
                     row.className = "w-full p-2 text-left text-xs text-zinc-400 bg-[#0a0a0c] border border-[#1f1f24] rounded-lg flex items-center justify-between cursor-pointer hover:border-[#ffde00] transition-colors truncate";
                     row.onclick = () => selectFileNode(item.index);
                     
-                    // Assign icon depending on extension flags directly inside list mapping matrix
                     const ext = item.name.split('.').pop().toLowerCase();
                     let currentSvg = SVG_TEXT;
                     if (["png", "jpg", "jpeg", "webp"].includes(ext)) currentSvg = SVG_IMAGE;
@@ -294,7 +311,11 @@
                 resultsGrid.classList.remove("hidden");
                 downloadAllBtn.classList.remove("hidden");
                 downloadAllBtn.onclick = () => { window.location.href = "/api/extract?download_type=zip"; };
-                statusText.innerText = `Extracted items: ${activeCache.length}`;
+                
+                manifestTitle.innerText = "Game Asset Extracted";
+                statusText.innerText = `Registry Manifest Elements: ${activeCache.length}`;
+                runtimeBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-green-500"></span> Extracted`;
+                runtimeBadge.className = "flex items-center gap-2 text-[11px] font-bold text-green-400 bg-[#141419] px-3 py-1.5 rounded border border-[#222229] uppercase tracking-widest";
 
                 previewFallback.style.display = "flex";
                 previewContentBox.classList.add("hidden");
@@ -305,19 +326,19 @@
             }
         } else {
             formData.append("file", file);
-            formData.append("mode", mode);
+            formData.append("mode", "ktx_to_png");
             try {
                 const response = await fetch("/api/convert", { method: "POST", body: formData });
                 if (!response.ok) throw new Error("Conversion failed.");
 
                 const blob = await response.blob();
                 const blobUrl = URL.createObjectURL(blob);
-                const outName = mode === "ktx_to_png" ? "converted.png" : "converted.ktx";
+                const outName = "converted.png";
 
                 fileList.innerHTML = `
                     <div class="w-full p-2.5 text-left text-xs bg-[#0a0a0c] border border-[#ffde00]/30 rounded-lg flex items-center justify-between cursor-pointer" onclick="activeCache[0].view()">
                         <div class="flex items-center gap-2 truncate">
-                            ${mode === "ktx_to_png" ? SVG_IMAGE : SVG_TEXT}
+                            ${SVG_IMAGE}
                             <span class="truncate font-bold text-white">${outName}</span>
                         </div>
                     </div>`;
@@ -331,15 +352,18 @@
                         mediaTitle.innerText = outName;
                         singleSaveBtn.href = blobUrl;
                         singleSaveBtn.download = outName;
-                        mediaBox.innerHTML = mode === "ktx_to_png" 
-                            ? `<img src="${blobUrl}" class="max-w-full max-h-[160px] object-contain rounded shadow">`
-                            : `<div class="text-center text-zinc-600"><svg class="w-6 h-6 text-zinc-700 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg><span class="text-[10px] font-bold uppercase tracking-wider text-zinc-500 block">KTX Binary Package</span></div>`;
+                        mediaBox.innerHTML = `<img src="${blobUrl}" class="max-w-full max-h-[160px] object-contain rounded shadow">`;
                     }
                 }];
 
                 emptyState.style.display = "none";
                 resultsGrid.classList.remove("hidden");
+                
+                manifestTitle.innerText = "KTX Asset Extracted";
                 statusText.innerText = "File processing complete.";
+                runtimeBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500"></span> Converted`;
+                runtimeBadge.className = "flex items-center gap-2 text-[11px] font-bold text-amber-400 bg-[#141419] px-3 py-1.5 rounded border border-[#222229] uppercase tracking-widest";
+                
                 activeCache[0].view();
 
             } catch (err) {
