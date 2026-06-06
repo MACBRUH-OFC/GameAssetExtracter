@@ -8,7 +8,7 @@ import re
 import gc
 import hashlib
 import struct
-from flask import Flask, request, send_file, jsonify, make_response
+from flask import Flask, request, send_file, jsonify
 from PIL import Image
 import texture2ddecoder
 
@@ -29,7 +29,8 @@ def decompress_stream(data: bytes) -> bytes:
     except: pass
     return data
 
-def extract_clean_name(obj, data, default_type: str) -> str:
+def extract_original_asset_name(obj, data, default_type: str) -> str:
+    """Extracts the pure original internal name from the asset maps without modifications."""
     if hasattr(obj, 'container') and obj.container:
         base_mapped_path = os.path.basename(obj.container)
         if base_mapped_path:
@@ -40,108 +41,108 @@ def extract_clean_name(obj, data, default_type: str) -> str:
             return val.strip()
     return f"{default_type}_{obj.path_id}"
 
+def build_wavefront_obj_file(mesh_data) -> bytes:
+    """Parses Unity Mesh channels directly into standard Wavefront 3D .obj asset strings."""
+    try:
+        out = io.StringIO()
+        out.write(f"# Extracted Wavefront OBJ - Mesh: {getattr(mesh_data, 'name', 'Mesh')}\n")
+        
+        # Pull geometric channel maps safely from the engine reader
+        if hasattr(mesh_data, "m_Vertices") and mesh_data.m_Vertices:
+            verts = mesh_data.m_Vertices
+            for i in range(0, len(verts), 3):
+                if i+2 < len(verts):
+                    out.write(f"v {verts[i]} {verts[i+1]} {verts[i+2]}\n")
+                    
+        if hasattr(mesh_data, "m_Normals") and mesh_data.m_Normals:
+            norms = mesh_data.m_Normals
+            for i in range(0, len(norms), 3):
+                if i+2 < len(norms):
+                    out.write(f"vn {norms[i]} {norms[i+1]} {norms[i+2]}\n")
+
+        if hasattr(mesh_data, "m_UV0") and mesh_data.m_UV0:
+            uvs = mesh_data.m_UV0
+            for i in range(0, len(uvs), 2):
+                if i+1 < len(uvs):
+                    out.write(f"vt {uvs[i]} {uvs[i+1]}\n")
+
+        # Reconstruct face indices vectors smoothly
+        if hasattr(mesh_data, "m_Indices") and mesh_data.m_Indices:
+            indices = mesh_data.m_Indices
+            for i in range(0, len(indices), 3):
+                if i+2 < len(indices):
+                    # OBJ index structure counts from 1 base offset
+                    v1, v2, v3 = indices[i]+1, indices[i+1]+1, indices[i+2]+1
+                    out.write(f"f {v1}/{v1}/{v1} {v2}/{v2}/{v2} {v3}/{v3}/{v3}\n")
+                    
+        return out.getvalue().encode('utf-8')
+    except:
+        return b""
+
 def dump_obj_to_dict(obj_data) -> dict:
     out = {}
     try:
-        if hasattr(obj_data, "read_typetree"):
-            return obj_data.read_typetree()
-    except:
-        pass
+        if hasattr(obj_data, "read_typetree"): return obj_data.read_typetree()
+    except: pass
     for attr in dir(obj_data):
         if attr.startswith('_') or attr in ['read', 'assets_file', 'reader', 'image', 'samples']: continue
         try:
             val = getattr(obj_data, attr)
-            if isinstance(val, (int, float, str, bool)):
-                out[attr] = val
-            elif isinstance(val, bytes):
-                out[attr] = val.hex()[:500] + "..." if len(val) > 500 else val.hex()
-        except:
-            pass
+            if isinstance(val, (int, float, str, bool)): out[attr] = val
+        except: pass
     return out
-
-def export_unity_mesh_to_obj(data) -> bytes:
-    """Parses Unity Mesh geometry buffers and constructs a standard Wavefront .obj file."""
-    try:
-        sb = io.StringIO()
-        sb.write(f"# Unity Asset Extractor 3D OBJ Export\n# Mesh Name: {getattr(data, 'name', 'Mesh')}\n\n")
-        
-        # Extract Vertices
-        if hasattr(data, "vertices") and data.vertices:
-            for v in data.vertices:
-                sb.write(f"v {v.x} {v.y} {v.z}\n")
-        else:
-            return b"" # Mesh lacks baseline structural vertex positional data arrays
-
-        # Extract Normals
-        if hasattr(data, "normals") and data.normals:
-            for n in data.normals:
-                sb.write(f"vn {n.x} {n.y} {n.z}\n")
-
-        # Extract UV coordinates
-        if hasattr(data, "uv") and data.uv:
-            for uv in data.uv:
-                sb.write(f"vt {uv.x} {uv.y}\n")
-
-        # Extract Face Triangles Mapping Indices
-        if hasattr(data, "triangles") and data.triangles:
-            # Group into chunks of 3 elements per polygonal face node
-            for i in range(0, len(data.triangles), 3):
-                if i + 2 < len(data.triangles):
-                    t1 = data.triangles[i] + 1
-                    t2 = data.triangles[i+1] + 1
-                    t3 = data.triangles[i+2] + 1
-                    sb.write(f"f {t1}/{t1}/{t1} {t2}/{t2}/{t2} {t3}/{t3}/{t3}\n")
-        
-        return sb.getvalue().encode('utf-8')
-    except:
-        return b""
 
 def process_object_unrestricted(obj, raw_env_data: bytes):
     try:
         t = obj.type.name
         data = obj.read()
-        pristine_name = extract_clean_name(obj, data, t)
+        pristine_name = extract_original_asset_name(obj, data, t)
         safe_name = re.sub(r'[<>:"/\\|?*\x00-\x1f]', "_", pristine_name)
 
-        # 1. TextAsset processing
-        if t == "TextAsset":
+        # 3D Objects / Mesh Extraction Matrix Route
+        if t == "Mesh":
+            obj_mesh_bytes = build_wavefront_obj_file(data)
+            if obj_mesh_bytes and len(obj_mesh_bytes) > 50:
+                return f"{safe_name}.obj", obj_mesh_bytes, f"Geometry/{safe_name}.obj", "3D Mesh Object", pristine_name
+
+        # Text Configurations Assets Handling
+        elif t == "TextAsset":
             raw = getattr(data, "m_Script", b"")
             if isinstance(raw, str): raw = raw.encode('utf-8', errors='replace')
             ext = ".txt"
-            label = "Text Asset"
-            if safe_name.lower().endswith('.atlas') or raw.startswith(b"\n") or b"size:" in raw:
+            label = "Text File"
+            if safe_name.lower().endswith('.atlas') or b"size:" in raw:
                 if not safe_name.lower().endswith('.atlas'): ext = ".atlas.txt"
-                label = "SpriteAtlas Map"
+                label = "Atlas Sheet"
             elif raw.startswith((b"{", b"[")):
                 ext = ".json"
                 label = "Data Config"
-            return f"{safe_name}{ext}", raw, f"Text/{safe_name}{ext}", label
+            return f"{safe_name}{ext}", raw, f"Text/{safe_name}{ext}", label, pristine_name
 
-        # 2. Texture2D & Sprite processing
+        # Textures and Sprite Systems
         elif t in ["Texture2D", "Sprite"] and hasattr(data, 'image'):
             buf = io.BytesIO()
             data.image.save(buf, format="PNG", optimize=False)
             img_bytes = buf.getvalue()
             buf.close()
-            return f"{safe_name}.png", img_bytes, f"Textures/{safe_name}.png", "Texture2D"
+            return f"{safe_name}.png", img_bytes, f"Textures/{safe_name}.png", f"{t} Asset", pristine_name
 
-        # 3. SpriteAtlas processing
         elif t == "SpriteAtlas":
             tree_data = dump_obj_to_dict(data)
             js_bytes = json.dumps(tree_data, indent=2, ensure_ascii=False).encode('utf-8')
-            return f"{safe_name}_atlas.json", js_bytes, f"Mapping/{safe_name}_atlas.json", "SpriteAtlas Map"
+            return f"{safe_name}_atlas_map.json", js_bytes, f"Mapping/{safe_name}_atlas_map.json", "SpriteAtlas Map", pristine_name
 
-        # 4. AudioClip processing
+        # Audio Track Framework Core Handling
         elif t == "AudioClip":
             samples = getattr(data, "samples", None)
             if samples and list(samples.keys()):
                 audio_filename = list(samples.keys())[0]
-                return audio_filename, samples[audio_filename], f"Audio/{audio_filename}", "AudioClip"
+                return audio_filename, samples[audio_filename], f"Audio/{audio_filename}", "Audio Track", pristine_name
             raw = obj.get_raw_data()
             ext = ".ogg" if raw.startswith(b'OggS') else ".wav"
-            return f"{safe_name}{ext}", raw, f"Audio/{safe_name}{ext}", "AudioClip"
+            return f"{safe_name}{ext}", raw, f"Audio/{safe_name}{ext}", "Audio Track", pristine_name
 
-        # 5. VideoClip processing
+        # Video Streaming Clips Engine
         elif t == "VideoClip":
             raw = obj.get_raw_data()
             if len(raw) < 1024:
@@ -149,148 +150,93 @@ def process_object_unrestricted(obj, raw_env_data: bytes):
                 if match != -1:
                     start_pos = max(0, match - 4)
                     raw = raw_env_data[start_pos:start_pos + 12_000_000]
-            return f"{safe_name}.mp4", raw, f"Video/{safe_name}.mp4", "VideoClip"
+            return f"{safe_name}.mp4", raw, f"Video/{safe_name}.mp4", "Video Clip", pristine_name
 
-        # 6. 3D Geometric Mesh Core Exporter
-        elif t == "Mesh":
-            obj_mesh_bytes = export_unity_mesh_to_obj(data)
-            if obj_mesh_bytes and len(obj_mesh_bytes) > 0:
-                return f"{safe_name}.obj", obj_mesh_bytes, f"Geometry/Meshes/{safe_name}.obj", "Mesh 3D Object"
-            else:
-                tree_data = dump_obj_to_dict(data)
-                js_bytes = json.dumps(tree_data, indent=2, ensure_ascii=False).encode('utf-8')
-                return f"{safe_name}_mesh_fallback.json", js_bytes, f"Geometry/Meshes/{safe_name}_meta.json", "Mesh 3D Object"
-
-        # 7. Structural Components & Shaders Catch Framework
-        elif t in ["GameObject", "MonoBehaviour", "ScriptableObject", "Material", "Shader", "SkinnedMeshRenderer", "AnimationClip", "AnimatorController", "Animator"]:
+        # Structural Schemas / Hierarchies Fallbacks
+        elif t in ["GameObject", "MonoBehaviour", "ScriptableObject", "Material", "Shader", "SkinnedMeshRenderer", "AnimationClip", "AnimatorController", "Animator", "AssetBundle"]:
             tree_data = dump_obj_to_dict(data)
             js_bytes = json.dumps(tree_data, indent=2, ensure_ascii=False).encode('utf-8')
-            folder_routing_category = "Structural"
-            if "Mesh" in t or "Renderer" in t: folder_routing_category = "Geometry"
-            elif "Animator" in t or "Animation" in t: folder_routing_category = "Animations"
-            elif "Shader" in t or "Material" in t: folder_routing_category = "Shaders_Materials"
-            return f"{safe_name}_{t}.json", js_bytes, f"{folder_routing_category}/{t}/{safe_name}.json", t
+            return f"{safe_name}_{t}.json", js_bytes, f"Structures/{t}/{safe_name}.json", f"{t} Layout", pristine_name
 
-        # 8. Typography Engine Packages
+        # Typography Data Arrays Mapping
         elif t == "Font":
             raw_font_data = getattr(data, "m_FontData", b"")
             if raw_font_data and len(raw_font_data) > 10:
                 ext = ".ttf"
                 if raw_font_data.startswith(b'OTTO'): ext = ".otf"
-                return f"{safe_name}{ext}", raw_font_data, f"Fonts/{safe_name}{ext}", "Font"
-            else:
-                tree_data = dump_obj_to_dict(data)
-                js_bytes = json.dumps(tree_data, indent=2, ensure_ascii=False).encode('utf-8')
-                return f"{safe_name}_font.json", js_bytes, f"Fonts/{safe_name}_meta.json", "Font"
+                return f"{safe_name}{ext}", raw_font_data, f"Fonts/{safe_name}{ext}", "Font File", pristine_name
 
-        # 9. Main Containers
-        elif t == "AssetBundle":
-            tree_data = dump_obj_to_dict(data)
+        # Unified Structured Catch-All Extraction Routines
+        tree_data = dump_obj_to_dict(data)
+        if tree_data:
             js_bytes = json.dumps(tree_data, indent=2, ensure_ascii=False).encode('utf-8')
-            return f"{safe_name}_manifest.json", js_bytes, f"Containers/{safe_name}_manifest.json", "AssetBundle"
-
-        # 10. Global Fallback Catch Automation
-        else:
-            try:
-                tree_data = dump_obj_to_dict(data)
-                if tree_data:
-                    js_bytes = json.dumps(tree_data, indent=2, ensure_ascii=False).encode('utf-8')
-                    return f"{safe_name}_{t}.json", js_bytes, f"Other/{t}/{safe_name}.json", t
-            except: pass
-            raw_bytes = obj.get_raw_data()
-            if raw_bytes and len(raw_bytes) > 0:
-                return f"{safe_name}_{t}.dat", raw_bytes, f"Other/{t}/{safe_name}.dat", t
+            return f"{safe_name}_{t}.json", js_bytes, f"Other_Metadata/{t}/{safe_name}.json", f"{t} Node Data", pristine_name
     except: pass
     return None
 
 def convert_ktx_to_png_fallback(file_bytes) -> bytes:
     f = io.BytesIO(file_bytes)
     header = f.read(64)
-    if len(header) < 64 or header[:12] != b'\xABKTX 11\xBB\r\n\x1A\n':
-        raise Exception("Not a valid KTX format structure.")
+    if len(header) < 64 or header[:12] != b'\xABKTX 11\xBB\r\n\x1A\n': raise Exception("Invalid KTX format.")
     gl_internal_format = struct.unpack('<I', header[28:32])[0]
-    width = struct.unpack('<I', header[36:40])[0]
-    height = struct.unpack('<I', header[40:44])[0]
-    bytes_of_kv = struct.unpack('<I', header[60:64])[0]
-    f.seek(64 + bytes_of_kv)
-    image_size = struct.unpack('<I', f.read(4))[0]
-    data = f.read(image_size)
+    width, height = struct.unpack('<I', header[36:40])[0], struct.unpack('<I', header[40:44])[0]
+    f.seek(64 + struct.unpack('<I', header[60:64])[0])
+    data = f.read(struct.unpack('<I', f.read(4))[0])
 
-    if gl_internal_format == 0x8D64:
-        decoded = texture2ddecoder.decode_etc1(data, width, height)
+    if gl_internal_format == 0x8D64: decoded = texture2ddecoder.decode_etc1(data, width, height)
     elif 0x93B0 <= gl_internal_format <= 0x93BD:
-        astc_formats = {
-            0x93B0: (4, 4), 0x93B1: (5, 4), 0x93B2: (5, 5), 0x93B3: (6, 5),
-            0x93B4: (6, 6), 0x93B5: (8, 5), 0x93B6: (8, 6), 0x93B7: (8, 8),
-            0x93B8: (10, 5), 0x93B9: (10, 6), 0x93BA: (10, 8), 0x93BB: (10, 10),
-            0x93BC: (12, 10), 0x93BD: (12, 12)
-        }
-        bx, by = astc_formats[gl_internal_format]
+        astc_formats = {0x93B0:(4,4), 0x93B1:(5,4), 0x93B2:(5,5), 0x93B3:(6,5), 0x93B4:(6,6), 0x93B5:(8,5), 0x93B6:(8,6), 0x93B7:(8,8)}
+        bx, by = astc_formats.get(gl_internal_format, (4,4))
         decoded = texture2ddecoder.decode_astc(data, width, height, bx, by)
-    elif gl_internal_format == 0x8058:
-        expected = width * height * 4
-        if len(data) < expected: raise Exception("Truncated texture buffer arrays.")
-        decoded = data[:expected]
-    else:
-        raise Exception(f"Unsupported format standard: {hex(gl_internal_format)}")
+    else: decoded = data[:width*height*4]
 
     img = Image.frombytes("RGBA", (width, height), decoded)
     r, g, b, a = img.split()
-    img = Image.merge("RGBA", (b, g, r, a))
-    img = img.transpose(Image.FLIP_TOP_BOTTOM)
-    output = io.BytesIO()
-    img.save(output, format="PNG")
-    return output.getvalue()
-
-def isolate_structural_prefix(filename: str) -> str:
-    """Helper method to isolate file categorization tokens for smart map pairing groups."""
-    cleaned = re.sub(r'(_(Texture2D|Sprite|Mesh|AudioClip|VideoClip|Material|Shader|Font|GameObject|MonoBehaviour|ScriptableObject))?\.[a-zA-w0-9]+$', '', filename, flags=re.IGNORECASE)
-    parts = re.split(r'[-_]', cleaned)
-    if parts and len(parts[0]) > 2:
-        return parts[0].upper()
-    return "GENERAL_COMPONENTS"
+    img = Image.merge("RGBA", (b, g, r, a)).transpose(Image.FLIP_TOP_BOTTOM)
+    out = io.BytesIO()
+    img.save(out, format="PNG")
+    return out.getvalue()
 
 @app.route('/api/extract', methods=['GET', 'POST'])
 def handle_universal_extraction_pipeline():
     global GLOBAL_CACHE_REGISTRY
     download_type = request.args.get('download_type', '')
 
-    if download_type in ['zip', 'zip_mapped']:
-        if not GLOBAL_CACHE_REGISTRY.get('extracted'):
-            return jsonify({"error": "Cache registry empty."}), 400
+    if download_type == 'zip':
+        if not GLOBAL_CACHE_REGISTRY.get('extracted'): return jsonify({"error": "Cache empty."}), 400
         
+        target_indices = request.args.get('indices', '')
+        group_by_name = request.args.get('group_mapped', 'false') == 'true'
+        
+        allowed_indices = []
+        if target_indices:
+            allowed_indices = [int(x) for x in target_indices.split(',') if x.strip()]
+
         zip_io = io.BytesIO()
         with zipfile.ZipFile(zip_io, "w", zipfile.ZIP_DEFLATED, compresslevel=1) as zf:
             for item in GLOBAL_CACHE_REGISTRY['extracted']:
-                if download_type == 'zip_mapped':
-                    prefix_token = isolate_structural_prefix(item['name'])
-                    mapped_structural_path = f"Grouped_Bundles/{prefix_token}/{os.path.basename(item['zip_path'])}"
-                    zf.writestr(mapped_structural_path, item['bytes'])
+                if allowed_indices and item['index'] not in allowed_indices: continue
+                
+                # Dynamic file architecture layout mapping routine
+                if group_by_name:
+                    clean_folder_ref = re.sub(r'[<>:"/\\|?*\x00-\x1f]', "_", item['orig_name'])
+                    final_path = f"Grouped_Assets/{clean_folder_ref}/{item['name']}"
                 else:
-                    zf.writestr(item['zip_path'], item['bytes'])
+                    final_path = item['zip_path']
                     
+                zf.writestr(final_path, item['bytes'])
+                
         zip_io.seek(0)
-        return send_file(zip_io, mimetype='application/zip', as_attachment=True, download_name="extracted_assets.zip")
+        return send_file(zip_io, mimetype='application/zip', as_attachment=True, download_name="extracted_package.zip")
 
     elif download_type == 'single':
         file_idx = int(request.args.get('file_index', -1))
         if not GLOBAL_CACHE_REGISTRY.get('extracted') or file_idx < 0 or file_idx >= len(GLOBAL_CACHE_REGISTRY['extracted']):
-            return jsonify({"error": "Target node out of bounds."}), 400
+            return jsonify({"error": "Out of bounds."}), 400
         item = GLOBAL_CACHE_REGISTRY['extracted'][file_idx]
-        
-        ext = item['name'].split('.')[-1].lower()
-        mimetype = 'application/octet-stream'
-        if ext in ['png', 'jpg', 'jpeg', 'webp']: mimetype = 'image/png'
-        elif ext in ['mp3', 'wav', 'ogg']: mimetype = 'audio/mpeg'
-        elif ext in ['json', 'txt', 'xml', 'atlas', 'obj']: mimetype = 'text/plain; charset=utf-8'
-        elif ext in ['ttf', 'otf']: mimetype = 'font/ttf'
-        
-        response = make_response(send_file(io.BytesIO(item['bytes']), mimetype=mimetype, as_attachment=True, download_name=item['name']))
-        response.headers["Access-Control-Allow-Origin"] = "*"
-        return response
+        return send_file(io.BytesIO(item['bytes']), mimetype='application/octet-stream', as_attachment=True, download_name=item['name'])
 
-    if 'asset_bundle' not in request.files:
-        return jsonify({"error": "No file stream discovered."}), 400
+    if 'asset_bundle' not in request.files: return jsonify({"error": "Missing file file stream."}), 400
 
     try:
         uploaded_file = request.files['asset_bundle']
@@ -298,16 +244,15 @@ def handle_universal_extraction_pipeline():
         raw_bytes = uploaded_file.read()
         decompressed_data = decompress_stream(raw_bytes)
 
-        extracted_list = []
-        json_metadata_manifest = []
+        extracted_list, json_metadata_manifest = [], []
         tracking_index_counter = 0
 
         if decompressed_data.startswith(b'\xABKTX 11\xBB\r\n\x1A\n'):
             try:
                 png_bytes = convert_ktx_to_png_fallback(decompressed_data)
-                clean_base_title = os.path.splitext(orig_name)[0]
-                extracted_list.append({'name': f"{clean_base_title}.png", 'zip_path': f"Textures/{clean_base_title}.png", 'bytes': png_bytes, 'label': 'Texture2D'})
-                json_metadata_manifest.append({'index': 0, 'name': f"{clean_base_title}.png", 'path': f"Textures/{clean_base_title}.png", 'label': "Texture2D"})
+                clean_title = os.path.splitext(orig_name)[0]
+                extracted_list.append({'index': 0, 'name': f"{clean_title}.png", 'zip_path': f"Textures/{clean_title}.png", 'bytes': png_bytes, 'orig_name': clean_title})
+                json_metadata_manifest.append({'index': 0, 'name': f"{clean_title}.png", 'path': f"Textures/{clean_title}.png", 'label': "KTX Image"})
                 GLOBAL_CACHE_REGISTRY['extracted'] = extracted_list
                 return jsonify({"files": json_metadata_manifest})
             except: pass
@@ -318,49 +263,45 @@ def handle_universal_extraction_pipeline():
         except:
             try:
                 png_bytes = convert_ktx_to_png_fallback(decompressed_data)
-                clean_base_title = os.path.splitext(orig_name)[0]
-                extracted_list.append({'name': f"{clean_base_title}.png", 'zip_path': f"Textures/{clean_base_title}.png", 'bytes': png_bytes, 'label': 'Texture2D'})
-                json_metadata_manifest.append({'index': 0, 'name': f"{clean_base_title}.png", 'path': f"Textures/{clean_base_title}.png", 'label': "Texture2D"})
+                clean_title = os.path.splitext(orig_name)[0]
+                extracted_list.append({'index': 0, 'name': f"{clean_title}.png", 'zip_path': f"Textures/{clean_title}.png", 'bytes': png_bytes, 'orig_name': clean_title})
+                json_metadata_manifest.append({'index': 0, 'name': f"{clean_title}.png", 'path': f"Textures/{clean_title}.png", 'label': "KTX Image"})
                 GLOBAL_CACHE_REGISTRY['extracted'] = extracted_list
                 return jsonify({"files": json_metadata_manifest})
-            except:
-                return jsonify({"error": "Unrecognized package formatting maps."}), 400
+            except: return jsonify({"error": "Failed parsing archive layers."}), 400
 
         seen_md5 = set()
         for obj in objects_array:
             res = process_object_unrestricted(obj, decompressed_data)
             if res:
-                filename, file_bytes, zip_folder_path, type_label = res
+                filename, file_bytes, zip_path, type_label, original_raw_name = res
                 h = hashlib.md5(file_bytes).hexdigest()
                 if h not in seen_md5:
                     seen_md5.add(h)
-                    extracted_list.append({'name': filename, 'zip_path': zip_folder_path, 'bytes': file_bytes, 'label': type_label})
+                    extracted_list.append({
+                        'index': tracking_index_counter, 'name': filename, 
+                        'zip_path': zip_path, 'bytes': file_bytes, 'orig_name': original_raw_name
+                    })
                     json_metadata_manifest.append({
-                        'index': tracking_index_counter, 
-                        'name': filename, 
-                        'path': zip_folder_path,
-                        'label': type_label
+                        'index': tracking_index_counter, 'name': filename, 
+                        'path': zip_path, 'label': type_label
                     })
                     tracking_index_counter += 1
         del env
         gc.collect()
 
-        if tracking_index_counter == 0:
-            return jsonify({"error": "No elements matched inside package targets."}), 400
-
+        if tracking_index_counter == 0: return jsonify({"error": "No elements found inside asset mappings."}), 400
         GLOBAL_CACHE_REGISTRY['extracted'] = extracted_list
         return jsonify({"files": json_metadata_manifest})
     except Exception as e:
-        return jsonify({"error": f"Internal process crash: {str(e)}"}), 500
+        return jsonify({"error": f"Process crash log: {str(e)}"}), 500
 
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def serve_ui_layout(path):
     try:
-        with open(HTML_PATH, 'r', encoding='utf-8') as f:
-            return f.read()
-    except Exception as e:
-        return f"System UI file missing: {str(e)}", 500
+        with open(HTML_PATH, 'r', encoding='utf-8') as f: return f.read()
+    except Exception as e: return f"Missing layout index maps: {str(e)}", 500
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=10000, debug=True)

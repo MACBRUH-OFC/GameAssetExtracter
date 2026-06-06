@@ -12,216 +12,69 @@
             font-family: 'GFF-Bold'; 
             src: url('https://dl.dir.freefiremobile.com/common/web_event/common/fonts/website/GFFLatinW05-Bold.woff') format('woff'); 
         }
-        
-        :root { 
-            --ff-yellow: #ffde00; 
-            --ff-emerald: #00ffa3; 
-            --ff-red: #ff3e3e; 
-            --ff-cyan: #38bdf8;
-        }
-
+        :root { --ff-yellow: #ffde00; --ff-emerald: #00ffa3; --ff-red: #ff3e3e; --ff-cyan: #38bdf8; }
         body { 
-            background: #000; 
-            color: #fff; 
-            min-height: 100vh; 
+            background: #000; color: #fff; min-height: 100vh; 
             background-image: url('https://dl.dir.freefiremobile.com/common/web_event/official2/dist/client/img/bg_pc.617c669.jpg'); 
-            background-size: cover; 
-            background-attachment: fixed; 
-            font-family: 'Inter', sans-serif; 
-            overflow-x: hidden; 
+            background-size: cover; background-attachment: fixed; font-family: 'Inter', sans-serif; overflow-x: hidden; 
         }
-        
-        body::before { 
-            content: ""; 
-            position: fixed; 
-            inset: 0; 
-            background: rgba(0, 0, 0, 0.95); 
-            z-index: -1; 
-        }
-
+        body::before { content: ""; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.95); z-index: -1; }
         .gff { font-family: 'GFF-Bold', sans-serif; }
 
+        /* Asymmetric Layout Panel Borders Configuration */
         .uniform-panel {
-            background: #0a0a0a; 
-            border: 1px solid #1f1f1f; 
-            border-radius: 24px; 
-            position: relative; 
-            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8);
-            height: 390px;
-            display: flex;
-            flex-direction: column;
-            transition: height 0.3s ease-out;
+            background: #09090b; border: 1px solid #1a1a22; border-left: none;
+            border-radius: 0px 24px 24px 0px; position: relative; 
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85); height: 420px;
+            display: flex; flex-direction: column; overflow: hidden;
         }
-        
         .uniform-panel::before { 
-            content: ""; 
-            position: absolute; 
-            top: 0; left: 0; width: 4px; height: 100%; 
-            background: var(--ff-yellow); 
-            border-radius: 24px 0 0 24px; 
+            content: ""; position: absolute; top: 0; left: 0; width: 4px; height: 100%; 
+            background: var(--ff-yellow); z-index: 10;
         }
-
-        @media (max-width: 1023px) {
-            .uniform-panel.adaptive-mobile-height {
-                height: auto;
-                min-height: 160px;
-                max-height: 390px;
-            }
-        }
-
-        .panel-body {
-            padding: 20px;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            position: relative;
-        }
-
+        .panel-body { padding: 20px; flex: 1; display: flex; flex-direction: column; overflow: hidden; }
         .scrollable-content-box {
-            flex: 1;
-            background: #060608;
-            border: 1px solid #1a1a1f;
-            border-radius: 16px;
-            overflow: hidden;
-            position: relative;
-            min-height: 120px;
+            flex: 1; background: #040406; border: 1px solid #14141a;
+            border-radius: 16px; overflow-y: auto; position: relative;
         }
 
         .btn-mechanical { 
-            cursor: pointer; 
-            font-family: 'GFF-Bold'; 
-            text-transform: uppercase; 
-            font-style: italic; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            border-radius: 16px; 
-            gap: 12px; 
-            position: relative;
-            background: var(--ff-yellow); 
-            color: #000; 
-            box-shadow: 0 5px 0 #c2a900;
-            transition: background 0.1s ease;
+            cursor: pointer; font-family: 'GFF-Bold'; text-transform: uppercase; font-style: italic; 
+            display: flex; align-items: center; justify-content: center; border-radius: 14px; gap: 10px; 
+            position: relative; background: var(--ff-yellow); color: #000; box-shadow: 0 4px 0 #b59e00;
+            transition: all 0.1s ease;
         }
-        .btn-mechanical:hover { background: #ffe526; }
-        .btn-mechanical:active { 
-            transform: translateY(2px);
-            box-shadow: 0 3px 0 #c2a900;
-        }
+        .btn-mechanical:active { transform: translateY(2px); box-shadow: 0 2px 0 #b59e00; }
 
         .upload-deck {
-            background: #121212;
-            border: 2px dashed #2a2a2a;
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            height: 110px;
-            cursor: pointer;
-            overflow: hidden;
-            transition: all 0.2s ease;
+            background: #0d0d11; border: 2px dashed #22222a; border-radius: 16px;
+            display: flex; align-items: center; height: 95px; cursor: pointer; transition: all 0.2s;
         }
-        .upload-deck.dragover {
-            border-color: var(--ff-yellow);
-            background: #161612;
+        .upload-deck.dragover { border-color: var(--ff-yellow); background: #131312; }
+        .deck-port { width: 60px; height: 100%; background: #121216; border-right: 1px solid #1e1e26; display: flex; align-items: center; justify-content: center; }
+
+        /* Multiselect Builtin Custom Matrix Filter System */
+        .custom-filter-deck { display: flex; flex-wrap: wrap; gap: 4px; padding: 8px; background: #08080c; border-radius: 12px; border: 1px solid #171722; }
+        .filter-chip {
+            padding: 4px 8px; font-size: 9px; font-weight: 800; text-transform: uppercase; border-radius: 6px;
+            background: #12121a; border: 1px solid #22222f; color: #a1a1aa; cursor: pointer; transition: all 0.15s;
         }
+        .filter-chip:hover { border-color: #444456; color: #fff; }
+        .filter-chip.active { background: var(--ff-yellow); border-color: var(--ff-yellow); color: #000; }
 
-        .deck-port {
-            width: 70px;
-            height: 100%;
-            background: #161616;
-            border-right: 1px solid #2a2a2a;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+        /* Audio Frequency Visualizer Bars styling */
+        .audio-wave-visualizer { display: flex; align-items: flex-end; justify-content: center; gap: 2px; height: 45px; width: 100%; padding: 0 10px; }
+        .wave-bar { width: 4px; height: 3px; background: #1e1e2a; border-radius: 2px; transition: height 0.05s linear; }
 
-        .deck-body { flex: 1; padding: 0 16px; display: flex; flex-direction: column; justify-content: center; min-width: 0; }
+        /* Modal Dialog Structure overrides */
+        .modal-blur-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(4px); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 16px; }
+        .dialog-frame { background: #0a0a0f; border: 1px solid #22222e; border-top: 4px solid var(--ff-yellow); border-radius: 16px; width: 100%; max-w: 400px; padding: 24px; box-shadow: 0 30px 70px rgba(0,0,0,0.9); }
 
-        .status-window { 
-            background: #121212; border: 1px solid #2a2a2a; height: 60px; 
-            border-radius: 16px; display: flex; align-items: center; padding: 0 16px; gap: 12px; 
-        }
-
-        .pixelated-render {
-            image-rendering: pixelated;
-            max-height: 100%;
-            max-width: 100%;
-            object-fit: contain;
-        }
-
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #070709; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #222227; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #040406; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #1e1e26; border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--ff-yellow); }
-
-        /* Custom Embedded Filter Selection Overlay Styles */
-        .embedded-filter-page {
-            position: absolute;
-            inset: 0;
-            background: #09090c;
-            z-index: 40;
-            border-radius: 24px;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            transform: translateY(100%);
-            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .embedded-filter-page.open { transform: translateY(0); }
-
-        /* Real Audio Frequency Wave Visualizer Bars Setup */
-        .audio-wave-visualizer {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 3px;
-            height: 40px;
-            width: 100%;
-            background: #060609;
-            border-radius: 12px;
-            border: 1px solid #14141a;
-        }
-        .wave-bar {
-            width: 3px;
-            height: 4px;
-            background: #1f1f2e;
-            border-radius: 2px;
-            transform-origin: center;
-            transition: height 0.05s linear, background 0.1s ease;
-        }
-
-        .player-slider {
-            height: 6px;
-            background: #1a1a24;
-            border-radius: 10px;
-            position: relative;
-            cursor: pointer;
-        }
-        .player-slider-fill { height: 100%; border-radius: 10px; width: 0%; }
-
-        .premium-video-player {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #000;
-        }
-        .video-control-bar {
-            position: absolute;
-            bottom: 0; left: 0; right: 0;
-            background: linear-gradient(transparent, rgba(0,0,0,0.95));
-            padding: 16px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            opacity: 0;
-            transition: opacity 0.2s ease;
-            z-index: 10;
-        }
-        .premium-video-player:hover .video-control-bar { opacity: 1; }
+        .pixelated-render { image-rendering: pixelated; max-height: 90%; max-width: 90%; object-fit: contain; }
     </style>
 </head>
 <body class="flex flex-col justify-between">
@@ -231,142 +84,148 @@
 </header>
 
 <main class="flex-1 w-full max-w-7xl mx-auto p-4 md:p-6 lg:p-8">
-    
-    <div class="text-center my-4 flex flex-col items-center">
-        <span class="text-[38px] md:text-[48px] font-black italic block leading-[0.75] gff tracking-tight">ASSETS</span>
-        <span class="text-[38px] md:text-[48px] font-black italic block text-[#ffde00] leading-[0.85] gff tracking-tight">EXTRACTOR</span>
-        
-        <div class="mt-3 inline-flex items-center bg-zinc-900/80 text-zinc-400 border border-zinc-800 text-[10px] font-black tracking-widest px-4 py-1 rounded-full gff uppercase shadow-inner">
-            <i class="fa-solid fa-cubes text-[#ffde00] mr-2 text-[9px]"></i> ASSETSBUNDLE, KTX EXTRACTOR
+    <div class="text-center my-4 relative">
+        <span class="text-[38px] md:text-[50px] font-black italic block leading-[0.75] gff">ASSETS</span>
+        <span class="text-[38px] md:text-[50px] font-black italic block text-[#ffde00] leading-[0.85] gff">EXTRACTOR</span>
+        <div class="inline-block mt-2 px-3 py-1 bg-zinc-950/80 border border-zinc-800 rounded-full">
+            <span class="text-[9px] font-bold tracking-widest text-zinc-500 uppercase">ASSETSBUNDLE, KTX EXTRACTOR</span>
         </div>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start mt-6">
-        
+        <!-- Window Box 1: File Uploader Component -->
         <div class="uniform-panel">
             <div class="panel-body justify-between">
                 <div>
                     <h2 class="text-xs font-black text-white uppercase tracking-wider mb-1 gff">Upload File</h2>
-                    <p class="text-[11px] text-zinc-500">Select or drop your asset maps here.</p>
+                    <p class="text-[11px] text-zinc-500">Select or drop target binary data streams here.</p>
                 </div>
-
-                <form id="extractorForm" class="flex-1 flex flex-col justify-center space-y-4 my-2">
+                <form id="extractorForm" class="flex-1 flex flex-col justify-center space-y-3 my-2">
                     <div class="upload-deck" id="dropZone" onclick="document.getElementById('fileInput').click()">
-                        <div class="deck-port">
-                            <i id="uploadIcon" class="fa-solid fa-folder-open text-lg text-zinc-500"></i>
-                        </div>
+                        <div class="deck-port"><i id="uploadIcon" class="fa-solid fa-folder-open text-base text-zinc-600"></i></div>
                         <div class="deck-body">
-                            <span id="fileStatusText" class="text-[9px] font-bold tracking-widest text-zinc-500 gff mb-0.5 uppercase">CHOOSE FILE</span>
-                            <p id="fileLabel" class="gff text-[12px] text-zinc-300 uppercase tracking-wide truncate">Click or drag file here</p>
+                            <span id="fileStatusText" class="text-[8px] font-bold tracking-widest text-zinc-600 gff mb-0.5 uppercase">CHOOSE FILE</span>
+                            <p id="fileLabel" class="gff text-[11px] text-zinc-400 uppercase tracking-wide truncate">Drag file package here</p>
                         </div>
                     </div>
                     <input type="file" id="fileInput" class="hidden" required>
-                    
-                    <button type="submit" class="btn-mechanical w-full h-14 text-sm font-bold italic">
-                        <i class="fa-solid fa-bolt text-sm"></i> Extract Files
+                    <button type="submit" class="btn-mechanical w-full h-12 text-xs font-bold italic">
+                        <i class="fa-solid fa-bolt text-xs"></i> Extract System Data
                     </button>
                 </form>
-
-                <div class="status-window">
-                    <div id="statusIcon" class="w-5 h-5 flex items-center justify-center text-zinc-500">
-                        <i class="fa-solid fa-terminal text-xs"></i>
-                    </div>
+                <div class="bg-[#0c0c10] border border-[#1f1f2a] h-12 rounded-xl flex items-center px-3 gap-3">
+                    <div id="statusIcon" class="text-zinc-600"><i class="fa-solid fa-terminal text-xs"></i></div>
                     <div class="flex flex-col flex-1 min-w-0">
-                        <span id="statusText" class="gff text-[9px] uppercase tracking-widest text-zinc-400">System Log</span>
-                        <p id="statusDescText" class="text-[11px] text-zinc-500 truncate">Awaiting target package data.</p>
+                        <span id="statusText" class="gff text-[8px] uppercase tracking-widest text-zinc-400">System Log</span>
+                        <p id="statusDescText" class="text-[10px] text-zinc-500 truncate">Awaiting file input streams.</p>
                     </div>
-                    <span id="statusBadge" class="text-[9px] font-black uppercase text-zinc-400 bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800 gff tracking-wider">Ready</span>
+                    <span id="statusBadge" class="text-[8px] font-black uppercase text-zinc-500 bg-[#060608] px-2 py-0.5 rounded border border-zinc-800 gff tracking-wider">Ready</span>
                 </div>
             </div>
         </div>
 
-        <div id="listWindowPanel" class="uniform-panel adaptive-mobile-height">
-            <div class="panel-body">
-                <div class="flex items-center justify-between border-b border-[#1f1f1f] pb-3 mb-3">
+        <!-- Window Box 2: Custom Extracted Lists & Filters Frame -->
+        <div class="uniform-panel">
+            <div class="panel-body space-y-3">
+                <div class="flex items-center justify-between border-b border-[#1a1a22] pb-2">
                     <div>
                         <h2 class="text-xs font-black text-white uppercase tracking-wider gff">Extracted List</h2>
-                        <p id="cacheCounterText" class="text-[11px] text-zinc-500">No source pack loaded.</p>
+                        <p id="cacheCounterText" class="text-[10px] text-zinc-500">Unpopulated matrix configuration.</p>
                     </div>
-                    
-                    <div class="flex items-center gap-2">
-                        <button id="openFilterBtn" class="hidden h-8 px-3 bg-[#121216] border border-[#2a2a32] hover:border-[#ffde00] text-zinc-300 hover:text-white rounded-lg flex items-center gap-1.5 transition-colors text-[11px] font-bold">
-                            <i class="fa-solid fa-filter text-[10px] text-[#ffde00]"></i> Filter
-                        </button>
-                        <button id="downloadAllBtn" class="hidden h-8 w-8 bg-[#121216] border border-[#2a2a32] hover:border-[#ffde00] text-[#ffde00] rounded-lg flex items-center justify-center transition-colors">
-                            <i class="fa-solid fa-download text-xs"></i>
-                        </button>
+                    <button id="downloadAllBtn" class="hidden h-7 w-7 bg-[#121218] border border-[#22222f] hover:border-[#ffde00] text-[#ffde00] rounded-lg flex items-center justify-center transition-colors">
+                        <i class="fa-solid fa-download text-xs"></i>
+                    </button>
+                </div>
+
+                <!-- Custom Inbuilt Tabbed In-Page Multiselect Grid System -->
+                <div class="hidden flex flex-col gap-1.5" id="filterDeckContainer">
+                    <span class="text-[9px] font-black text-zinc-500 uppercase tracking-wider gff">Filter By Asset Categories:</span>
+                    <div class="custom-filter-deck custom-scrollbar max-height-[65px] overflow-y-auto" id="customFilterDeckNode">
+                        <!-- Dynamic Multiselect Chips injected automatically -->
                     </div>
                 </div>
 
                 <div class="scrollable-content-box">
                     <div class="w-full h-full flex flex-col justify-center items-center text-center p-4 absolute inset-0" id="listEmptyState">
-                        <i class="fa-solid fa-list-ul text-lg text-zinc-800 mb-1.5"></i>
-                        <div class="gff text-[9px] text-zinc-600 uppercase tracking-widest">Awaiting file parsing mapping</div>
+                        <i class="fa-solid fa-list-ul text-base text-zinc-800 mb-1"></i>
+                        <div class="gff text-[8px] text-zinc-600 uppercase tracking-widest">Parsed assets mapping node area</div>
                     </div>
-                    <div class="w-full h-full overflow-y-auto custom-scrollbar hidden space-y-1 p-2" id="fileList"></div>
-                </div>
-
-                <div id="embeddedFilterPage" class="embedded-filter-page">
-                    <div class="flex items-center justify-between border-b border-[#1f1f25] pb-2.5 mb-3">
-                        <span class="text-xs font-black uppercase tracking-wider text-white gff"><i class="fa-solid fa-sliders text-[#ffde00] mr-1.5"></i> Select Type Filter</span>
-                        <button id="closeFilterBtn" class="text-zinc-500 hover:text-white text-sm px-1"><i class="fa-solid fa-xmark"></i></button>
+                    <div class="w-full h-full overflow-y-auto custom-scrollbar hidden space-y-0.5 p-2" id="fileList">
+                        <!-- Content Rows Injected Here -->
                     </div>
-                    <div id="filterOptionsContainer" class="flex-1 overflow-y-auto custom-scrollbar space-y-1 pr-1">
-                        </div>
                 </div>
             </div>
         </div>
 
+        <!-- Window Box 3: Terminal Preview Pipeline Workspace -->
         <div class="uniform-panel">
             <div class="panel-body">
-                <div class="border-b border-[#1f1f1f] pb-3 mb-3">
+                <div class="border-b border-[#1a1a22] pb-2 mb-2">
                     <h2 class="text-xs font-black text-white uppercase tracking-wider gff">File Preview</h2>
-                    <p class="text-[11px] text-zinc-500">Real-time media and 3D schema viewing matrix.</p>
+                    <p class="text-[11px] text-zinc-500">Real-time object renders and signal processing checks.</p>
                 </div>
-
-                <div class="scrollable-content-box bg-[#0a0a0c]">
-                    <div id="previewFallback" class="w-full h-full flex flex-col justify-center items-center text-center p-4 absolute inset-0 text-zinc-600">
-                        <i class="fa-solid fa-eye text-lg text-zinc-800 mb-1.5"></i>
-                        <p class="text-[9px] font-bold uppercase tracking-wider gff text-zinc-600">Select an asset row node</p>
+                <div class="scrollable-content-box bg-[#020204]">
+                    <div id="previewFallback" class="w-full h-full flex flex-col justify-center items-center text-center p-4 absolute inset-0 text-zinc-700">
+                        <i class="fa-solid fa-eye text-base text-zinc-800 mb-1"></i>
+                        <p class="text-[8px] font-bold uppercase tracking-wider gff text-zinc-600">Select file node to run preview tests</p>
                     </div>
-
                     <div id="previewContentBox" class="hidden w-full h-full flex flex-col justify-between p-2 absolute inset-0">
-                        <div class="flex-1 w-full flex items-center justify-center overflow-hidden rounded-xl bg-[#121215] border border-[#1f1f23] relative" id="mediaBox"></div>
-                        <div class="w-full flex items-center justify-between gap-3 bg-[#111115] p-2 mt-2 rounded-xl border border-[#1f1f25]">
-                            <p id="mediaTitle" class="text-[11px] text-zinc-400 font-bold truncate flex-1 text-left px-1"></p>
-                            <a id="singleSaveBtn" href="#" class="h-8 w-8 bg-[#1a1a22] hover:bg-[#ffde00] hover:text-black text-zinc-400 rounded-lg border border-[#2d2d35] transition-colors flex items-center justify-center flex-shrink-0 shadow-md">
-                                <i class="fa-solid fa-arrow-down text-xs"></i>
+                        <div class="flex-1 w-full flex items-center justify-center overflow-hidden rounded-xl bg-[#0a0a0f] border border-[#161622] relative" id="mediaBox">
+                            <!-- Visual outputs rendered here live -->
+                        </div>
+                        <div class="w-full flex items-center justify-between gap-2 bg-[#09090d] p-1.5 mt-1.5 rounded-xl border border-[#171722]">
+                            <p id="mediaTitle" class="text-[10px] text-zinc-400 font-bold truncate flex-1 text-left px-1 font-mono"></p>
+                            <a id="singleSaveBtn" href="#" class="h-7 w-7 bg-[#14141c] hover:bg-[#ffde00] hover:text-black text-zinc-400 rounded-md border border-[#242433] transition-colors flex items-center justify-center flex-shrink-0 shadow-md">
+                                <i class="fa-solid fa-arrow-down text-[11px]"></i>
                             </a>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-
     </div>
 </main>
 
-<div id="zipExportModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-[#0b0b0f] border border-[#222] rounded-3xl max-w-sm w-full p-6 text-center space-y-4 shadow-2xl relative">
-        <div class="w-12 h-12 bg-yellow-950/40 border border-yellow-700/40 text-[#ffde00] rounded-2xl flex items-center justify-center text-lg mx-auto mb-1"><i class="fa-solid fa-cubes"></i></div>
-        <h3 class="text-sm font-black text-white uppercase tracking-wider gff">ZIP Archive Pipeline Options</h3>
-        <p class="text-xs text-zinc-400 leading-relaxed">Choose how you want the extractor to compile and structure your compressed file directories:</p>
-        <div class="space-y-2 pt-2">
-            <button id="confirmStandardZipBtn" class="w-full py-3 px-4 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-800 text-xs font-bold rounded-xl transition-all uppercase tracking-wide flex items-center justify-between"><span>Standard Category Folders</span><i class="fa-solid fa-folder text-zinc-500 text-[11px]"></i></button>
-            <button id="confirmMappedZipBtn" class="w-full py-3 px-4 bg-gradient-to-r from-yellow-500/10 to-amber-600/10 hover:from-yellow-500/20 border border-yellow-500/30 text-[#ffde00] text-xs font-black rounded-xl transition-all uppercase tracking-wider flex items-center justify-between gff"><span>Smart Map Project Grouping</span><i class="fa-solid fa-diagram-project text-[11px]"></i></button>
+<!-- Zip Download Mode Selection Custom Modal Dialog Panel -->
+<div id="zipSelectionModal" class="modal-blur-overlay hidden">
+    <div class="dialog-frame">
+        <h3 class="gff text-sm font-black text-white uppercase tracking-wider mb-1">Package Exporter Setup</h3>
+        <p class="text-[11px] text-zinc-400 mb-4">Choose how the system packaging engine structures your target archive maps.</p>
+        <div class="space-y-2 mb-6">
+            <label class="flex items-start gap-3 p-3 bg-[#111116] border border-[#222232] rounded-xl cursor-pointer hover:border-zinc-500">
+                <input type="radio" name="zipStructureOption" value="type" checked class="mt-0.5 accent-[#ffde00]">
+                <div class="flex flex-col">
+                    <span class="text-xs font-bold text-zinc-200">Sort By System Type Folders</span>
+                    <span class="text-[10px] text-zinc-500 mt-0.5">Organizes files into categories like /Textures/, /Geometry/, /Audio/.</span>
+                </div>
+            </label>
+            <label class="flex items-start gap-3 p-3 bg-[#111116] border border-[#222232] rounded-xl cursor-pointer hover:border-zinc-500">
+                <input type="radio" name="zipStructureOption" value="group" class="mt-0.5 accent-[#ffde00]">
+                <div class="flex flex-col">
+                    <span class="text-xs font-bold text-zinc-200">Group By Shared Element Identity</span>
+                    <span class="text-[10px] text-zinc-500 mt-0.5">Collects matching configuration layers together under individual original identity mapping directories.</span>
+                </div>
+            </label>
+            <label class="flex items-center gap-3 p-2 px-3 bg-[#0d0d12] border border-zinc-800 rounded-xl">
+                <input type="checkbox" id="zipFilterScopeCheckbox" checked class="accent-[#ffde00]">
+                <span class="text-[11px] font-bold text-zinc-400">Download only matching filtered list values (${filteredCount})</span>
+            </label>
         </div>
-        <button id="closeZipModalBtn" class="text-[10px] uppercase font-bold tracking-widest text-zinc-600 hover:text-zinc-400 pt-2 block mx-auto transition-colors">Cancel Process</button>
+        <div class="flex items-center gap-2">
+            <button id="modalCancelBtn" class="flex-1 h-10 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-xs font-bold uppercase tracking-wider text-zinc-400 border border-zinc-800 transition-colors">Cancel</button>
+            <button id="modalConfirmBtn" class="flex-1 h-10 rounded-xl bg-[#ffde00] hover:bg-[#ffe525] text-xs font-bold uppercase tracking-wider text-black font-semibold shadow-md">Compile Zip</button>
+        </div>
     </div>
 </div>
 
-<footer class="w-full text-center py-4 text-[10px] font-bold text-zinc-700 border-t border-[#141419] bg-[#050507] tracking-widest uppercase mt-8">
-    Extractor Suite &bull; High Resolution System Mapping Layout
+<footer class="w-full text-center py-4 text-[10px] font-bold text-zinc-700 border-t border-[#121217] bg-[#030305] tracking-widest uppercase mt-8">
+    Extractor Suite &bull; High Performance Unpacking Pipelines
 </footer>
 
 <script>
     let activeCache = [];
-    let selectedActiveFilterType = "ALL";
-    let activeWebAudioNodes = null; // Frequency analyzer references
+    let activeSelectedFilters = new Set();
+    let audioCtx = null, audioSrc = null, audioAnalyser = null, audioAnimationId = null;
 
     const fileInput = document.getElementById("fileInput");
     const fileLabel = document.getElementById("fileLabel");
@@ -378,11 +237,8 @@
     const statusIcon = document.getElementById("statusIcon");
     const dropZone = document.getElementById("dropZone");
     
-    const listWindowPanel = document.getElementById("listWindowPanel");
-    const openFilterBtn = document.getElementById("openFilterBtn");
-    const embeddedFilterPage = document.getElementById("embeddedFilterPage");
-    const closeFilterBtn = document.getElementById("closeFilterBtn");
-    const filterOptionsContainer = document.getElementById("filterOptionsContainer");
+    const filterDeckContainer = document.getElementById("filterDeckContainer");
+    const customFilterDeckNode = document.getElementById("customFilterDeckNode");
     const listEmptyState = document.getElementById("listEmptyState");
     const fileList = document.getElementById("fileList");
     const cacheCounterText = document.getElementById("cacheCounterText");
@@ -394,131 +250,128 @@
     const mediaTitle = document.getElementById("mediaTitle");
     const singleSaveBtn = document.getElementById("singleSaveBtn");
 
-    const zipExportModal = document.getElementById("zipExportModal");
-    const confirmStandardZipBtn = document.getElementById("confirmStandardZipBtn");
-    const confirmMappedZipBtn = document.getElementById("confirmMappedZipBtn");
-    const closeZipModalBtn = document.getElementById("closeZipModalBtn");
+    const zipSelectionModal = document.getElementById("zipSelectionModal");
+    const zipFilterScopeCheckbox = document.getElementById("zipFilterScopeCheckbox");
+    const modalCancelBtn = document.getElementById("modalCancelBtn");
+    const modalConfirmBtn = document.getElementById("modalConfirmBtn");
 
     function getAssetIconMarkup(label) {
-        const lowerLabel = label.toLowerCase();
-        if (lowerLabel.includes("image") || lowerLabel.includes("texture")) {
-            return `<div class="w-6 h-6 bg-yellow-950/40 rounded-lg flex items-center justify-center border border-yellow-900/50 flex-shrink-0"><i class="fa-solid fa-image text-[#ffde00] text-[10px]"></i></div>`;
-        } else if (lowerLabel.includes("audio") || lowerLabel.includes("clip")) {
-            return `<div class="w-6 h-6 bg-cyan-950/40 rounded-lg flex items-center justify-center border border-cyan-900/50 flex-shrink-0"><i class="fa-solid fa-volume-high text-cyan-400 text-[10px]"></i></div>`;
-        } else if (lowerLabel.includes("video") || lowerLabel.includes("clip")) {
-            return `<div class="w-6 h-6 bg-red-950/40 rounded-lg flex items-center justify-center border border-red-900/50 flex-shrink-0"><i class="fa-solid fa-clapperboard text-red-500 text-[10px]"></i></div>`;
-        } else if (lowerLabel.includes("mesh") || lowerLabel.includes("3d") || lowerLabel.includes("geometry")) {
-            return `<div class="w-6 h-6 bg-emerald-950/40 rounded-lg flex items-center justify-center border border-emerald-900/50 flex-shrink-0"><i class="fa-solid fa-cube text-emerald-400 text-[10px]"></i></div>`;
-        } else if (lowerLabel.includes("font")) {
-            return `<div class="w-6 h-6 bg-purple-950/40 rounded-lg flex items-center justify-center border border-purple-900/50 flex-shrink-0"><i class="fa-solid fa-font text-purple-400 text-[10px]"></i></div>`;
-        }
-        return `<div class="w-6 h-6 bg-zinc-900 rounded-lg flex items-center justify-center border border-zinc-800 flex-shrink-0"><i class="fa-solid fa-file-lines text-zinc-500 text-[10px]"></i></div>`;
+        const l = label.toLowerCase();
+        if (l.includes("image") || l.includes("texture")) return `<i class="fa-solid fa-image text-[#ffde00] text-[10px]"></i>`;
+        if (l.includes("audio") || l.includes("track")) return `<i class="fa-solid fa-volume-high text-cyan-400 text-[10px]"></i>`;
+        if (l.includes("video") || l.includes("clip")) return `<i class="fa-solid fa-clapperboard text-red-500 text-[10px]"></i>`;
+        if (l.includes("mesh") || l.includes("object") || l.includes("geometry")) return `<i class="fa-solid fa-cube text-emerald-400 text-[10px]"></i>`;
+        if (l.includes("font")) return `<i class="fa-solid fa-font text-purple-400 text-[10px]"></i>`;
+        return `<i class="fa-solid fa-file-lines text-zinc-500 text-[10px]"></i>`;
     }
 
     function handleFileSelection(file) {
         if (!file) return;
         fileLabel.innerText = file.name;
         fileLabel.style.color = "var(--ff-yellow)";
-        uploadIcon.className = "fa-solid fa-circle-check text-lg text-[#ffde00]";
-        fileStatusText.innerText = "FILE RECOGNIZED";
+        uploadIcon.className = "fa-solid fa-circle-check text-base text-[#ffde00]";
+        fileStatusText.innerText = "STREAM TRACKED";
         fileStatusText.style.color = "var(--ff-yellow)";
     }
 
     fileInput.addEventListener("change", function() { handleFileSelection(this.files[0]); });
 
-    ['dragenter', 'dragover'].forEach(name => {
-        dropZone.addEventListener(name, (e) => { e.preventDefault(); dropZone.classList.add('dragover'); }, false);
-    });
-    ['dragleave', 'drop'].forEach(name => {
-        dropZone.addEventListener(name, (e) => { e.preventDefault(); dropZone.classList.remove('dragover'); }, false);
-    });
+    ['dragenter', 'dragover'].forEach(n => { dropZone.addEventListener(n, (e) => { e.preventDefault(); dropZone.classList.add('dragover'); }, false); });
+    ['dragleave', 'drop'].forEach(n => { dropZone.addEventListener(n, (e) => { e.preventDefault(); dropZone.classList.remove('dragover'); }, false); });
     dropZone.addEventListener('drop', (e) => {
         const files = e.dataTransfer.files;
         if(files.length) { fileInput.files = files; handleFileSelection(files[0]); }
     }, false);
 
-    // Inbuilt Page Navigation Toggle Handling
-    openFilterBtn.onclick = () => embeddedFilterPage.classList.add("open");
-    closeFilterBtn.onclick = () => embeddedFilterPage.classList.remove("open");
-
+    // Render Array Listings Matrix
     function renderFileListItems() {
         fileList.innerHTML = "";
-        let count = 0;
+        let displayedCount = 0;
 
         activeCache.forEach(item => {
-            if (selectedActiveFilterType !== "ALL" && item.label !== selectedActiveFilterType) return;
-            count++;
+            // Evaluates multi-selection chip vectors
+            if (activeSelectedFilters.size > 0 && !activeSelectedFilters.has(item.label)) return;
+            displayedCount++;
 
             const row = document.createElement("div");
-            row.className = "file-row-node w-full p-2 text-left bg-[#111115] border border-[#1c1c22] rounded-xl flex items-center justify-between cursor-pointer hover:border-zinc-500 transition-all truncate group";
+            row.className = "file-row-node w-full p-1.5 px-2 text-left bg-[#09090e] border border-[#14141b] rounded-lg flex items-center justify-between cursor-pointer hover:border-zinc-600 transition-all truncate group";
             row.onclick = () => selectFileNode(item.index, row);
             
             row.innerHTML = `
-                <div class="flex items-center gap-2.5 truncate">
-                    ${getAssetIconMarkup(item.label)}
-                    <div class="flex flex-col truncate">
-                        <span class="truncate font-semibold text-zinc-300 text-[11px] group-hover:text-white">${item.name}</span>
-                        <span class="text-[7.5px] font-bold text-zinc-600 mt-0.5 uppercase tracking-wider">${item.label}</span>
+                <div class="flex items-center gap-2 truncate flex-1">
+                    <div class="w-5 h-5 bg-zinc-950 rounded border border-zinc-800 flex items-center justify-center flex-shrink-0">${getAssetIconMarkup(item.label)}</div>
+                    <div class="flex flex-col truncate flex-1">
+                        <span class="truncate text-zinc-300 font-mono text-[10px] group-hover:text-white">${item.name}</span>
+                        <span class="text-[7.5px] font-bold text-zinc-600 uppercase tracking-wider">${item.label}</span>
                     </div>
                 </div>
-                <i class="fa-solid fa-angle-right text-zinc-700 text-[10px] flex-shrink-0 group-hover:text-white group-hover:translate-x-0.5 transition-transform"></i>`;
+                <i class="fa-solid fa-angle-right text-zinc-800 text-[9px] flex-shrink-0 group-hover:text-white transition-transform"></i>`;
             fileList.appendChild(row);
         });
 
-        // Adaptive layout sizing checks for small content lists on phone viewports
-        if (count <= 4) { listWindowPanel.style.height = "auto"; } 
-        else { listWindowPanel.style.height = ""; }
-
-        cacheCounterText.innerText = selectedActiveFilterType === "ALL" 
-            ? `Total elements: ${activeCache.length}` 
-            : `Showing ${count} of ${activeCache.length} elements`;
+        cacheCounterText.innerText = activeSelectedFilters.size === 0 
+            ? `Total items: ${activeCache.length}` 
+            : `Filtered tracking: ${displayedCount} of ${activeCache.length}`;
     }
 
-    function buildInlineCustomFilterPage() {
-        filterOptionsContainer.innerHTML = "";
-        const labels = [...new Set(activeCache.map(i => i.label))].sort();
+    // Build Native Inline Page Multi-Selection Workspace
+    function rebuildFilterDeck() {
+        customFilterDeckNode.innerHTML = "";
+        const labels = [...new Set(activeCache.map(item => item.label))].sort();
+        
+        if(labels.length === 0) {
+            filterDeckContainer.classList.add("hidden");
+            return;
+        }
+        filterDeckContainer.classList.remove("hidden");
 
-        // Standard operational choice allocation row block
-        const allRow = document.createElement("div");
-        allRow.className = `p-2 px-3 text-xs font-bold rounded-xl cursor-pointer flex items-center justify-between transition-colors ${selectedActiveFilterType === 'ALL' ? 'bg-[#ffde00] text-black' : 'bg-zinc-900/60 text-zinc-400 hover:bg-zinc-900 hover:text-white'}`;
-        allRow.innerHTML = `<span>Show All Categories</span><span class="text-[9px] bg-black/10 px-1.5 py-0.5 rounded">${activeCache.length}</span>`;
-        allRow.onclick = () => applySelectedFilterCriteria("ALL");
-        filterOptionsContainer.appendChild(allRow);
-
-        labels.forEach(l => {
-            const labelCount = activeCache.filter(i => i.label === l).length;
-            const row = document.createElement("div");
-            row.className = `p-2 px-3 text-xs font-bold rounded-xl cursor-pointer flex items-center justify-between transition-colors ${selectedActiveFilterType === l ? 'bg-[#ffde00] text-black' : 'bg-zinc-900/60 text-zinc-400 hover:bg-zinc-900 hover:text-white'}`;
-            row.innerHTML = `<span>${l}</span><span class="text-[9px] ${selectedActiveFilterType === l ? 'bg-black/20 text-black' : 'bg-zinc-950 text-zinc-500'} px-1.5 py-0.5 rounded">${labelCount}</span>`;
-            row.onclick = () => applySelectedFilterCriteria(l);
-            filterOptionsContainer.appendChild(row);
+        labels.forEach(label => {
+            const chip = document.createElement("div");
+            chip.className = `filter-chip ${activeSelectedFilters.has(label) ? 'active' : ''}`;
+            chip.innerText = label;
+            chip.onclick = () => {
+                if(activeSelectedFilters.has(label)) {
+                    activeSelectedFilters.delete(label);
+                    chip.classList.remove("active");
+                } else {
+                    activeSelectedFilters.add(label);
+                    chip.classList.add("active");
+                }
+                renderFileListItems();
+            };
+            customFilterDeckNode.appendChild(chip);
         });
     }
 
-    function applySelectedFilterCriteria(targetType) {
-        selectedActiveFilterType = targetType;
-        embeddedFilterPage.classList.remove("open");
-        renderFileListItems();
-        buildInlineCustomFilterPage();
-    }
+    // Process Zip Export Configurations
+    downloadAllBtn.onclick = () => {
+        const count = activeSelectedFilters.size === 0 ? activeCache.length : activeCache.filter(item => activeSelectedFilters.has(item.label)).length;
+        zipFilterScopeCheckbox.closest('label').innerHTML = `
+            <input type="checkbox" id="zipFilterScopeCheckbox" ${activeSelectedFilters.size > 0 ? 'checked' : ''} class="accent-[#ffde00]">
+            <span class="text-[11px] font-bold text-zinc-400">Export only matching filtered list values (${count} items)</span>
+        `;
+        zipSelectionModal.classList.remove("hidden");
+    };
 
-    // Modal Archive Event Observers
-    downloadAllBtn.onclick = () => zipExportModal.classList.remove("hidden");
-    closeZipModalBtn.onclick = () => zipExportModal.classList.add("hidden");
-    
-    confirmStandardZipBtn.onclick = () => { window.location.href = "/api/extract?download_type=zip"; zipExportModal.classList.add("hidden"); };
-    confirmMappedZipBtn.onclick = () => { window.location.href = "/api/extract?download_type=zip_mapped"; zipExportModal.classList.add("hidden"); };
+    modalCancelBtn.onclick = () => zipSelectionModal.classList.add("hidden");
 
-    function killActiveAudioContext() {
-        if(activeWebAudioNodes && activeWebAudioNodes.frameId) { cancelAnimationFrame(activeWebAudioNodes.frameId); }
-        if(activeWebAudioNodes && activeWebAudioNodes.ctx) { activeWebAudioNodes.ctx.close(); }
-        activeWebAudioNodes = null;
-    }
+    modalConfirmBtn.onclick = () => {
+        const structure = document.querySelector('input[name="zipStructureOption"]:checked').value;
+        const scopeCheck = document.getElementById("zipFilterScopeCheckbox").checked;
+        zipSelectionModal.classList.add("hidden");
 
-    function selectFileNode(index, targetElement) {
-        killActiveAudioContext();
-        document.querySelectorAll('.file-row-node').forEach(node => node.classList.remove('border-[#ffde00]', 'bg-[#18181f]'));
-        targetElement.classList.add('border-[#ffde00]', 'bg-[#18181f]');
+        let url = `/api/extract?download_type=zip&group_mapped=${structure === 'group' ? 'true' : 'false'}`;
+        if(scopeCheck && activeSelectedFilters.size > 0) {
+            const indices = activeCache.filter(item => activeSelectedFilters.has(item.label)).map(item => item.index).join(',');
+            url += `&indices=${indices}`;
+        }
+        window.location.href = url;
+    };
+
+    function selectFileNode(index, element) {
+        if(audioAnimationId) cancelAnimationFrame(audioAnimationId);
+        document.querySelectorAll('.file-row-node').forEach(n => n.classList.remove('border-[#ffde00]', 'bg-[#12121a]'));
+        element.classList.add('border-[#ffde00]', 'bg-[#12121a]');
 
         const item = activeCache[index];
         if (!item) return;
@@ -539,218 +392,140 @@
         } 
         else if (["mp3", "wav", "ogg"].includes(ext)) {
             mediaBox.innerHTML = `
-                <div class="premium-audio-player w-full px-4" id="audioPlayerContainer">
-                    <div class="audio-wave-visualizer" id="visualizerCoreDeck">
-                        ${Array(24).fill().map(() => `<div class="wave-bar" style="height: 4px;"></div>`).join('')}
+                <div class="w-full p-4 flex flex-col gap-3" id="audioContainer">
+                    <div class="audio-wave-visualizer" id="visualizerDeck">
+                        ${Array(32).fill().map(() => `<div class="wave-bar"></div>`).join('')}
                     </div>
-                    <div class="flex items-center gap-4 bg-[#0a0a0c] p-3 mt-4 rounded-xl border border-[#1f1f23]">
-                        <button id="customAudioPlayBtn" class="w-9 h-9 rounded-full bg-cyan-400 hover:bg-cyan-300 text-black flex items-center justify-center text-xs shadow-md transition-transform active:scale-95 flex-shrink-0"><i class="fa-solid fa-play ml-0.5"></i></button>
+                    <div class="flex items-center gap-3 bg-[#050508] p-2 rounded-xl border border-[#14141f]">
+                        <button id="playBtn" class="w-8 h-8 rounded-full bg-cyan-400 hover:bg-cyan-300 text-black flex items-center justify-center text-xs shadow transition-transform active:scale-95 flex-shrink-0"><i class="fa-solid fa-play ml-0.5"></i></button>
                         <div class="flex flex-col min-w-0 flex-1">
-                            <span class="text-[9px] font-bold tracking-widest text-zinc-500 gff uppercase">STREAM FREQUENCY</span>
-                            <span id="audioTimeDisplay" class="text-xs font-mono text-cyan-400 mt-0.5">00:00 / 00:00</span>
+                            <span class="text-[8px] font-bold tracking-widest text-zinc-500 gff">FREQUENCY ANALYSER</span>
+                            <span id="timeText" class="text-[11px] font-mono text-cyan-400 mt-0.5">00:00 / 00:00</span>
                         </div>
                     </div>
-                    <div class="player-slider mx-1 mt-3" id="audioProgressDeck">
-                        <div class="player-slider-fill bg-cyan-400" id="audioFillNode"></div>
-                    </div>
-                    <audio id="hiddenAudioNode" src="${fileUrl}" crossOrigin="anonymous" preload="metadata" class="hidden"></audio>
+                    <div class="player-slider" id="progressDeck"><div class="player-slider-fill bg-cyan-400" id="fillNode"></div></div>
+                    <audio id="audioNode" src="${fileUrl}" crossOrigin="anonymous" class="hidden"></audio>
                 </div>`;
 
-            const audio = document.getElementById("hiddenAudioNode");
-            const playBtn = document.getElementById("customAudioPlayBtn");
-            const fillNode = document.getElementById("audioFillNode");
-            const timeDisplay = document.getElementById("audioTimeDisplay");
-            const progressDeck = document.getElementById("audioProgressDeck");
+            const audio = document.getElementById("audioNode");
+            const playBtn = document.getElementById("playBtn");
+            const fillNode = document.getElementById("fillNode");
+            const timeText = document.getElementById("timeText");
+            const progressDeck = document.getElementById("progressDeck");
             const bars = document.querySelectorAll(".wave-bar");
 
-            const formatTime = (s) => { if (isNaN(s)) return "00:00"; let m = Math.floor(s/60), sec = Math.floor(s%60); return `${m < 10 ? '0' : ''}${m}:${sec < 10 ? '0' : ''}${sec}`; };
-
-            audio.addEventListener("loadedmetadata", () => {
-                timeDisplay.innerText = `00:00 / ${formatTime(audio.duration)}`;
-                bars.forEach(b => b.style.height = "4px");
-            });
-
-            // True Web Audio Frequency Spectrum Scanning Engine Construction
-            function deployAudioTrackingPipeline() {
-                if (activeWebAudioNodes) return;
-                try {
-                    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-                    const src = ctx.createMediaElementSource(audio);
-                    const analyser = ctx.createAnalyser();
-                    src.connect(analyser);
-                    analyser.connect(ctx.destination);
-                    analyser.fftSize = 64; // Discrete targeted frequency array bounds
-                    
-                    const bufferLength = analyser.frequencyBinCount;
-                    const dataArray = new Uint8Array(bufferLength);
-                    
-                    activeWebAudioNodes = { ctx, src, analyser, dataArray, frameId: null };
-
-                    function executeSpectrumRenderLoop() {
-                        if (!activeWebAudioNodes) return;
-                        activeWebAudioNodes.frameId = requestAnimationFrame(executeSpectrumRenderLoop);
-                        
-                        if (audio.paused) {
-                            bars.forEach(b => { b.style.height = "4px"; b.style.backgroundColor = "#1f1f2e"; });
-                            return;
-                        }
-                        
-                        analyser.getByteFrequencyData(dataArray);
-                        bars.forEach((bar, idx) => {
-                            let dataVal = dataArray[idx % bufferLength];
-                            // Scale decibel numbers to visual block heights smoothly
-                            let dynamicHeight = Math.max(4, (dataVal / 255) * 38);
-                            bar.style.height = `${dynamicHeight}px`;
-                            
-                            if (dataVal > 10) {
-                                bar.style.backgroundColor = "var(--ff-cyan)";
-                            } else {
-                                bar.style.backgroundColor = "#1f1f2e";
-                            }
-                        });
-                    }
-                    executeSpectrumRenderLoop();
-                } catch(err) { console.log("Cross-Origin audio mapping contextual blocking bypass triggered.", err); }
-            }
+            const formatTime = (s) => isNaN(s) ? "00:00" : `${Math.floor(s/60).toString().padStart(2,'0')}:${Math.floor(s%60).toString().padStart(2,'0')}`;
+            audio.onloadedmetadata = () => timeText.innerText = `00:00 / ${formatTime(audio.duration)}`;
 
             playBtn.onclick = () => {
+                if(!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    audioAnalyser = audioCtx.createAnalyser();
+                    audioAnalyser.fftSize = 64;
+                    audioSrc = audioCtx.createMediaElementSource(audio);
+                    audioSrc.connect(audioAnalyser);
+                    audioAnalyser.connect(audioCtx.destination);
+                }
+                if(audioCtx.state === 'suspended') audioCtx.resume();
+
                 if (audio.paused) {
-                    deployAudioTrackingPipeline();
-                    if(activeWebAudioNodes && activeWebAudioNodes.ctx.state === 'suspended') { activeWebAudioNodes.ctx.resume(); }
                     audio.play();
                     playBtn.innerHTML = `<i class="fa-solid fa-pause"></i>`;
+                    updateLiveFrequencySpectrum();
                 } else {
                     audio.pause();
                     playBtn.innerHTML = `<i class="fa-solid fa-play ml-0.5"></i>`;
                 }
             };
 
-            audio.addEventListener("timeupdate", () => {
-                let pct = (audio.currentTime / audio.duration) * 100;
-                fillNode.style.width = `${pct}%`;
-                timeDisplay.innerText = `${formatTime(audio.currentTime)} / ${formatTime(audio.duration)}`;
-            });
+            function updateLiveFrequencySpectrum() {
+                if(audio.paused) return;
+                const bufferLength = audioAnalyser.frequencyBinCount;
+                const dataArray = new Uint8Array(bufferLength);
+                audioAnalyser.getByteFrequencyData(dataArray);
 
-            progressDeck.onclick = (e) => {
-                let rect = progressDeck.getBoundingClientRect();
-                audio.currentTime = ((e.clientX - rect.left) / rect.width) * audio.duration;
+                for (let i = 0; i < bars.length; i++) {
+                    const val = dataArray[i % bufferLength];
+                    // Direct dynamic interpolation based on pure mathematical frequency arrays
+                    const heightPixels = Math.max(3, (val / 255) * 42);
+                    bars[i].style.height = `${heightPixels}px`;
+                    bars[i].style.backgroundColor = val > 0 ? `hsl(${190 + (val/255)*40}, 90%, 60%)` : '#1e1e2a';
+                }
+                audioAnimationId = requestAnimationFrame(updateLiveFrequencySpectrum);
+            }
+
+            audio.ontimeupdate = () => {
+                fillNode.style.width = `${(audio.currentTime / audio.duration) * 100}%`;
+                timeText.innerText = `${formatTime(audio.currentTime)} / ${formatTime(audio.duration)}`;
             };
-
-            audio.addEventListener("ended", () => {
+            progressDeck.onclick = (e) => {
+                audio.currentTime = ((e.clientX - progressDeck.getBoundingClientRect().left) / progressDeck.getBoundingClientRect().width) * audio.duration;
+            };
+            audio.onended = () => {
                 playBtn.innerHTML = `<i class="fa-solid fa-play ml-0.5"></i>`;
                 fillNode.style.width = "0%";
-                bars.forEach(b => b.style.height = "4px");
-            });
+                bars.forEach(b => { b.style.height = "3px"; b.style.backgroundColor = '#1e1e2a'; });
+            };
         } 
-        else if (["mp4"].includes(ext)) {
+        else if (ext === "mp4") {
             mediaBox.innerHTML = `
-                <div class="premium-video-player w-full h-full">
-                    <video id="customVideoNode" src="${fileUrl}" class="w-full h-full object-contain"></video>
-                    <div class="video-control-bar">
-                        <button id="customVideoPlayBtn" class="w-8 h-8 rounded-lg bg-red-500 text-white flex items-center justify-center text-xs shadow-md transition-transform active:scale-95 flex-shrink-0"><i class="fa-solid fa-play ml-0.5"></i></button>
-                        <div class="player-slider flex-1" id="videoProgressDeck">
-                            <div class="player-slider-fill bg-red-500" id="videoFillNode"></div>
-                        </div>
+                <div class="relative w-full h-full flex items-center justify-center bg-black">
+                    <video id="vNode" src="${fileUrl}" class="w-full h-full object-contain"></video>
+                    <div class="absolute bottom-0 inset-x-0 p-3 bg-gradient-to-t from-black via-black/80 to-transparent flex items-center gap-3 opacity-0 hover:opacity-100 transition-opacity z-10">
+                        <button id="vPlay" class="w-7 h-7 rounded bg-red-500 text-white flex items-center justify-center text-xs"><i class="fa-solid fa-play ml-0.5"></i></button>
+                        <div class="player-slider flex-1" id="vProgress"><div class="player-slider-fill bg-red-500" id="vFill"></div></div>
                     </div>
                 </div>`;
-
-            const video = document.getElementById("customVideoNode");
-            const vPlayBtn = document.getElementById("customVideoPlayBtn");
-            const vFillNode = document.getElementById("videoFillNode");
-            const vProgressDeck = document.getElementById("videoProgressDeck");
-
-            vPlayBtn.onclick = () => {
-                if (video.paused) { video.play(); vPlayBtn.innerHTML = `<i class="fa-solid fa-pause"></i>`; } 
-                else { video.pause(); vPlayBtn.innerHTML = `<i class="fa-solid fa-play ml-0.5"></i>`; }
-            };
-            video.addEventListener("timeupdate", () => { vFillNode.style.width = `${(video.currentTime / video.duration) * 100}%`; });
-            vProgressDeck.onclick = (e) => { let rect = vProgressDeck.getBoundingClientRect(); video.currentTime = ((e.clientX - rect.left) / rect.width) * video.duration; };
-            video.onclick = () => vPlayBtn.click();
+            const v = document.getElementById("vNode"), vp = document.getElementById("vPlay"), vf = document.getElementById("vFill"), vpd = document.getElementById("vProgress");
+            vp.onclick = () => { if(v.paused) { v.play(); vp.innerHTML=`<i class="fa-solid fa-pause"></i>`; } else { v.pause(); vp.innerHTML=`<i class="fa-solid fa-play ml-0.5"></i>`; } };
+            v.ontimeupdate = () => vf.style.width = `${(v.currentTime / v.duration)*100}%`;
+            vpd.onclick = (e) => v.currentTime = ((e.clientX - vpd.getBoundingClientRect().left)/vpd.getBoundingClientRect().width)*v.duration;
+            v.onclick = () => vp.click();
         } 
-        else if (["json", "txt", "xml", "yaml", "ini", "atlas", "obj"].includes(ext)) {
-            mediaBox.innerHTML = `<div class="absolute inset-0 text-[10px] font-mono text-zinc-500 text-left overflow-y-auto bg-[#07070a] p-3 custom-scrollbar whitespace-pre-wrap select-text" id="textContentView">Loading source coordinates...</div>`;
-            fetch(fileUrl)
-                .then(r => r.text())
-                .then(t => {
-                    const view = document.getElementById("textContentView");
-                    if(view) view.innerText = t.slice(0, 12000) + (t.length > 12000 ? "\n\n[Truncated for interface optimization performance]" : "");
-                }).catch(() => {
-                    const view = document.getElementById("textContentView");
-                    if(view) view.innerText = "Error pulling script descriptors.";
-                });
+        else if (["json", "txt", "xml", "atlas", "obj"].includes(ext)) {
+            mediaBox.innerHTML = `<div class="absolute inset-0 text-[10px] font-mono text-zinc-500 text-left overflow-y-auto bg-[#030305] p-3 custom-scrollbar whitespace-pre select-text" id="textDeck">Parsing object data...</div>`;
+            fetch(fileUrl).then(r => r.text()).then(t => {
+                const node = document.getElementById("textDeck");
+                if(node) node.innerText = t.slice(0, 15000) + (t.length > 15000 ? "\n\n[Truncated for view performance]" : "");
+            }).catch(() => { if(document.getElementById("textDeck")) document.getElementById("textDeck").innerText = "Error loading configuration description maps."; });
         } else {
-            mediaBox.innerHTML = `
-                <div class="text-center text-zinc-600 space-y-1">
-                    <i class="fa-solid fa-cube text-xl text-zinc-800"></i>
-                    <span class="text-[9px] font-bold uppercase tracking-widest block text-zinc-500 gff">Raw System Component Block</span>
-                </div>`;
+            mediaBox.innerHTML = `<div class="text-center text-zinc-700 space-y-1"><i class="fa-solid fa-cube text-xl text-zinc-800"></i><span class="text-[8px] font-bold uppercase tracking-widest block text-zinc-500 gff">Raw Stream Core Object</span></div>`;
         }
     }
 
-    document.getElementById("extractorForm").addEventListener("submit", async function(e) {
+    document.getElementById("extractorForm").submit = async function(e) {
         e.preventDefault();
-        killActiveAudioContext();
-        const file = fileInput.files[0];
-        if (!file) return;
+        const file = fileInput.files[0]; if (!file) return;
 
-        listEmptyState.innerHTML = `
-            <div class="text-center space-y-1">
-                <i class="fa-solid fa-circle-notch text-lg text-[#ffde00] animate-spin"></i>
-                <p class="text-[9px] uppercase tracking-widest font-bold text-zinc-500">Unpacking archives...</p>
-            </div>`;
-        
-        listEmptyState.style.display = "flex";
-        fileList.classList.add("hidden");
-        downloadAllBtn.classList.add("hidden");
-        openFilterBtn.classList.add("hidden");
-        listWindowPanel.style.height = "";
-        
-        statusBadge.innerText = "RUNNING";
-        statusBadge.style.color = "var(--ff-yellow)";
-        statusText.innerText = "Processing Pack";
-        statusDescText.innerText = "Unpacking indices and writing geometry streams...";
-        statusIcon.innerHTML = `<i class="fa-solid fa-gear text-sm text-yellow-500 animate-spin"></i>`;
+        listEmptyState.innerHTML = `<div class="text-center space-y-1"><i class="fa-solid fa-circle-notch text-sm text-[#ffde00] animate-spin"></i><p class="text-[8px] uppercase tracking-widest font-bold text-zinc-500">Unpacking...</p></div>`;
+        listEmptyState.style.display = "flex"; fileList.classList.add("hidden"); downloadAllBtn.classList.add("hidden");
+        filterDeckContainer.classList.add("hidden"); activeSelectedFilters.clear();
 
-        const formData = new FormData();
-        formData.append("asset_bundle", file);
+        statusBadge.innerText = "RUNNING"; statusBadge.style.color = "var(--ff-yellow)";
+        statusText.innerText = "Unpacking"; statusDescText.innerText = "Executing structural matrix queries...";
+        statusIcon.innerHTML = `<i class="fa-solid fa-gear text-xs text-yellow-500 animate-spin"></i>`;
 
+        const fd = new FormData(); fd.append("asset_bundle", file);
         try {
-            const response = await fetch("/api/extract", { method: "POST", body: formData });
-            if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || "Extraction pipeline failure.");
+            const r = await fetch("/api/extract", { method: "POST", body: fd });
+            if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || "Extraction pipeline failure.");
+            const data = await r.json(); activeCache = data.files || [];
 
-            const data = await response.json();
-            activeCache = data.files || [];
-            selectedActiveFilterType = "ALL";
+            rebuildFilterDeck(); renderFileListItems();
+            listEmptyState.style.display = "none"; fileList.classList.remove("hidden"); downloadAllBtn.classList.remove("hidden");
 
-            buildInlineCustomFilterPage();
-            renderFileListItems();
-
-            listEmptyState.style.display = "none";
-            fileList.classList.remove("hidden");
-            downloadAllBtn.classList.remove("hidden");
-            openFilterBtn.classList.remove("hidden");
-            
-            statusBadge.innerText = "SUCCESS";
-            statusBadge.style.color = "var(--ff-emerald)";
-            statusText.innerText = "Finished";
-            statusDescText.innerText = `Successfully read ${activeCache.length} original structural assets.`;
-            statusIcon.innerHTML = `<i class="fa-solid fa-circle-check text-sm text-[#00ffa3]"></i>`;
-
-            previewFallback.style.display = "flex";
-            previewContentBox.classList.add("hidden");
+            statusBadge.innerText = "SUCCESS"; statusBadge.style.color = "var(--ff-emerald)";
+            statusText.innerText = "Completed"; statusDescText.innerText = `Mapped ${activeCache.length} original engine assets.`;
+            statusIcon.innerHTML = `<i class="fa-solid fa-circle-check text-xs text-[#00ffa3]"></i>`;
+            previewFallback.style.display = "flex"; previewContentBox.classList.add("hidden");
         } catch (err) {
-            statusBadge.innerText = "ERROR";
-            statusBadge.style.color = "var(--ff-red)";
-            statusText.innerText = "Failed";
-            statusDescText.innerText = err.message;
-            statusIcon.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-sm text-[#ff3e3e]"></i>`;
-            
-            listEmptyState.innerHTML = `
-                <i class="fa-solid fa-triangle-exclamation text-base text-red-500 mb-1"></i>
-                <p class="text-[11px] text-red-500 font-bold px-2">${err.message}</p>`;
+            statusBadge.innerText = "ERROR"; statusBadge.style.color = "var(--ff-red)";
+            statusText.innerText = "Failed"; statusDescText.innerText = err.message;
+            statusIcon.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-xs text-[#ff3e3e]"></i>`;
+            listEmptyState.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-base text-red-500 mb-1"></i><p class="text-[10px] text-red-500 font-bold px-2">${err.message}</p>`;
         }
-    });
+    };
+    document.getElementById("extractorForm").addEventListener("submit", document.getElementById("extractorForm").submit);
 </script>
-
 </body>
 </html>
