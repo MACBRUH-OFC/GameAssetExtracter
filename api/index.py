@@ -163,7 +163,7 @@ def handle_direct_extraction_stream():
 
     if download_type == 'zip':
         if not GLOBAL_CACHE_REGISTRY.get('extracted'):
-            return jsonify({"error": "Cache registry empty. Re-stream source package container."}), 400
+            return jsonify({"error": "No files found in cache."}), 400
         zip_io = io.BytesIO()
         with zipfile.ZipFile(zip_io, "w", zipfile.ZIP_DEFLATED, compresslevel=1) as zf:
             for item in GLOBAL_CACHE_REGISTRY['extracted']:
@@ -174,10 +174,9 @@ def handle_direct_extraction_stream():
     elif download_type == 'single':
         file_idx = int(request.args.get('file_index', -1))
         if not GLOBAL_CACHE_REGISTRY.get('extracted') or file_idx < 0 or file_idx >= len(GLOBAL_CACHE_REGISTRY['extracted']):
-            return jsonify({"error": "Target mapping index reference lost."}), 400
+            return jsonify({"error": "File index missing."}), 400
         item = GLOBAL_CACHE_REGISTRY['extracted'][file_idx]
         
-        # Determine content types for live preview streaming tags
         ext = item['name'].split('.')[-1].lower()
         mimetype = 'application/octet-stream'
         if ext in ['png', 'jpg', 'jpeg', 'webp']: mimetype = 'image/png'
@@ -186,7 +185,7 @@ def handle_direct_extraction_stream():
         return send_file(io.BytesIO(item['bytes']), mimetype=mimetype, as_attachment=True, download_name=item['name'])
 
     if 'asset_bundle' not in request.files:
-        return jsonify({"error": "Multipart byte payload context missing."}), 400
+        return jsonify({"error": "No file uploaded."}), 400
 
     try:
         raw_bundle_bytes = request.files['asset_bundle'].read()
@@ -195,7 +194,7 @@ def handle_direct_extraction_stream():
             env = UnityPy.load(final_data)
             objects_array = env.objects
         except:
-            return jsonify({"error": "Invalid format layout. Standard package headers not verified."}), 400
+            return jsonify({"error": "Invalid bundle file."}), 400
 
         seen_md5 = set()
         extracted_list = []
@@ -216,12 +215,12 @@ def handle_direct_extraction_stream():
         gc.collect()
 
         if tracking_index_counter == 0:
-            return jsonify({"error": "No valid supported structural elements recognized inside files."}), 400
+            return jsonify({"error": "No supported elements found inside this file."}), 400
 
         GLOBAL_CACHE_REGISTRY['extracted'] = extracted_list
         return jsonify({"files": json_metadata_manifest})
     except Exception as e:
-        return jsonify({"error": f"Internal exception: {str(e)}"}), 500
+        return jsonify({"error": f"Error: {str(e)}"}), 500
 
 @app.route("/api/convert", methods=["POST"])
 def api_convert():
@@ -229,7 +228,7 @@ def api_convert():
         mode = request.form.get("mode")
         file = request.files.get("file")
         if not file:
-            return jsonify({"success": False, "error": "No file uploaded"}), 400
+            return jsonify({"success": False, "error": "No file uploaded."}), 400
 
         file_bytes = file.read()
         if mode == "ktx_to_png":
@@ -239,7 +238,7 @@ def api_convert():
             output = convert_png_to_ktx(file_bytes)
             return send_file(output, mimetype="application/octet-stream", as_attachment=True, download_name="converted.ktx")
         else:
-            return jsonify({"success": False, "error": "Invalid mode configuration matrix option parameter passed"}), 400
+            return jsonify({"success": False, "error": "Invalid mode selected."}), 400
     except Exception as e:
         return jsonify({"success": False, "error": str(e), "traceback": traceback.format_exc()}), 500
 
@@ -250,7 +249,7 @@ def serve_ui_layout(path):
         with open(HTML_PATH, 'r', encoding='utf-8') as f:
             return f.read()
     except Exception as e:
-        return f"Interface layout missing or broken: {str(e)}", 500
+        return f"File missing: {str(e)}", 500
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=10000, debug=True)
