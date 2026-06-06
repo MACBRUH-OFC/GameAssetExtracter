@@ -1,330 +1,306 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Assets Extractor | ELITE</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
-<style>
-@font-face { font-family: 'GFF-Bold'; src: url('https://dl.dir.freefiremobile.com/common/web_event/common/fonts/website/GFFLatinW05-Bold.woff') format('woff'); }
-:root { --ff-yellow: #ffde00; --ff-emerald: #00ffa3; --ff-red: #ff3e3e; --ff-cyan: #38bdf8; }
-body { background: #000; color: #fff; min-height: 100vh; background-image: url('https://dl.dir.freefiremobile.com/common/web_event/official2/dist/client/img/bg_pc.617c669.jpg'); background-size: cover; background-attachment: fixed; font-family: 'Inter', sans-serif; overflow-x: hidden; }
-body::before { content: ""; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.94); z-index: -1; }
-.gff { font-family: 'GFF-Bold', sans-serif; }
-.uniform-panel { background: #0a0a0a; border: 1px solid #1f1f1f; border-radius: 0 24px 24px 0; position: relative; box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8); min-height: 380px; display: flex; flex-direction: column; }
-.uniform-panel::before { content: ""; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--ff-yellow); }
-.panel-body { padding: 24px; flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-.scrollable-content-box { flex: 1; background: #060608; border: 1px solid #1a1a1f; border-radius: 16px; overflow-y: auto; position: relative; min-height: 250px; }
-.btn-mechanical { cursor: pointer; font-family: 'GFF-Bold'; text-transform: uppercase; font-style: italic; display: flex; align-items: center; justify-content: center; border-radius: 16px; gap: 12px; position: relative; background: var(--ff-yellow); color: #000; box-shadow: 0 5px 0 #c2a900; transition: background 0.1s ease; }
-.btn-mechanical:active { transform: translateY(2px); box-shadow: 0 3px 0 #c2a900; }
-.upload-deck { background: #121212; border: 2px dashed #2a2a2a; border-radius: 20px; display: flex; align-items: center; height: 110px; cursor: pointer; transition: all 0.2s ease; }
-.upload-deck.dragover { border-color: var(--ff-yellow); background: #161612; }
-.deck-port { width: 70px; height: 100%; background: #161616; border-right: 1px solid #2a2a2a; display: flex; align-items: center; justify-content: center; }
-.deck-body { flex: 1; padding: 0 16px; min-width: 0; }
-.status-window { background: #121212; border: 1px solid #2a2a2a; height: 60px; border-radius: 16px; display: flex; align-items: center; padding: 0 16px; gap: 12px; }
-.pixelated-render { image-rendering: pixelated; max-height: 100%; max-width: 100%; object-fit: contain; }
-.custom-scrollbar::-webkit-scrollbar { width: 6px; }
-.custom-scrollbar::-webkit-scrollbar-thumb { background: #222227; border-radius: 4px; }
-.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--ff-yellow); }
-.custom-dropdown { position: relative; width: 100%; }
-.dropdown-trigger { background: #121216; border: 1px solid #272732; padding: 8px 12px; border-radius: 8px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 11px; font-weight: 700; color: #d4d4d8; }
-.dropdown-menu { position: absolute; top: 110%; left: 0; right: 0; background: #0f0f12; border: 1px solid #272732; border-radius: 8px; z-index: 50; max-height: 200px; overflow-y: auto; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-.dropdown-item { padding: 8px 12px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 11px; }
-.dropdown-item:hover { background: #1a1a22; }
-.zip-options { position: absolute; bottom: 50px; right: 0; background: #0f0f12; border: 1px solid #272732; border-radius: 12px; padding: 8px; display: none; flex-direction: column; gap: 4px; min-width: 180px; z-index: 100; }
-.zip-opt-btn { padding: 8px 12px; font-size: 11px; border-radius: 6px; text-align: left; }
-.zip-opt-btn:hover { background: var(--ff-yellow); color: #000; }
-.premium-audio-player { width: 100%; padding: 15px; display: flex; flex-direction: column; gap: 12px; }
-.audio-wave-visualizer { display: flex; align-items: center; justify-content: center; gap: 3px; height: 40px; }
-.wave-bar { width: 3px; height: 6px; background: #1f1f2e; border-radius: 2px; transition: height 0.1s ease; }
-@keyframes bounceWave { 0% { height: 6px; } 100% { height: 35px; } }
-.player-slider { height: 6px; background: #1a1a24; border-radius: 10px; cursor: pointer; position: relative; }
-.player-slider-fill { height: 100%; border-radius: 10px; width: 0%; transition: width 0.1s linear; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Assets Extractor | ELITE</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        @font-face { font-family: 'GFF-Bold'; src: url('https://dl.dir.freefiremobile.com/common/web_event/common/fonts/website/GFFLatinW05-Bold.woff') format('woff'); }
+        :root { --ff-yellow: #ffde00; --ff-emerald: #00ffa3; --ff-red: #ff3e3e; --ff-cyan: #38bdf8; }
+        body { background: #000; color: #fff; min-height: 100vh; background-image: url('https://dl.dir.freefiremobile.com/common/web_event/official2/dist/client/img/bg_pc.617c669.jpg'); background-size: cover; background-attachment: fixed; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+        body::before { content: ""; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.94); z-index: -1; }
+        .gff { font-family: 'GFF-Bold', sans-serif; }
+        .uniform-panel { background: #0a0a0a; border: 1px solid #1f1f1f; border-radius: 0 24px 24px 0; position: relative; box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8); height: 420px; display: flex; flex-direction: column; transition: height 0.3s ease-out; }
+        .uniform-panel::before { content: ""; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--ff-yellow); }
+        .panel-body { padding: 24px; flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .scrollable-content-box { flex: 1; background: #060608; border: 1px solid #1a1a1f; border-radius: 16px; overflow-y: auto; position: relative; min-height: 120px; }
+        .btn-mechanical { cursor: pointer; font-family: 'GFF-Bold'; text-transform: uppercase; font-style: italic; display: flex; align-items: center; justify-content: center; border-radius: 16px; gap: 12px; position: relative; background: var(--ff-yellow); color: #000; box-shadow: 0 5px 0 #c2a900; transition: background 0.1s ease; }
+        .btn-mechanical:hover { background: #ffe526; }
+        .btn-mechanical:active { transform: translateY(2px); box-shadow: 0 3px 0 #c2a900; }
+        .upload-deck { background: #121212; border: 2px dashed #2a2a2a; border-radius: 20px; display: flex; align-items: center; height: 110px; cursor: pointer; overflow: hidden; }
+        .status-window { background: #121212; border: 1px solid #2a2a2a; height: 60px; border-radius: 16px; display: flex; align-items: center; padding: 0 16px; gap: 12px; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #222227; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--ff-yellow); }
+        .custom-dropdown { position: relative; user-select: none; z-index: 50; }
+        .dropdown-trigger { background: #121216; border: 1px solid #272732; color: #fff; font-size: 10px; font-weight: 700; border-radius: 8px; padding: 6px 12px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+        .dropdown-menu { position: absolute; top: 110%; right: 0; background: #121216; border: 1px solid #272732; border-radius: 12px; width: 180px; display: none; padding: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .dropdown-menu.show { display: block; }
+        .filter-item { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 6px; cursor: pointer; font-size: 10px; color: #a1a1aa; }
+        .filter-item:hover { background: #1a1a22; color: #fff; }
+        .filter-item.active { color: var(--ff-yellow); }
+        .audio-wave-visualizer { display: flex; align-items: flex-end; justify-content: center; gap: 3px; height: 40px; }
+        .wave-bar { width: 3px; height: 4px; background: #1f1f2e; border-radius: 2px; }
+        .playing .wave-bar { animation: waveAnim 0.5s ease-in-out infinite alternate; }
+        @keyframes waveAnim { from { height: 4px; opacity: 0.5; } to { height: 35px; opacity: 1; } }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(4px); display: none; items-center; justify-content: center; z-index: 100; }
+        .modal-card { background: #0d0d0d; border: 1px solid #1f1f1f; border-radius: 24px; width: 90%; max-width: 400px; padding: 24px; position: relative; }
+    </style>
 </head>
 <body class="p-4 md:p-8">
-<div class="max-w-7xl mx-auto">
-    <div class="flex flex-col items-center mb-8">
-        <img src="https://dl.dir.freefiremobile.com/common/web_event/official2/dist/client/img/full_logo.969f536.png" class="h-10 mb-4" alt="Logo">
-        <div class="text-center gff">
-            <span class="text-[40px] md:text-[64px] font-black italic block leading-none">ASSETS</span>
-            <span class="text-[40px] md:text-[64px] font-black italic block text-[#ffde00] leading-none">EXTRACTOR</span>
+    <div class="max-w-7xl mx-auto">
+        <div class="flex items-center justify-between mb-2">
+            <img src="https://dl.dir.freefiremobile.com/common/web_event/official2/dist/client/img/full_logo.969f536.png" class="h-7" alt="Logo">
         </div>
-        <div class="flex items-center gap-3 mt-2 opacity-80">
-            <i class="fa-solid fa-box-open text-xs text-[#ffde00]"></i>
-            <span class="text-xs font-bold tracking-[0.2em] text-zinc-400 uppercase">AssetBundle • KTX • Unity Assets Extractor</span>
-            <i class="fa-solid fa-box-open text-xs text-[#ffde00]"></i>
-        </div>
-    </div>
-
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div class="uniform-panel">
-            <div class="panel-body justify-between">
-                <div>
-                    <h2 class="text-xs font-black text-white uppercase tracking-wider mb-1 gff">Upload File</h2>
-                    <p class="text-[11px] text-zinc-500">Select Unity asset bundle or KTX map.</p>
-                </div>
-                <form id="extractorForm" class="flex-1 flex flex-col justify-center space-y-4 my-4">
-                    <div class="upload-deck" id="dropZone" onclick="document.getElementById('fileInput').click()">
-                        <div class="deck-port"><i id="uploadIcon" class="fa-solid fa-folder-open text-lg text-zinc-500"></i></div>
-                        <div class="deck-body">
-                            <span id="fileStatusText" class="text-[9px] font-bold tracking-widest text-zinc-500 gff mb-0.5 uppercase">CHOOSE FILE</span>
-                            <p id="fileLabel" class="gff text-[12px] text-zinc-300 uppercase tracking-wide truncate">Drag file here</p>
-                        </div>
-                    </div>
-                    <input type="file" id="fileInput" class="hidden">
-                    <button type="submit" class="btn-mechanical w-full h-14 text-sm">Extract Files</button>
-                </form>
-                <div class="status-window">
-                    <div id="statusIcon" class="text-zinc-500"><i class="fa-solid fa-terminal text-xs"></i></div>
-                    <div class="flex-1 min-w-0">
-                        <span id="statusText" class="gff text-[9px] uppercase tracking-widest text-zinc-400">System Log</span>
-                        <p id="statusDescText" class="text-[11px] text-zinc-500 truncate">Awaiting input stream.</p>
-                    </div>
-                    <span id="statusBadge" class="text-[9px] font-black uppercase text-zinc-400 bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800 gff">Ready</span>
-                </div>
+        <div class="text-center my-6 gff">
+            <span class="text-[40px] md:text-[54px] font-black italic block leading-[0.75]">ASSETS</span>
+            <span class="text-[40px] md:text-[54px] font-black italic block text-[#ffde00] leading-[0.85]">EXTRACTOR</span>
+            <div class="flex items-center justify-center gap-2 mt-3 text-zinc-500">
+                <i class="fa-solid fa-cube text-[10px]"></i>
+                <span class="text-[11px] font-bold tracking-tighter uppercase">AssetBundle • KTX • Unity Assets Extractor</span>
+                <i class="fa-solid fa-cube text-[10px]"></i>
             </div>
         </div>
 
-        <div id="listWindowPanel" class="uniform-panel">
-            <div class="panel-body">
-                <div class="flex justify-between items-center border-b border-[#1f1f1f] pb-3 mb-3">
-                    <div class="flex flex-col">
-                        <h2 class="text-xs font-black text-white uppercase tracking-wider gff">Extracted List</h2>
-                        <p id="cacheCounterText" class="text-[10px] text-zinc-500">0 assets parsed.</p>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+            <div class="uniform-panel">
+                <div class="panel-body justify-between">
+                    <div>
+                        <h2 class="text-xs font-black text-white uppercase tracking-wider mb-1 gff">Upload File</h2>
+                        <p class="text-[11px] text-zinc-500">Select or drop your asset archive package.</p>
                     </div>
-                    <div class="flex gap-2 relative">
-                        <button id="downloadAllBtn" class="hidden h-9 w-9 bg-[#121216] border border-[#2a2a32] text-[#ffde00] rounded-lg items-center justify-center">
-                            <i class="fa-solid fa-download"></i>
+                    <form id="extractorForm" class="flex-1 flex flex-col justify-center space-y-4 my-2">
+                        <div class="upload-deck" id="dropZone" onclick="document.getElementById('fileInput').click()">
+                            <div class="w-[70px] h-full bg-[#161616] border-right border-[#2a2a2a] flex items-center justify-center">
+                                <i id="uploadIcon" class="fa-solid fa-folder-open text-lg text-zinc-500"></i>
+                            </div>
+                            <div class="flex-1 px-4 flex flex-col justify-center min-w-0">
+                                <span id="fileStatusText" class="text-[9px] font-bold tracking-widest text-zinc-500 gff mb-0.5 uppercase">CHOOSE FILE</span>
+                                <p id="fileLabel" class="gff text-[12px] text-zinc-300 uppercase tracking-wide truncate">Click or drag file here</p>
+                            </div>
+                        </div>
+                        <input type="file" id="fileInput" class="hidden">
+                        <button type="submit" class="btn-mechanical w-full h-14 text-sm font-bold italic">
+                            <i class="fa-solid fa-bolt text-sm"></i> Extract Files
                         </button>
-                        <div id="zipOptionsMenu" class="zip-options">
-                            <button class="zip-opt-btn gff" onclick="triggerZip('normal')">Download Normally</button>
-                            <button class="zip-opt-btn gff" onclick="triggerZip('grouped')">Download Grouped</button>
-                            <button id="filteredZipBtn" class="zip-opt-btn gff" onclick="triggerZip('filtered')">Download Filtered</button>
+                    </form>
+                    <div class="status-window">
+                        <div id="statusIcon" class="w-5 h-5 flex items-center justify-center text-zinc-500"><i class="fa-solid fa-terminal text-xs"></i></div>
+                        <div class="flex flex-col flex-1 min-w-0">
+                            <span id="statusText" class="gff text-[9px] uppercase tracking-widest text-zinc-400">System Log</span>
+                            <p id="statusDescText" class="text-[11px] text-zinc-500 truncate">Awaiting file input.</p>
                         </div>
+                        <span id="statusBadge" class="text-[9px] font-black uppercase text-zinc-400 bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800 gff tracking-wider">Ready</span>
                     </div>
-                </div>
-                <div class="custom-dropdown mb-3 hidden" id="filterContainer">
-                    <div class="dropdown-trigger" onclick="toggleDropdown()">
-                        <span id="dropdownLabel">Filter Asset Types</span>
-                        <i class="fa-solid fa-chevron-down text-[8px]"></i>
-                    </div>
-                    <div class="dropdown-menu custom-scrollbar" id="dropdownMenu"></div>
-                </div>
-                <div class="scrollable-content-box">
-                    <div id="listEmptyState" class="absolute inset-0 flex flex-col items-center justify-center text-zinc-700">
-                        <i class="fa-solid fa-list-ul text-2xl mb-2"></i>
-                        <span class="gff text-[10px] uppercase tracking-widest">No data extracted</span>
-                    </div>
-                    <div id="fileList" class="hidden p-2 space-y-1"></div>
                 </div>
             </div>
-        </div>
 
-        <div class="uniform-panel">
-            <div class="panel-body">
-                <div class="border-b border-[#1f1f1f] pb-3 mb-3">
-                    <h2 class="text-xs font-black text-white uppercase tracking-wider gff">Preview</h2>
-                    <p class="text-[11px] text-zinc-500">Instant visualizer.</p>
-                </div>
-                <div class="scrollable-content-box bg-[#050507]">
-                    <div id="previewFallback" class="absolute inset-0 flex flex-col items-center justify-center text-zinc-700">
-                        <i class="fa-solid fa-eye text-2xl mb-2"></i>
-                        <span class="gff text-[10px] uppercase tracking-widest">Select to view</span>
+            <div id="listWindowPanel" class="uniform-panel">
+                <div class="panel-body">
+                    <div class="flex items-center justify-between border-b border-[#1f1f1f] pb-3 mb-3">
+                        <div>
+                            <h2 class="text-xs font-black text-white uppercase tracking-wider gff">Extracted List</h2>
+                            <p id="cacheCounterText" class="text-[11px] text-zinc-500">Empty.</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="custom-dropdown" id="filterDropdown">
+                                <div class="dropdown-trigger" onclick="toggleFilterMenu()">
+                                    <i class="fa-solid fa-filter"></i>
+                                    <span>Filter</span>
+                                </div>
+                                <div class="dropdown-menu custom-scrollbar" id="filterMenu"></div>
+                            </div>
+                            <button id="downloadAllBtn" class="hidden h-8 w-8 bg-[#121216] border border-[#2a2a32] text-[#ffde00] rounded-lg items-center justify-center">
+                                <i class="fa-solid fa-download text-xs"></i>
+                            </button>
+                        </div>
                     </div>
-                    <div id="previewContentBox" class="hidden h-full flex flex-col p-2">
-                        <div id="mediaBox" class="flex-1 rounded-xl bg-[#0a0a0c] border border-[#1a1a1f] overflow-hidden relative flex items-center justify-center"></div>
-                        <div class="mt-3 flex items-center gap-3 bg-[#111115] p-2 rounded-xl border border-[#1f1f25]">
-                            <p id="mediaTitle" class="text-[11px] font-bold text-zinc-400 truncate flex-1"></p>
-                            <a id="singleSaveBtn" href="#" class="h-9 w-9 bg-[#1a1a22] text-zinc-400 rounded-lg flex items-center justify-center"><i class="fa-solid fa-arrow-down text-sm"></i></a>
+                    <div class="scrollable-content-box">
+                        <div class="w-full h-full flex flex-col justify-center items-center text-center p-4 absolute inset-0" id="listEmptyState">
+                            <i class="fa-solid fa-list-ul text-lg text-zinc-800 mb-1.5"></i>
+                            <div class="gff text-[9px] text-zinc-600 uppercase tracking-widest">Parsed assets list</div>
+                        </div>
+                        <div class="w-full h-full overflow-y-auto custom-scrollbar hidden space-y-1 p-2" id="fileList"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="uniform-panel">
+                <div class="panel-body">
+                    <div class="border-b border-[#1f1f1f] pb-3 mb-3">
+                        <h2 class="text-xs font-black text-white uppercase tracking-wider gff">Preview</h2>
+                        <p class="text-[11px] text-zinc-500">Live Asset Inspector.</p>
+                    </div>
+                    <div class="scrollable-content-box bg-[#0a0a0c]">
+                        <div id="previewFallback" class="w-full h-full flex flex-col justify-center items-center text-center p-4 absolute inset-0 text-zinc-600">
+                            <i class="fa-solid fa-eye text-lg text-zinc-800 mb-1.5"></i>
+                            <p class="text-[9px] font-bold uppercase tracking-wider gff">Select an item</p>
+                        </div>
+                        <div id="previewContentBox" class="hidden w-full h-full flex flex-col justify-between p-2 absolute inset-0">
+                            <div class="flex-1 w-full flex items-center justify-center overflow-hidden rounded-xl bg-[#121215] border border-[#1f1f23]" id="mediaBox"></div>
+                            <div class="w-full flex items-center justify-between gap-3 bg-[#111115] p-2 mt-2 rounded-xl border border-[#1f1f25]">
+                                <p id="mediaTitle" class="text-[11px] text-zinc-400 font-bold truncate flex-1 px-1"></p>
+                                <a id="singleSaveBtn" href="#" class="h-8 w-8 bg-[#1a1a22] hover:bg-[#ffde00] hover:text-black text-zinc-400 rounded-lg flex items-center justify-center">
+                                    <i class="fa-solid fa-arrow-down text-xs"></i>
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<script>
-let activeCache = [];
-let selectedFilters = new Set();
-const fileInput = document.getElementById("fileInput");
-const fileList = document.getElementById("fileList");
-const listEmptyState = document.getElementById("listEmptyState");
-const downloadAllBtn = document.getElementById("downloadAllBtn");
-const zipOptionsMenu = document.getElementById("zipOptionsMenu");
-const dropdownMenu = document.getElementById("dropdownMenu");
-
-function getIcon(label) {
-    const l = label.toLowerCase();
-    if(l.includes("texture") || l.includes("sprite")) return 'fa-image text-yellow-400';
-    if(l.includes("audio")) return 'fa-volume-high text-cyan-400';
-    if(l.includes("mesh")) return 'fa-cube text-purple-400';
-    if(l.includes("video")) return 'fa-clapperboard text-red-500';
-    if(l.includes("font")) return 'fa-font text-emerald-400';
-    if(l.includes("shader") || l.includes("material")) return 'fa-fill-drip text-orange-400';
-    return 'fa-file-code text-zinc-500';
-}
-
-fileInput.onchange = e => {
-    const file = e.target.files[0];
-    if(!file) return;
-    document.getElementById("fileLabel").innerText = file.name;
-    document.getElementById("fileLabel").style.color = "var(--ff-yellow)";
-    document.getElementById("fileStatusText").innerText = "FILE READY";
-};
-
-function toggleDropdown() {
-    dropdownMenu.style.display = dropdownMenu.style.display === 'block' ? 'none' : 'block';
-}
-
-function updateFilter(label) {
-    if(selectedFilters.has(label)) selectedFilters.delete(label);
-    else selectedFilters.add(label);
-    renderList();
-    const triggerLabel = selectedFilters.size === 0 ? "All Assets" : `${selectedFilters.size} Selected`;
-    document.getElementById("dropdownLabel").innerText = triggerLabel;
-}
-
-function renderList() {
-    fileList.innerHTML = "";
-    let visible = activeCache.filter(item => selectedFilters.size === 0 || selectedFilters.has(item.label));
-    visible.forEach(item => {
-        const div = document.createElement("div");
-        div.className = "p-2 bg-[#0d0d12] border border-[#1a1a22] rounded-xl flex items-center justify-between cursor-pointer hover:border-zinc-500 transition-all group mb-1";
-        div.onclick = () => selectFile(item);
-        div.innerHTML = `
-            <div class="flex items-center gap-3 truncate">
-                <div class="w-7 h-7 bg-black rounded flex items-center justify-center border border-zinc-800 flex-shrink-0">
-                    <i class="fa-solid ${getIcon(item.label)} text-[10px]"></i>
-                </div>
-                <div class="flex flex-col truncate">
-                    <span class="text-[11px] font-bold text-zinc-300 truncate">${item.name}</span>
-                    <span class="text-[8px] font-black text-zinc-600 uppercase tracking-tighter">${item.label}</span>
-                </div>
+    <div id="zipModal" class="modal-overlay flex">
+        <div class="modal-card">
+            <h3 class="gff text-sm text-white mb-1 uppercase italic">Export Configuration</h3>
+            <p class="text-zinc-500 text-[11px] mb-6">Choose how you want to package your assets.</p>
+            <div class="space-y-3">
+                <button onclick="downloadZip('normal')" class="w-full bg-[#16161a] border border-[#272732] hover:border-[#ffde00] text-zinc-300 py-3 rounded-xl text-[11px] font-bold uppercase gff transition-all flex items-center justify-between px-4">
+                    <span>Download Normally</span>
+                    <i class="fa-solid fa-box-archive"></i>
+                </button>
+                <button onclick="downloadZip('grouped')" class="w-full bg-[#16161a] border border-[#272732] hover:border-[#ffde00] text-zinc-300 py-3 rounded-xl text-[11px] font-bold uppercase gff transition-all flex items-center justify-between px-4">
+                    <span>Grouped/Mapped Assets</span>
+                    <i class="fa-solid fa-folder-tree"></i>
+                </button>
+                <button onclick="downloadZip('filtered')" id="btnFilteredZip" class="w-full bg-[#16161a] border border-[#272732] hover:border-[#ffde00] text-zinc-300 py-3 rounded-xl text-[11px] font-bold uppercase gff transition-all flex items-center justify-between px-4 hidden">
+                    <span>Download Filtered Only</span>
+                    <i class="fa-solid fa-filter"></i>
+                </button>
             </div>
-            <i class="fa-solid fa-chevron-right text-[8px] text-zinc-800 group-hover:text-white transition-colors"></i>`;
-        fileList.appendChild(div);
-    });
-    document.getElementById("cacheCounterText").innerText = `${visible.length} items visible.`;
-}
+            <button onclick="closeZipModal()" class="w-full mt-6 text-zinc-600 text-[9px] font-bold uppercase tracking-widest hover:text-white transition-colors">Cancel</button>
+        </div>
+    </div>
 
-function selectFile(item) {
-    document.getElementById("previewFallback").style.display = "none";
-    document.getElementById("previewContentBox").classList.remove("hidden");
-    document.getElementById("mediaTitle").innerText = item.name;
-    const box = document.getElementById("mediaBox");
-    box.innerHTML = "";
-    const url = `/api/extract?download_type=single&file_index=${item.index}`;
-    document.getElementById("singleSaveBtn").href = url;
-    
-    const ext = item.name.split('.').pop().toLowerCase();
-    if(["png","jpg","jpeg","webp"].includes(ext)) {
-        box.innerHTML = `<img src="${url}" class="pixelated-render">`;
-    } else if(["mp3","wav","ogg"].includes(ext)) {
-        box.innerHTML = `
-            <div class="premium-audio-player" id="p_audio">
-                <div class="audio-wave-visualizer" id="visualizer">
-                    ${Array(20).fill().map(() => `<div class="wave-bar"></div>`).join('')}
-                </div>
-                <div class="flex items-center gap-4 bg-black/40 p-3 rounded-xl border border-white/5">
-                    <button id="p_play" class="w-10 h-10 rounded-full bg-cyan-400 text-black flex items-center justify-center"><i class="fa-solid fa-play"></i></button>
-                    <div class="flex-1"><div class="player-slider" id="p_seek"><div class="player-slider-fill bg-cyan-400" id="p_fill"></div></div></div>
-                </div>
-                <audio id="h_audio" src="${url}"></audio>
-            </div>`;
-        const a = document.getElementById("h_audio");
-        const b = document.getElementById("p_play");
-        const f = document.getElementById("p_fill");
-        const v = document.getElementById("visualizer");
-        b.onclick = () => {
-            if(a.paused) { a.play(); b.innerHTML='<i class="fa-solid fa-pause"></i>'; }
-            else { a.pause(); b.innerHTML='<i class="fa-solid fa-play"></i>'; }
-        };
-        a.ontimeupdate = () => {
-            f.style.width = (a.currentTime/a.duration*100)+'%';
-            if(!a.paused) {
-                v.querySelectorAll('.wave-bar').forEach(bar => {
-                    bar.style.height = (Math.random()*30 + 5)+'px';
-                    bar.style.background = 'var(--ff-cyan)';
-                });
+    <script>
+        let activeCache = [];
+        let selectedFilters = new Set();
+        const fileInput = document.getElementById("fileInput");
+        const statusBadge = document.getElementById("statusBadge");
+        const fileList = document.getElementById("fileList");
+        const filterMenu = document.getElementById("filterMenu");
+
+        function getAssetIcon(label) {
+            const l = label.toLowerCase();
+            if(l.includes('texture') || l.includes('sprite')) return 'fa-image text-yellow-400';
+            if(l.includes('audio')) return 'fa-volume-high text-cyan-400';
+            if(l.includes('mesh')) return 'fa-cube text-purple-400';
+            if(l.includes('video')) return 'fa-clapperboard text-red-500';
+            if(l.includes('font')) return 'fa-font text-emerald-400';
+            return 'fa-file-code text-zinc-400';
+        }
+
+        function toggleFilterMenu() { filterMenu.classList.toggle('show'); }
+
+        function updateFilterUI() {
+            const labels = [...new Set(activeCache.map(i => i.label))].sort();
+            filterMenu.innerHTML = '';
+            labels.forEach(label => {
+                const item = document.createElement('div');
+                item.className = `filter-item ${selectedFilters.has(label) ? 'active' : ''}`;
+                item.innerHTML = `<i class="fa-solid ${selectedFilters.has(label) ? 'fa-square-check' : 'fa-square'}"></i><span>${label}</span>`;
+                item.onclick = (e) => {
+                    e.stopPropagation();
+                    if(selectedFilters.has(label)) selectedFilters.delete(label);
+                    else selectedFilters.add(label);
+                    updateFilterUI();
+                    renderList();
+                };
+                filterMenu.appendChild(item);
+            });
+            document.getElementById('btnFilteredZip').style.display = selectedFilters.size > 0 ? 'flex' : 'none';
+        }
+
+        function renderList() {
+            fileList.innerHTML = '';
+            const filtered = activeCache.filter(i => selectedFilters.size === 0 || selectedFilters.has(i.label));
+            filtered.forEach(item => {
+                const row = document.createElement('div');
+                row.className = "p-2 bg-[#111115] border border-[#1c1c22] rounded-xl flex items-center justify-between cursor-pointer hover:border-zinc-500 transition-all mb-1 group";
+                row.onclick = () => selectItem(item, row);
+                row.innerHTML = `<div class="flex items-center gap-3 truncate">
+                    <div class="w-7 h-7 bg-zinc-900 rounded flex items-center justify-center border border-zinc-800"><i class="fa-solid ${getAssetIcon(item.label)} text-[10px]"></i></div>
+                    <div class="truncate"><p class="text-[11px] font-semibold text-zinc-300 truncate">${item.name}</p><p class="text-[8px] text-zinc-600 uppercase font-bold">${item.label}</p></div>
+                </div><i class="fa-solid fa-angle-right text-zinc-800 text-[10px] group-hover:text-white transition-colors"></i>`;
+                fileList.appendChild(row);
+            });
+            document.getElementById('cacheCounterText').innerText = `Total: ${activeCache.length} | Shown: ${filtered.length}`;
+            if(window.innerWidth < 1024) {
+                document.getElementById('listWindowPanel').style.height = activeCache.length > 5 ? "420px" : "auto";
+            }
+        }
+
+        function selectItem(item, el) {
+            document.querySelectorAll('#fileList > div').forEach(d => d.classList.remove('border-[#ffde00]','bg-[#18181f]'));
+            el.classList.add('border-[#ffde00]','bg-[#18181f]');
+            const box = document.getElementById('mediaBox');
+            const url = `/api/extract?download_type=single&file_index=${item.index}`;
+            document.getElementById('previewFallback').style.display = 'none';
+            document.getElementById('previewContentBox').classList.remove('hidden');
+            document.getElementById('mediaTitle').innerText = item.name;
+            document.getElementById('singleSaveBtn').href = url;
+            box.innerHTML = '';
+            const ext = item.name.split('.').pop().toLowerCase();
+
+            if(['png','jpg','webp'].includes(ext)) {
+                box.innerHTML = `<img src="${url}" class="max-h-full max-w-full object-contain">`;
+            } else if(['mp3','wav','ogg'].includes(ext)) {
+                box.innerHTML = `<div class="w-full px-6 py-4" id="audioPlayer">
+                    <div class="audio-wave-visualizer mb-6">${Array(20).fill('<div class="wave-bar"></div>').join('')}</div>
+                    <div class="flex items-center gap-4 bg-black/40 p-4 rounded-2xl border border-white/5">
+                        <button id="pBtn" class="w-10 h-10 rounded-full bg-cyan-400 text-black flex items-center justify-center transition-transform active:scale-90"><i class="fa-solid fa-play"></i></button>
+                        <div class="flex-1"><div class="h-1 bg-zinc-800 rounded-full overflow-hidden"><div id="pFill" class="h-full bg-cyan-400 w-0"></div></div></div>
+                    </div>
+                    <audio id="hAudio" src="${url}" class="hidden"></audio>
+                </div>`;
+                const a = document.getElementById('hAudio'), b = document.getElementById('pBtn'), f = document.getElementById('pFill'), wrap = document.getElementById('audioPlayer');
+                b.onclick = () => { if(a.paused){ a.play(); wrap.classList.add('playing'); b.innerHTML='<i class="fa-solid fa-pause"></i>'; } else { a.pause(); wrap.classList.remove('playing'); b.innerHTML='<i class="fa-solid fa-play"></i>'; }};
+                a.ontimeupdate = () => f.style.width = (a.currentTime/a.duration*100)+'%';
+            } else if(ext === 'mp4') {
+                box.innerHTML = `<video src="${url}" controls class="w-full h-full"></video>`;
+            } else {
+                box.innerHTML = `<div class="text-zinc-700 flex flex-col items-center"><i class="fa-solid fa-file-circle-exclamation text-3xl mb-2"></i><span class="text-[9px] gff uppercase tracking-widest">Binary/Data Object</span></div>`;
+            }
+        }
+
+        document.getElementById('extractorForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const f = fileInput.files[0]; if(!f) return;
+            statusBadge.innerText = 'EXTRACTING';
+            statusBadge.style.color = 'var(--ff-yellow)';
+            const fd = new FormData(); fd.append('asset_bundle', f);
+            try {
+                const res = await fetch('/api/extract', { method:'POST', body:fd });
+                const data = await res.json();
+                if(data.error) throw new Error(data.error);
+                activeCache = data.files;
+                document.getElementById('listEmptyState').style.display = 'none';
+                document.getElementById('fileList').classList.remove('hidden');
+                document.getElementById('downloadAllBtn').classList.add('flex');
+                statusBadge.innerText = 'SUCCESS';
+                statusBadge.style.color = 'var(--ff-emerald)';
+                updateFilterUI();
+                renderList();
+            } catch(err) {
+                statusBadge.innerText = 'ERROR';
+                statusBadge.style.color = 'var(--ff-red)';
+                alert(err.message);
             }
         };
-        a.onended = () => { b.innerHTML='<i class="fa-solid fa-play"></i>'; v.querySelectorAll('.wave-bar').forEach(bar => bar.style.height='6px'); };
-    } else if(ext === "mp4") {
-        box.innerHTML = `<video src="${url}" controls class="w-full h-full"></video>`;
-    } else if(["json","txt","obj","atlas"].includes(ext)) {
-        box.innerHTML = `<div id="txtView" class="absolute inset-0 p-4 text-[10px] font-mono text-zinc-500 overflow-auto whitespace-pre">Loading...</div>`;
-        fetch(url).then(r=>r.text()).then(t => document.getElementById("txtView").innerText = t.slice(0, 5000));
-    } else {
-        box.innerHTML = `<i class="fa-solid fa-file-circle-question text-4xl text-zinc-800"></i>`;
-    }
-}
 
-document.getElementById("extractorForm").onsubmit = async e => {
-    e.preventDefault();
-    const file = fileInput.files[0];
-    if(!file) return;
-    
-    listEmptyState.innerHTML = `<i class="fa-solid fa-spinner animate-spin text-[#ffde00] text-xl mb-2"></i><span class="gff text-[10px]">Processing...</span>`;
-    const fd = new FormData();
-    fd.append("asset_bundle", file);
-    
-    try {
-        const res = await fetch("/api/extract", { method: "POST", body: fd });
-        const data = await res.json();
-        if(data.error) throw new Error(data.error);
-        activeCache = data.files;
-        
-        const labels = [...new Set(activeCache.map(i => i.label))].sort();
-        dropdownMenu.innerHTML = "";
-        labels.forEach(l => {
-            const item = document.createElement("div");
-            item.className = "dropdown-item";
-            item.innerHTML = `<input type="checkbox" class="accent-[#ffde00]"> ${l}`;
-            item.onclick = (e) => {
-                e.stopPropagation();
-                const cb = item.querySelector('input');
-                cb.checked = !cb.checked;
-                updateFilter(l);
-            };
-            dropdownMenu.appendChild(item);
-        });
-        
-        document.getElementById("filterContainer").classList.remove("hidden");
-        listEmptyState.style.display = "none";
-        fileList.classList.remove("hidden");
-        downloadAllBtn.classList.remove("hidden");
-        renderList();
-        
-        document.getElementById("statusBadge").innerText = "SUCCESS";
-        document.getElementById("statusBadge").style.color = "var(--ff-emerald)";
-        document.getElementById("statusDescText").innerText = `Extracted ${activeCache.length} assets.`;
-    } catch(err) {
-        listEmptyState.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-red-500 text-xl mb-2"></i><span class="text-red-500 text-[10px] font-bold">${err.message}</span>`;
-    }
-};
+        document.getElementById('downloadAllBtn').onclick = () => document.getElementById('zipModal').style.display = 'flex';
+        function closeZipModal() { document.getElementById('zipModal').style.display = 'none'; }
+        function downloadZip(mode) {
+            let url = `/api/extract?download_type=zip`;
+            if(mode === 'grouped') url += '&mode=grouped';
+            if(mode === 'filtered') url += `&filters=${[...selectedFilters].join(',')}`;
+            window.location.href = url;
+            closeZipModal();
+        }
 
-downloadAllBtn.onclick = () => {
-    zipOptionsMenu.style.display = zipOptionsMenu.style.display === 'flex' ? 'none' : 'flex';
-};
-
-function triggerZip(mode) {
-    zipOptionsMenu.style.display = 'none';
-    let url = `/api/extract?download_type=zip&mode=${mode}`;
-    if(mode === 'filtered') {
-        const visibleIndices = activeCache.filter(item => selectedFilters.size === 0 || selectedFilters.has(item.label)).map(i => i.index);
-        url += `&indices=${visibleIndices.join(',')}`;
-    }
-    window.location.href = url;
-}
-
-window.onclick = e => {
-    if(!e.target.closest('.custom-dropdown')) dropdownMenu.style.display = 'none';
-    if(!e.target.closest('#downloadAllBtn')) zipOptionsMenu.style.display = 'none';
-};
-</script>
+        fileInput.onchange = () => {
+            const f = fileInput.files[0];
+            if(f) {
+                document.getElementById('fileLabel').innerText = f.name;
+                document.getElementById('fileLabel').style.color = 'var(--ff-yellow)';
+            }
+        };
+        window.onclick = () => { if(filterMenu.classList.contains('show')) filterMenu.classList.remove('show'); };
+        document.getElementById('filterDropdown').onclick = (e) => e.stopPropagation();
+    </script>
 </body>
 </html>
