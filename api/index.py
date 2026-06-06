@@ -8,7 +8,6 @@ import re
 import gc
 import hashlib
 import struct
-import traceback
 from flask import Flask, request, send_file, jsonify
 from PIL import Image
 import texture2ddecoder
@@ -51,8 +50,17 @@ def process_object_unrestricted(obj, raw_env_data: bytes):
         if t == "TextAsset":
             raw = getattr(data, "m_Script", b"")
             if isinstance(raw, str): raw = raw.encode('utf-8', errors='replace')
-            ext = ".json" if raw.startswith((b"{", b"[")) else ".txt"
-            return f"{safe_name}{ext}", raw, f"Text/{safe_name}{ext}", "Script Asset Extracted"
+            
+            # Smart extraction sorting label check for atlas structural files
+            ext = ".txt"
+            label = "Script Asset Extracted"
+            if safe_name.lower().endswith('.atlas') or raw.startswith(b"\n") or b"size:" in raw:
+                if not safe_name.lower().endswith('.atlas'): ext = ".atlas.txt"
+                label = "Atlas Mapping Extracted"
+            elif raw.startswith((b"{", b"[")):
+                ext = ".json"
+            
+            return f"{safe_name}{ext}", raw, f"Text/{safe_name}{ext}", label
 
         elif t in ["Texture2D", "Sprite"] and hasattr(data, 'image'):
             buf = io.BytesIO()
@@ -86,7 +94,7 @@ def convert_ktx_to_png_fallback(file_bytes) -> bytes:
     f = io.BytesIO(file_bytes)
     header = f.read(64)
     if len(header) < 64 or header[:12] != b'\xABKTX 11\xBB\r\n\x1A\n':
-        raise Exception("Not a valid KTX file signature format.")
+        raise Exception("Not a valid KTX format signature structure.")
 
     gl_internal_format = struct.unpack('<I', header[28:32])[0]
     width = struct.unpack('<I', header[36:40])[0]
@@ -110,10 +118,10 @@ def convert_ktx_to_png_fallback(file_bytes) -> bytes:
         decoded = texture2ddecoder.decode_astc(data, width, height, bx, by)
     elif gl_internal_format == 0x8058:
         expected = width * height * 4
-        if len(data) < expected: raise Exception("Truncated texture storage bounds loop inside data stream mapping.")
+        if len(data) < expected: raise Exception("Truncated texture byte buffer array map bounds.")
         decoded = data[:expected]
     else:
-        raise Exception(f"Unsupported format: {hex(gl_internal_format)}")
+        raise Exception(f"Unsupported gl format mapping encoding structure: {hex(gl_internal_format)}")
 
     img = Image.frombytes("RGBA", (width, height), decoded)
     r, g, b, a = img.split()
@@ -131,30 +139,30 @@ def handle_universal_extraction_pipeline():
 
     if download_type == 'zip':
         if not GLOBAL_CACHE_REGISTRY.get('extracted'):
-            return jsonify({"error": "No elements found in cache registry."}), 400
+            return jsonify({"error": "Memory map index cache is currently unpopulated."}), 400
         zip_io = io.BytesIO()
         with zipfile.ZipFile(zip_io, "w", zipfile.ZIP_DEFLATED, compresslevel=1) as zf:
             for item in GLOBAL_CACHE_REGISTRY['extracted']:
                 zf.writestr(item['zip_path'], item['bytes'])
         zip_io.seek(0)
-        return send_file(zip_io, mimetype='application/zip', as_attachment=True, download_name="extracted_assets.zip")
+        return send_file(zip_io, mimetype='application/zip', as_attachment=True, download_name="extracted_assets_manifest.zip")
 
     elif download_type == 'single':
         file_idx = int(request.args.get('file_index', -1))
         if not GLOBAL_CACHE_REGISTRY.get('extracted') or file_idx < 0 or file_idx >= len(GLOBAL_CACHE_REGISTRY['extracted']):
-            return jsonify({"error": "Target mapping index reference missing inside context bounds."}), 400
+            return jsonify({"error": "Target node registry data out of bounds index mapping reference."}), 400
         item = GLOBAL_CACHE_REGISTRY['extracted'][file_idx]
         
         ext = item['name'].split('.')[-1].lower()
         mimetype = 'application/octet-stream'
         if ext in ['png', 'jpg', 'jpeg', 'webp']: mimetype = 'image/png'
         elif ext in ['mp3', 'wav', 'ogg']: mimetype = 'audio/mpeg'
-        elif ext in ['json', 'txt', 'xml']: mimetype = 'text/plain; charset=utf-8'
+        elif ext in ['json', 'txt', 'xml', 'atlas']: mimetype = 'text/plain; charset=utf-8'
         
         return send_file(io.BytesIO(item['bytes']), mimetype=mimetype, as_attachment=True, download_name=item['name'])
 
     if 'asset_bundle' not in request.files:
-        return jsonify({"error": "No file uploaded layout."}), 400
+        return jsonify({"error": "No processing upload source payload found."}), 400
 
     try:
         uploaded_file = request.files['asset_bundle']
@@ -166,51 +174,29 @@ def handle_universal_extraction_pipeline():
         json_metadata_manifest = []
         tracking_index_counter = 0
 
-        # Step 1: Intelligent Dynamic Try Logic - Check if file is a valid raw binary KTX layout container stream first
         if decompressed_data.startswith(b'\xABKTX 11\xBB\r\n\x1A\n'):
             try:
                 png_bytes = convert_ktx_to_png_fallback(decompressed_data)
                 clean_base_title = os.path.splitext(orig_name)[0]
-                extracted_list.append({
-                    'name': f"{clean_base_title}.png", 
-                    'zip_path': f"Textures/{clean_base_title}.png", 
-                    'bytes': png_bytes
-                })
-                json_metadata_manifest.append({
-                    'index': 0, 
-                    'name': f"{clean_base_title}.png", 
-                    'path': f"Textures/{clean_base_title}.png", 
-                    'label': "KTX Texture Extracted"
-                })
+                extracted_list.append({'name': f"{clean_base_title}.png", 'zip_path': f"Textures/{clean_base_title}.png", 'bytes': png_bytes})
+                json_metadata_manifest.append({'index': 0, 'name': f"{clean_base_title}.png", 'path': f"Textures/{clean_base_title}.png", 'label': "KTX Texture Extracted"})
                 GLOBAL_CACHE_REGISTRY['extracted'] = extracted_list
                 return jsonify({"files": json_metadata_manifest})
-            except Exception as e:
-                pass
+            except: pass
 
-        # Step 2: Fallback Logic - Run Unity Asset Bundle object unpacking sequence
         try:
             env = UnityPy.load(decompressed_data)
             objects_array = env.objects
         except:
-            # Step 3: Ultimate Fallback Logic - If Unity loading fails, check if the raw file can process directly as KTX format layout anyway
             try:
                 png_bytes = convert_ktx_to_png_fallback(decompressed_data)
                 clean_base_title = os.path.splitext(orig_name)[0]
-                extracted_list.append({
-                    'name': f"{clean_base_title}.png", 
-                    'zip_path': f"Textures/{clean_base_title}.png", 
-                    'bytes': png_bytes
-                })
-                json_metadata_manifest.append({
-                    'index': 0, 
-                    'name': f"{clean_base_title}.png", 
-                    'path': f"Textures/{clean_base_title}.png", 
-                    'label': "KTX Texture Extracted"
-                })
+                extracted_list.append({'name': f"{clean_base_title}.png", 'zip_path': f"Textures/{clean_base_title}.png", 'bytes': png_bytes})
+                json_metadata_manifest.append({'index': 0, 'name': f"{clean_base_title}.png", 'path': f"Textures/{clean_base_title}.png", 'label': "KTX Texture Extracted"})
                 GLOBAL_CACHE_REGISTRY['extracted'] = extracted_list
                 return jsonify({"files": json_metadata_manifest})
             except:
-                return jsonify({"error": "Unsupported file layout: Eventually failed both asset and raw texture extraction matrices."}), 400
+                return jsonify({"error": "Unrecognized package: Both asset scanner unpacker and direct KTX raw image decoder execution routines failed eventually."}), 400
 
         seen_md5 = set()
         for obj in objects_array:
@@ -232,12 +218,12 @@ def handle_universal_extraction_pipeline():
         gc.collect()
 
         if tracking_index_counter == 0:
-            return jsonify({"error": "No recognizable asset elements tracked inside package container."}), 400
+            return jsonify({"error": "No extraction elements matched within structural array blocks."}), 400
 
         GLOBAL_CACHE_REGISTRY['extracted'] = extracted_list
         return jsonify({"files": json_metadata_manifest})
     except Exception as e:
-        return jsonify({"error": f"Internal Core Matrix Failure: {str(e)}"}), 500
+        return jsonify({"error": f"Core pipeline internal processing runtime failure: {str(e)}"}), 500
 
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
@@ -246,7 +232,7 @@ def serve_ui_layout(path):
         with open(HTML_PATH, 'r', encoding='utf-8') as f:
             return f.read()
     except Exception as e:
-        return f"File target system missing: {str(e)}", 500
+        return f"Structural source asset mapping system missing: {str(e)}", 500
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=10000, debug=True)
