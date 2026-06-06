@@ -1,325 +1,304 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Assets Extractor</title>
-    <meta name="description" content="Best Assets Extractor for AssetBundle, KTX, and Unity Assets. Made by MACBRUH_FF.">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&display=swap" rel="stylesheet">
-    <style>
-        @font-face { font-family: 'GFF-Bold'; src: url('https://dl.dir.freefiremobile.com/common/web_event/common/fonts/website/GFFLatinW05-Bold.woff'); }
-        :root { --ff-yellow: #ffde00; --ff-cyan: #00f0ff; }
-        body { background: #000; color: #fff; font-family: 'Inter', sans-serif; min-height: 100vh; overflow-x: hidden; background-image: url('https://dl.dir.freefiremobile.com/common/web_event/official2/dist/client/img/bg_pc.617c669.jpg'); background-size: cover; background-attachment: fixed; }
-        body::before { content: ""; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.92); z-index: -1; }
-        .gff { font-family: 'GFF-Bold', sans-serif; }
+import os
+import io
+import json
+import gzip
+import zlib
+import zipfile
+import re
+import gc
+import hashlib
+import struct
+from flask import Flask, request, send_file, jsonify
+from PIL import Image
+import texture2ddecoder
+import UnityPy
+
+os.environ["UNITYPY_NO_GUI"] = "1"
+
+app = Flask(__name__)
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+HTML_PATH = os.path.join(BASE_DIR, 'index.html')
+GLOBAL_CACHE_REGISTRY = {}
+
+def decompress_stream(data: bytes) -> bytes:
+    try:
+        if data.startswith(b'\x1f\x8b'):
+            return decompress_stream(gzip.decompress(data))
+        if data.startswith((b'\x78\x9c', b'\x78\x01', b'\x78\xda')):
+            return decompress_stream(zlib.decompress(data))
+    except:
+        pass
+    return data
+
+def mesh_to_obj(mesh) -> str:
+    try:
+        lines = [f"g {mesh.name}"]
+        for v in mesh.m_Vertices:
+            lines.append(f"v {-v.x} {v.y} {v.z}")
+        for vn in mesh.m_Normals:
+            lines.append(f"vn {-vn.x} {vn.y} {vn.z}")
+        for vt in mesh.m_UV0:
+            lines.append(f"vt {vt.x} {vt.y}")
         
-        /* Layout Requirement: Left Square, Right Rounded */
-        .panel-container { 
-            background: #0a0a0a; border: 1px solid #1f1f1f; 
-            border-radius: 0 24px 24px 0; 
-            position: relative; height: 420px; display: flex; flex-direction: column;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-            transition: all 0.3s ease;
-        }
-        .panel-container::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--ff-yellow); }
+        for sub in mesh.m_SubMeshes:
+            index_data = mesh.m_IndexBuffer[sub.firstByte : sub.firstByte + sub.indexCount * 2]
+            indices = [struct.unpack('<H', index_data[i:i+2])[0] for i in range(0, len(index_data), 2)]
+            for i in range(0, len(indices), 3):
+                # OBJ indices are 1-based
+                f1, f2, f3 = indices[i]+1, indices[i+1]+1, indices[i+2]+1
+                lines.append(f"f {f1}/{f1}/{f1} {f2}/{f2}/{f2} {f3}/{f3}/{f3}")
+        return "\n".join(lines)
+    except:
+        return ""
 
-        .custom-dropdown { position: relative; display: inline-block; }
-        .dropdown-content { 
-            display: none; position: absolute; right: 0; background: #121212; 
-            min-width: 180px; border: 1px solid #2a2a2a; border-radius: 12px; 
-            z-index: 50; padding: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-        }
-        .dropdown-content.show { display: block; }
+def extract_clean_name(obj, data, default_type: str) -> str:
+    if hasattr(obj, 'container') and obj.container:
+        base_mapped_path = os.path.basename(obj.container)
+        if base_mapped_path:
+            return os.path.splitext(base_mapped_path)[0]
+    for attr in ["name", "m_Name", "m_name"]:
+        val = getattr(data, attr, "")
+        if isinstance(val, str) and val.strip():
+            return val.strip()
+    return f"{default_type}_{obj.path_id}"
+
+def dump_obj_to_dict(obj_data) -> dict:
+    out = {}
+    try:
+        if hasattr(obj_data, "read_typetree"):
+            return obj_data.read_typetree()
+    except:
+        pass
+    for attr in dir(obj_data):
+        if attr.startswith('_') or attr in ['read', 'assets_file', 'reader', 'image', 'samples']:
+            continue
+        try:
+            val = getattr(obj_data, attr)
+            if isinstance(val, (int, float, str, bool)):
+                out[attr] = val
+            elif isinstance(val, bytes):
+                out[attr] = val.hex()[:500] + "..." if len(val) > 500 else val.hex()
+        except:
+            pass
+    return out
+
+def process_object_unrestricted(obj, raw_env_data: bytes):
+    try:
+        t = obj.type.name
+        data = obj.read()
+        p_name = extract_clean_name(obj, data, t)
+        safe_name = re.sub(r'[<>:"/\|?*\x00-\x1f]', "", p_name)
+
+        # 1. Textures & Sprites
+        if t in ["Texture2D", "Sprite"] and hasattr(data, 'image'):
+            buf = io.BytesIO()
+            data.image.save(buf, format="PNG")
+            return f"{safe_name}.png", buf.getvalue(), f"Textures/{safe_name}.png", f"{t}"
+
+        # 2. Audio
+        elif t == "AudioClip":
+            samples = getattr(data, "samples", None)
+            if samples and list(samples.keys()):
+                audio_filename = list(samples.keys())[0]
+                return audio_filename, samples[audio_filename], f"Audio/{audio_filename}", "Audio"
+            raw = obj.get_raw_data()
+            ext = ".ogg" if raw.startswith(b'OggS') else ".wav"
+            return f"{safe_name}{ext}", raw, f"Audio/{safe_name}{ext}", "Audio"
+
+        # 3. Meshes (3D Objects)
+        elif t == "Mesh":
+            obj_content = mesh_to_obj(data)
+            if obj_content:
+                return f"{safe_name}.obj", obj_content.encode('utf-8'), f"Meshes/{safe_name}.obj", "3D Mesh"
+            tree_data = dump_obj_to_dict(data)
+            return f"{safe_name}.json", json.dumps(tree_data, indent=2).encode('utf-8'), f"Meshes/{safe_name}.json", "Mesh Data"
+
+        # 4. Text & Config
+        elif t == "TextAsset":
+            raw = getattr(data, "m_Script", b"")
+            if isinstance(raw, str): raw = raw.encode('utf-8')
+            ext = ".txt"
+            label = "Text File"
+            if safe_name.lower().endswith('.atlas') or b"size:" in raw:
+                ext = ".atlas"
+                label = "Atlas"
+            elif raw.startswith((b"{", b"[")):
+                ext = ".json"
+                label = "Config"
+            return f"{safe_name}{ext}", raw, f"Text/{safe_name}{ext}", label
+
+        # 5. Video
+        elif t == "VideoClip":
+            raw = obj.get_raw_data()
+            if len(raw) < 1024:
+                match = raw_env_data.find(b'ftyp')
+                if match != -1:
+                    raw = raw_env_data[match-4:match+12000000]
+            return f"{safe_name}.mp4", raw, f"Video/{safe_name}.mp4", "Video"
+
+        # 6. Logic & Scripts
+        elif t in ["MonoBehaviour", "GameObject", "ScriptableObject"]:
+            tree_data = dump_obj_to_dict(data)
+            js = json.dumps(tree_data, indent=2, ensure_ascii=False).encode('utf-8')
+            return f"{safe_name}.json", js, f"Scripts/{t}/{safe_name}.json", t
+
+        # 7. Rendering (Shaders/Materials)
+        elif t in ["Material", "Shader"]:
+            tree_data = dump_obj_to_dict(data)
+            js = json.dumps(tree_data, indent=2, ensure_ascii=False).encode('utf-8')
+            return f"{safe_name}.json", js, f"Shaders_Materials/{safe_name}.json", t
+
+        # 8. Fonts
+        elif t == "Font":
+            raw_font = getattr(data, "m_FontData", b"")
+            if len(raw_font) > 10:
+                ext = ".otf" if raw_font.startswith(b'OTTO') else ".ttf"
+                return f"{safe_name}{ext}", raw_font, f"Fonts/{safe_name}{ext}", "Font"
+
+        # 9. Asset Bundles
+        elif t == "AssetBundle":
+            tree_data = dump_obj_to_dict(data)
+            js = json.dumps(tree_data, indent=2).encode('utf-8')
+            return f"{safe_name}_manifest.json", js, f"Bundles/{safe_name}_manifest.json", "Bundle"
+
+        # Fallback
+        tree_data = dump_obj_to_dict(data)
+        if tree_data:
+            return f"{safe_name}.json", json.dumps(tree_data, indent=2).encode('utf-8'), f"Other/{t}/{safe_name}.json", t
         
-        .upload-area { border: 2px dashed #2a2a2a; border-radius: 16px; height: 120px; cursor: pointer; transition: 0.2s; }
-        .upload-area:hover { border-color: var(--ff-yellow); background: #11110a; }
-        
-        .asset-row { background: #111; border: 1px solid #1f1f1f; border-radius: 12px; margin-bottom: 4px; padding: 10px; cursor: pointer; transition: 0.2s; }
-        .asset-row:hover { border-color: #444; background: #161616; }
-        .asset-row.active { border-color: var(--ff-yellow); background: #1a1a12; }
+        raw_bytes = obj.get_raw_data()
+        if raw_bytes:
+            return f"{safe_name}.dat", raw_bytes, f"Other/{t}/{safe_name}.dat", f"Binary {t}"
+    except:
+        pass
+    return None
 
-        .waveform { display: flex; align-items: flex-end; gap: 2px; height: 40px; justify-content: center; }
-        .wave-bar { width: 3px; background: #333; border-radius: 2px; transition: 0.1s; }
-        .playing .wave-bar { animation: waveAnim 0.5s ease-in-out infinite alternate; }
-        @keyframes waveAnim { from { height: 5px; } to { height: 30px; } }
-
-        .loader-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 40; border-radius: inherit; }
-        
-        ::-webkit-scrollbar { width: 5px; }
-        ::-webkit-scrollbar-thumb { background: #222; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--ff-yellow); }
-
-        @media (max-width: 768px) { .panel-container { height: auto; min-height: 200px; border-radius: 16px; } }
-    </style>
-</head>
-<body class="p-4 md:p-8">
-
-    <!-- Header Section -->
-    <div class="max-w-7xl mx-auto mb-10 text-center">
-        <img src="https://dl.dir.freefiremobile.com/common/web_event/official2/dist/client/img/full_logo.969f536.png" class="h-8 mx-auto mb-4" alt="FF Logo">
-        <h1 class="text-5xl md:text-7xl font-black italic tracking-tighter leading-none mb-1">
-            ASSETS <span class="text-[#ffde00]">EXTRACTOR</span>
-        </h1>
-        <div class="flex items-center justify-center gap-3 text-zinc-400 text-xs font-bold tracking-widest uppercase">
-            <i class="fa-solid fa-cube text-[10px] text-yellow-500"></i>
-            <span>AssetBundle • KTX • Unity Assets Extractor</span>
-            <i class="fa-solid fa-cube text-[10px] text-yellow-500"></i>
-        </div>
-    </div>
-
-    <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        <!-- Left: Upload -->
-        <div class="panel-container">
-            <div class="p-6 flex-1 flex flex-col">
-                <div class="mb-4">
-                    <h2 class="gff text-sm uppercase tracking-wider">Source Upload</h2>
-                    <p class="text-[10px] text-zinc-500">Import your asset mapping file.</p>
-                </div>
-                
-                <div class="upload-area flex flex-col items-center justify-center gap-2 group" id="dropZone" onclick="document.getElementById('fileInput').click()">
-                    <i class="fa-solid fa-cloud-arrow-up text-2xl text-zinc-600 group-hover:text-yellow-500 transition-colors"></i>
-                    <span id="fileName" class="text-[11px] font-bold text-zinc-400 uppercase gff">Select Unity File</span>
-                    <input type="file" id="fileInput" class="hidden">
-                </div>
-
-                <button id="extractBtn" class="mt-4 bg-[#ffde00] text-black gff italic uppercase py-4 rounded-xl font-black text-sm shadow-[0_4px_0_#b39c00] active:translate-y-1 active:shadow-none transition-all">
-                    Start Extraction
-                </button>
-
-                <div class="mt-auto pt-6 border-t border-zinc-900 flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center">
-                        <i class="fa-solid fa-terminal text-[10px] text-zinc-500"></i>
-                    </div>
-                    <div class="flex-1">
-                        <p class="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Status Log</p>
-                        <p id="statusText" class="text-[11px] text-zinc-400">Ready for processing...</p>
-                    </div>
-                </div>
-            </div>
-            <div id="uploadLoader" class="loader-overlay"><i class="fa-solid fa-circle-notch fa-spin text-yellow-500 text-2xl"></i></div>
-        </div>
-
-        <!-- Middle: List -->
-        <div class="panel-container" id="listPanel">
-            <div class="p-6 flex flex-col h-full">
-                <div class="flex items-center justify-between mb-4">
-                    <div>
-                        <h2 class="gff text-sm uppercase tracking-wider">Asset List</h2>
-                        <p id="countText" class="text-[10px] text-zinc-500">0 elements found</p>
-                    </div>
-                    
-                    <div class="flex items-center gap-2">
-                        <div class="custom-dropdown hidden" id="filterArea">
-                            <button onclick="toggleDropdown('filterDropdown')" class="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400">
-                                <i class="fa-solid fa-filter text-[10px]"></i>
-                            </button>
-                            <div id="filterDropdown" class="dropdown-content">
-                                <div id="filterList" class="space-y-1"></div>
-                            </div>
-                        </div>
-
-                        <div class="custom-dropdown hidden" id="zipArea">
-                            <button onclick="toggleDropdown('zipDropdown')" class="w-8 h-8 rounded-lg bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center text-yellow-500">
-                                <i class="fa-solid fa-file-zipper text-[10px]"></i>
-                            </button>
-                            <div id="zipDropdown" class="dropdown-content">
-                                <button onclick="downloadZip('normal')" class="w-full text-left p-2 text-[10px] font-bold hover:bg-zinc-800 rounded">DOWNLOAD ALL</button>
-                                <button onclick="downloadZip('grouped')" class="w-full text-left p-2 text-[10px] font-bold hover:bg-zinc-800 rounded">DOWNLOAD GROUPED</button>
-                                <button id="filterDl" onclick="downloadZip('filtered')" class="w-full text-left p-2 text-[10px] font-bold hover:bg-zinc-800 rounded hidden">DOWNLOAD FILTERED</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="flex-1 overflow-y-auto pr-2" id="assetContainer">
-                    <div class="h-full flex flex-col items-center justify-center opacity-20 text-center">
-                        <i class="fa-solid fa-box-open text-3xl mb-2"></i>
-                        <p class="text-[10px] uppercase font-bold gff">Awaiting Data</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Right: Preview -->
-        <div class="panel-container">
-            <div class="p-6 flex flex-col h-full">
-                <div class="mb-4">
-                    <h2 class="gff text-sm uppercase tracking-wider">Preview</h2>
-                    <p class="text-[10px] text-zinc-500">Real-time content viewer.</p>
-                </div>
-
-                <div class="flex-1 bg-black/50 border border-zinc-900 rounded-2xl flex items-center justify-center overflow-hidden relative" id="previewDisplay">
-                    <i class="fa-solid fa-eye text-2xl text-zinc-800"></i>
-                </div>
-
-                <div class="mt-4 flex items-center justify-between bg-zinc-900/50 p-3 rounded-xl border border-zinc-800">
-                    <div class="truncate mr-4">
-                        <p id="previewName" class="text-[11px] font-bold truncate">No selection</p>
-                        <p id="previewType" class="text-[9px] text-zinc-500 uppercase tracking-widest font-black">Unknown</p>
-                    </div>
-                    <button id="singleDl" class="w-10 h-10 rounded-xl bg-zinc-800 flex items-center justify-center hover:bg-yellow-500 hover:text-black transition-all">
-                        <i class="fa-solid fa-arrow-down-long"></i>
-                    </button>
-                </div>
-            </div>
-            <div id="previewLoader" class="loader-overlay"><i class="fa-solid fa-circle-notch fa-spin text-white text-2xl"></i></div>
-        </div>
-
-    </div>
-
-    <script>
-        let allAssets = [];
-        let selectedTypes = new Set();
-
-        const fileInput = document.getElementById('fileInput');
-        const extractBtn = document.getElementById('extractBtn');
-
-        function toggleDropdown(id) {
-            document.getElementById(id).classList.toggle('show');
-        }
-
-        window.onclick = (e) => {
-            if (!e.target.closest('.custom-dropdown')) {
-                document.querySelectorAll('.dropdown-content').forEach(d => d.classList.remove('show'));
-            }
-        };
-
-        fileInput.onchange = (e) => {
-            if(e.target.files[0]) document.getElementById('fileName').innerText = e.target.files[0].name;
-        };
-
-        extractBtn.onclick = async () => {
-            if (!fileInput.files[0]) return;
-            const formData = new FormData();
-            formData.append('asset_bundle', fileInput.files[0]);
-
-            document.getElementById('uploadLoader').style.display = 'flex';
-            document.getElementById('statusText').innerText = "Processing engine data...";
-
-            try {
-                const res = await fetch('/api/extract', { method: 'POST', body: formData });
-                const data = await res.json();
-                allAssets = data.files || [];
-                renderList();
-                setupFilters();
-                
-                document.getElementById('filterArea').classList.remove('hidden');
-                document.getElementById('zipArea').classList.remove('hidden');
-                document.getElementById('countText').innerText = `${allAssets.length} elements loaded`;
-                document.getElementById('statusText').innerText = "Extraction successful.";
-                
-                // Responsive Logic: Expand list if many files
-                if(allAssets.length > 5) document.getElementById('listPanel').style.height = '420px';
-                else document.getElementById('listPanel').style.height = 'auto';
-
-            } catch (err) {
-                document.getElementById('statusText').innerText = "Process error occurred.";
-            } finally {
-                document.getElementById('uploadLoader').style.display = 'none';
-            }
-        };
-
-        function setupFilters() {
-            const types = [...new Set(allAssets.map(a => a.label))].sort();
-            const container = document.getElementById('filterList');
-            container.innerHTML = '';
-            types.forEach(type => {
-                const div = document.createElement('div');
-                div.className = "flex items-center gap-2 p-1 px-2 hover:bg-zinc-800 rounded cursor-pointer text-[10px] font-bold";
-                div.innerHTML = `<input type="checkbox" value="${type}" class="accent-yellow-500"> <span>${type}</span>`;
-                div.onclick = (e) => {
-                    const cb = div.querySelector('input');
-                    if(e.target !== cb) cb.checked = !cb.checked;
-                    if(cb.checked) selectedTypes.add(type); else selectedTypes.delete(type);
-                    renderList();
-                };
-                container.appendChild(div);
-            });
-        }
-
-        function renderList() {
-            const container = document.getElementById('assetContainer');
-            container.innerHTML = '';
-            const filtered = allAssets.filter(a => selectedTypes.size === 0 || selectedTypes.has(a.label));
+def handle_astc_ktx_decoding(data, name):
+    try:
+        # Check for KTX or ASTC magic
+        if data.startswith(b'\xABKTX 11\xBB\r\n\x1A\n'):
+            # KTX logic (Simplified for space, using texture2ddecoder)
+            header = data[:64]
+            gl_fmt = struct.unpack('<I', header[28:32])[0]
+            w = struct.unpack('<I', header[36:40])[0]
+            h = struct.unpack('<I', header[40:44])[0]
+            offset = 64 + struct.unpack('<I', header[60:64])[0]
+            img_data = data[offset+4:]
             
-            document.getElementById('filterDl').classList.toggle('hidden', selectedTypes.size === 0);
-
-            filtered.forEach(asset => {
-                const div = document.createElement('div');
-                div.className = "asset-row flex items-center justify-between";
-                div.onclick = () => showPreview(asset);
-                div.innerHTML = `
-                    <div class="flex items-center gap-3 truncate">
-                        <div class="w-7 h-7 rounded bg-zinc-800 flex items-center justify-center flex-shrink-0">
-                            <i class="fa-solid ${getIcon(asset.label)} text-[10px] text-zinc-500"></i>
-                        </div>
-                        <div class="truncate">
-                            <p class="text-[11px] font-bold truncate text-zinc-300">${asset.name}</p>
-                            <p class="text-[8px] text-zinc-600 font-black uppercase tracking-tighter">${asset.label}</p>
-                        </div>
-                    </div>
-                    <i class="fa-solid fa-chevron-right text-[8px] text-zinc-800"></i>
-                `;
-                container.appendChild(div);
-            });
-        }
-
-        function getIcon(label) {
-            if(label.includes('Texture')) return 'fa-image';
-            if(label.includes('Audio')) return 'fa-volume-high';
-            if(label.includes('Mesh')) return 'fa-cube';
-            if(label.includes('Video')) return 'fa-play';
-            return 'fa-file-code';
-        }
-
-        async function showPreview(asset) {
-            document.getElementById('previewLoader').style.display = 'flex';
-            const display = document.getElementById('previewDisplay');
-            const url = `/api/extract?download_type=single&file_index=${asset.index}`;
+            if gl_fmt == 0x8D64: # ETC1
+                decoded = texture2ddecoder.decode_etc1(img_data, w, h)
+            elif 0x93B0 <= gl_fmt <= 0x93BD: # ASTC
+                # Using a generic 4x4 block for KTX-wrapped ASTC
+                decoded = texture2ddecoder.decode_astc(img_data, w, h, 4, 4)
+            else:
+                return None
             
-            document.getElementById('previewName').innerText = asset.name;
-            document.getElementById('previewType').innerText = asset.label;
-            document.getElementById('singleDl').onclick = () => window.location.href = url;
-
-            const ext = asset.name.split('.').pop().toLowerCase();
+            img = Image.frombytes("RGBA", (w, h), decoded).transpose(Image.FLIP_TOP_BOTTOM)
+            out = io.BytesIO()
+            img.save(out, format="PNG")
+            return out.getvalue()
             
-            try {
-                if(['png','jpg','webp'].includes(ext)) {
-                    display.innerHTML = `<img src="${url}" class="max-w-full max-h-full object-contain">`;
-                } else if(['mp3','wav','ogg'].includes(ext)) {
-                    display.innerHTML = `
-                        <div class="w-full p-6 text-center">
-                            <div class="waveform" id="visualizer">${Array(20).fill('<div class="wave-bar"></div>').join('')}</div>
-                            <audio id="player" src="${url}" class="hidden"></audio>
-                            <button id="playBtn" class="mt-4 w-12 h-12 rounded-full bg-cyan-500 text-black flex items-center justify-center"><i class="fa-solid fa-play"></i></button>
-                        </div>
-                    `;
-                    const p = document.getElementById('player');
-                    const b = document.getElementById('playBtn');
-                    b.onclick = () => {
-                        if(p.paused) { p.play(); b.innerHTML = '<i class="fa-solid fa-pause"></i>'; document.getElementById('visualizer').classList.add('playing'); }
-                        else { p.pause(); b.innerHTML = '<i class="fa-solid fa-play"></i>'; document.getElementById('visualizer').classList.remove('playing'); }
-                    }
-                } else if(ext === 'json' || ext === 'txt') {
-                    const txt = await fetch(url).then(r => r.text());
-                    display.innerHTML = `<pre class="text-[9px] p-4 text-zinc-500 w-full overflow-auto text-left h-full">${txt.slice(0,2000)}</pre>`;
-                } else {
-                    display.innerHTML = `<div class="text-center text-zinc-700"><i class="fa-solid fa-file-circle-question text-3xl mb-2"></i><p class="text-[10px] font-bold">NO PREVIEW AVAILABLE</p></div>`;
-                }
-            } catch(e) {
-                display.innerHTML = "Preview Load Failed";
-            } finally {
-                document.getElementById('previewLoader').style.display = 'none';
-            }
-        }
+        elif data.startswith(b'\x13\xAB\xA1\x5C'): # Raw ASTC
+            block_w = data[4]
+            block_h = data[5]
+            w = data[7] | (data[8] << 8) | (data[9] << 16)
+            h = data[10] | (data[11] << 8) | (data[12] << 16)
+            decoded = texture2ddecoder.decode_astc(data[16:], w, h, block_w, block_h)
+            img = Image.frombytes("RGBA", (w, h), decoded).transpose(Image.FLIP_TOP_BOTTOM)
+            out = io.BytesIO()
+            img.save(out, format="PNG")
+            return out.getvalue()
+    except:
+        pass
+    return None
 
-        function downloadZip(mode) {
-            const indices = allAssets.filter(a => selectedTypes.size === 0 || selectedTypes.has(a.label)).map(a => a.index).join(',');
-            window.location.href = `/api/extract?download_type=zip&mode=${mode}&indices=${indices}`;
-        }
-    </script>
-</body>
-</html>
+@app.route('/api/extract', methods=['GET', 'POST'])
+def handle_universal_extraction_pipeline():
+    global GLOBAL_CACHE_REGISTRY
+    download_type = request.args.get('download_type', '')
+    
+    if download_type == 'zip':
+        mode = request.args.get('mode', 'normal')
+        indices = request.args.get('indices', '') # For filtered downloads
+        if not GLOBAL_CACHE_REGISTRY.get('extracted'):
+            return jsonify({"error": "No cache found"}), 400
+        
+        target_indices = []
+        if indices:
+            target_indices = [int(i) for i in indices.split(',') if i.isdigit()]
+        
+        zip_io = io.BytesIO()
+        with zipfile.ZipFile(zip_io, "w", zipfile.ZIP_DEFLATED) as zf:
+            for idx, item in enumerate(GLOBAL_CACHE_REGISTRY['extracted']):
+                if target_indices and idx not in target_indices:
+                    continue
+                
+                path = item['zip_path'] if mode == 'grouped' else item['name']
+                zf.writestr(path, item['bytes'])
+        
+        zip_io.seek(0)
+        zip_name = GLOBAL_CACHE_REGISTRY.get('orig_name', 'assets')
+        return send_file(zip_io, mimetype='application/zip', as_attachment=True, download_name=f"{zip_name}[Extracted].zip")
+
+    elif download_type == 'single':
+        file_idx = int(request.args.get('file_index', -1))
+        if not GLOBAL_CACHE_REGISTRY.get('extracted') or file_idx < 0 or file_idx >= len(GLOBAL_CACHE_REGISTRY['extracted']):
+            return jsonify({"error": "Invalid index"}), 400
+        item = GLOBAL_CACHE_REGISTRY['extracted'][file_idx]
+        return send_file(io.BytesIO(item['bytes']), as_attachment=True, download_name=item['name'])
+
+    if 'asset_bundle' not in request.files:
+        return jsonify({"error": "No file"}), 400
+
+    try:
+        up_file = request.files['asset_bundle']
+        orig_name = os.path.splitext(up_file.filename)[0].split('-')[0].split('.')[0]
+        raw_bytes = up_file.read()
+        decompressed = decompress_stream(raw_bytes)
+        
+        extracted_list = []
+        json_manifest = []
+        seen_md5 = set()
+        
+        # Try ASTC/KTX Direct
+        decoded_img = handle_astc_ktx_decoding(decompressed, orig_name)
+        if decoded_img:
+            extracted_list.append({'name': f"{orig_name}.png", 'zip_path': f"Textures/{orig_name}.png", 'bytes': decoded_img})
+            json_manifest.append({'index': 0, 'name': f"{orig_name}.png", 'label': "Image (ASTC/KTX)"})
+        else:
+            # Try UnityPy
+            try:
+                env = UnityPy.load(decompressed)
+                for obj in env.objects:
+                    res = process_object_unrestricted(obj, decompressed)
+                    if res:
+                        fname, fbytes, zpath, label = res
+                        h = hashlib.md5(fbytes).hexdigest()
+                        if h not in seen_md5:
+                            seen_md5.add(h)
+                            idx = len(extracted_list)
+                            extracted_list.append({'name': fname, 'zip_path': zpath, 'bytes': fbytes})
+                            json_manifest.append({'index': idx, 'name': fname, 'label': label})
+                del env
+            except:
+                return jsonify({"error": "Failed to parse file"}), 400
+
+        GLOBAL_CACHE_REGISTRY['extracted'] = extracted_list
+        GLOBAL_CACHE_REGISTRY['orig_name'] = orig_name
+        gc.collect()
+        return jsonify({"files": json_manifest})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def serve_ui(path):
+    try:
+        with open(HTML_PATH, 'r', encoding='utf-8') as f:
+            return f.read()
+    except Exception as e:
+        return f"Error: {str(e)}", 500
+
+if __name__ == '__main__':
+    app.run(host="0.0.0.0", port=10000)
