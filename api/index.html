@@ -41,24 +41,41 @@
 
         .gff { font-family: 'GFF-Bold', sans-serif; }
 
-        /* Unified Height Container Window Rule */
-        .equal-window-panel {
+        /* Unified Fixed Heights to match the original Upload panel exactly */
+        .uniform-panel {
             background: #0a0a0a; 
             border: 1px solid #1f1f1f; 
             border-radius: 24px; 
             position: relative; 
             box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8);
-            height: 520px; /* Locked equal size across all modules */
+            height: 380px; /* Equalized cross-panel height constraint */
             display: flex;
             flex-direction: column;
         }
         
-        .equal-window-panel::before { 
+        .uniform-panel::before { 
             content: ""; 
             position: absolute; 
             top: 0; left: 0; width: 4px; height: 100%; 
             background: var(--ff-yellow); 
             border-radius: 24px 0 0 24px; 
+        }
+
+        .panel-body {
+            padding: 24px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .scrollable-content-box {
+            flex: 1;
+            background: #060608;
+            border: 1px solid #1a1a1f;
+            border-radius: 16px;
+            overflow-y: auto;
+            position: relative;
         }
 
         .btn-mechanical { 
@@ -75,7 +92,7 @@
             background: var(--ff-yellow); 
             color: #000; 
             box-shadow: 0 5px 0 #c2a900;
-            transition: background 0.1s ease, transform 0.1s ease;
+            transition: background 0.1s ease;
         }
         .btn-mechanical:hover { background: #ffe526; }
         .btn-mechanical:active { 
@@ -83,66 +100,44 @@
             box-shadow: 0 3px 0 #c2a900;
         }
 
-        /* Drag and Drop Zone Interaction States */
         .upload-deck {
             background: #121212;
             border: 2px dashed #2a2a2a;
             border-radius: 20px;
             display: flex;
             align-items: center;
-            height: 180px;
+            height: 110px;
             cursor: pointer;
             overflow: hidden;
             transition: all 0.2s ease;
-            flex-direction: column;
-            justify-content: center;
-            gap: 12px;
-            text-align: center;
-            padding: 20px;
         }
-        .upload-deck:hover, .upload-deck.dragover { 
-            border-color: var(--ff-yellow); 
-            background: #161613; 
-        }
-        .upload-deck.dragover i {
-            transform: scale(1.2);
-            color: var(--ff-yellow);
+        .upload-deck.dragover {
+            border-color: var(--ff-yellow);
+            background: #161612;
         }
 
-        .upload-deck i {
-            transition: transform 0.2s ease, color 0.2s ease;
+        .deck-port {
+            width: 70px;
+            height: 100%;
+            background: #161616;
+            border-right: 1px solid #2a2a2a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
+
+        .deck-body { flex: 1; padding: 0 16px; display: flex; flex-direction: column; justify-content: center; min-width: 0; }
 
         .status-window { 
-            background: #121212; 
-            border: 1px solid #2a2a2a; 
-            height: 72px; 
-            border-radius: 16px; 
-            display: flex; 
-            align-items: center; 
-            padding: 0 20px; 
-            gap: 15px; 
-        }
-
-        /* Inner Content Panel Frameworks */
-        .live-display-box {
-            position: relative;
-            width: 100%;
-            border-radius: 16px;
-            background: #060608;
-            border: 1px solid #1c1c22;
-            flex: 1;
-            overflow-y: auto;
+            background: #121212; border: 1px solid #2a2a2a; height: 60px; 
+            border-radius: 16px; display: flex; align-items: center; padding: 0 16px; gap: 12px; 
         }
 
         .pixelated-render {
             image-rendering: pixelated;
-            border: 1px solid #222;
-            border-radius: 12px;
-            max-height: 290px;
+            max-height: 100%;
             max-width: 100%;
             object-fit: contain;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.9);
         }
 
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
@@ -150,48 +145,55 @@
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #222227; border-radius: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--ff-yellow); }
 
-        .badge {
-            display: flex; align-items: center; gap: 8px; padding: 6px 16px;
-            border-radius: 999px; background: rgba(255, 255, 255, 0.04); border: 1px solid #222;
-        }
-        .badge-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ff-yellow); box-shadow: 0 0 10px var(--ff-yellow); }
-
-        /* Premium Matching Audio Component */
-        .custom-audio-card {
+        /* Premium Minimalist Custom Audio Deck Interface */
+        .premium-audio-player {
             width: 100%;
-            max-width: 340px;
-            background: #111115;
-            border: 1px solid #232329;
-            border-radius: 20px;
             padding: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.7);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
         }
-        .player-seek-bar {
+        .audio-wave-visualizer {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            height: 32px;
+        }
+        .wave-bar {
+            width: 3px;
+            height: 8px;
+            background: #2a2a35;
+            border-radius: 2px;
+            transition: height 0.15s ease;
+        }
+        .premium-audio-player.playing .wave-bar {
+            animation: bounceWave 0.6s ease infinite alternate;
+        }
+        .premium-audio-player.playing .wave-bar:nth-child(2n) { animation-delay: 0.15s; }
+        .premium-audio-player.playing .wave-bar:nth-child(3n) { animation-delay: 0.3s; }
+        .premium-audio-player.playing .wave-bar:nth-child(4n) { animation-delay: 0.45s; }
+
+        @keyframes bounceWave {
+            0% { height: 6px; background: #2a2a35; }
+            100% { height: 28px; background: var(--ff-cyan); }
+        }
+
+        .player-slider {
             height: 6px;
-            background: #1f1f27;
+            background: #1a1a24;
             border-radius: 10px;
-            cursor: pointer;
             position: relative;
-            width: 100%;
+            cursor: pointer;
         }
-        .player-seek-fill {
+        .player-slider-fill {
             height: 100%;
-            background: var(--ff-yellow);
             border-radius: 10px;
             width: 0%;
-            position: relative;
-        }
-        .player-seek-fill::after {
-            content: '';
-            position: absolute;
-            right: -4px; top: -3px;
-            width: 12px; height: 12px;
-            background: #fff; border-radius: 50%;
-            box-shadow: 0 0 8px var(--ff-yellow);
         }
 
-        /* High Tier Unified Embedded Video Element */
-        .custom-video-card {
+        /* Premium Integrated Video Box Custom Interface */
+        .premium-video-player {
             position: relative;
             width: 100%;
             height: 100%;
@@ -199,26 +201,20 @@
             align-items: center;
             justify-content: center;
             background: #000;
-            border-radius: 12px;
-            overflow: hidden;
         }
-        .custom-video-card video {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-        }
-        .video-control-strip {
+        .video-control-bar {
             position: absolute;
             bottom: 0; left: 0; right: 0;
-            background: linear-gradient(to top, rgba(0,0,0,0.95), transparent);
+            background: linear-gradient(transparent, rgba(0,0,0,0.9));
             padding: 16px;
             display: flex;
             align-items: center;
-            gap: 14px;
+            gap: 12px;
             opacity: 0;
             transition: opacity 0.2s ease;
+            z-index: 10;
         }
-        .custom-video-card:hover .video-control-strip { opacity: 1; }
+        .premium-video-player:hover .video-control-bar { opacity: 1; }
     </style>
 </head>
 <body class="flex flex-col justify-between">
@@ -230,104 +226,102 @@
 <main class="flex-1 w-full max-w-7xl mx-auto p-4 md:p-6 lg:p-8">
     
     <div class="text-center my-4 md:my-6 gff">
-        <div class="flex justify-center mb-3">
-            <div class="badge">
-                <div class="badge-dot"></div>
-                <span class="text-[10px] uppercase tracking-widest font-bold text-zinc-400">File Extract Processor</span>
-            </div>
-        </div>
         <span class="text-[40px] md:text-[54px] font-black italic block leading-[0.75]">ASSETS</span>
         <span class="text-[40px] md:text-[54px] font-black italic block text-[#ffde00] leading-[0.85]">EXTRACTOR</span>
     </div>
 
-    <!-- Balanced Workspace Partition Grid -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+    <!-- Main Workspace Frame Layout Split -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         
-        <!-- Window Module 1: Operations Input -->
-        <div class="lg:col-span-4">
-            <div class="equal-window-panel p-6 justify-between">
+        <!-- Panel 1: Upload Workspace File Control Box -->
+        <div class="uniform-panel">
+            <div class="panel-body justify-between">
                 <div>
                     <h2 class="text-xs font-black text-white uppercase tracking-wider mb-1 gff">Upload File</h2>
-                    <p class="text-[11px] text-zinc-500">Select or drop a raw archive file sequence here.</p>
+                    <p class="text-[11px] text-zinc-500">Select or drop your archive file folder map here.</p>
                 </div>
 
                 <form id="extractorForm" class="flex-1 flex flex-col justify-center space-y-4 my-2">
-                    <!-- Drop Zone Interface Container Element -->
+                    <!-- Added Drag & Drop Listeners Directly -->
                     <div class="upload-deck" id="dropZone" onclick="document.getElementById('fileInput').click()">
-                        <i id="uploadIcon" class="fa-solid fa-cloud-arrow-up text-3xl text-zinc-600"></i>
-                        <div class="space-y-1">
-                            <span id="fileStatusText" class="text-[10px] font-bold tracking-widest text-zinc-400 gff block uppercase">CHOOSE OR DROP FILE</span>
-                            <p id="fileLabel" class="text-[12px] text-zinc-500 max-w-[220px] truncate mx-auto">No file imported</p>
+                        <div class="deck-port">
+                            <i id="uploadIcon" class="fa-solid fa-folder-open text-lg text-zinc-500"></i>
+                        </div>
+                        <div class="deck-body">
+                            <span id="fileStatusText" class="text-[9px] font-bold tracking-widest text-zinc-500 gff mb-0.5 uppercase">CHOOSE FILE</span>
+                            <p id="fileLabel" class="gff text-[12px] text-zinc-300 uppercase tracking-wide truncate">Click or drag file here</p>
                         </div>
                     </div>
                     <input type="file" id="fileInput" class="hidden" required>
                     
                     <button type="submit" class="btn-mechanical w-full h-14 text-sm font-bold italic">
-                        <i class="fa-solid fa-bolt text-xs"></i>
-                        Extract
+                        <i class="fa-solid fa-bolt text-sm"></i>
+                        Extract Files
                     </button>
                 </form>
 
                 <div class="status-window">
                     <div id="statusIcon" class="w-5 h-5 flex items-center justify-center text-zinc-500">
-                        <i class="fa-solid fa-folder text-sm"></i>
+                        <i class="fa-solid fa-terminal text-xs"></i>
                     </div>
                     <div class="flex flex-col flex-1 min-w-0">
-                        <span id="statusText" class="gff text-[9px] uppercase tracking-widest text-zinc-400">Status Log</span>
-                        <p id="statusDescText" class="text-[11px] text-zinc-500 truncate">Awaiting file interaction.</p>
+                        <span id="statusText" class="gff text-[9px] uppercase tracking-widest text-zinc-400">System Log</span>
+                        <p id="statusDescText" class="text-[11px] text-zinc-500 truncate">Awaiting file input stream.</p>
                     </div>
-                    <span id="statusBadge" class="text-[9px] font-black uppercase text-zinc-400 bg-zinc-900 px-2.5 py-1 rounded-md border border-zinc-800 gff tracking-wider">Idle</span>
+                    <span id="statusBadge" class="text-[9px] font-black uppercase text-zinc-400 bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800 gff tracking-wider">Ready</span>
                 </div>
             </div>
         </div>
 
-        <!-- Window Module 2: File Archive Index List -->
-        <div class="lg:col-span-4">
-            <div class="equal-window-panel p-5">
+        <!-- Panel 2: Output Extracted List Display Box -->
+        <div class="uniform-panel">
+            <div class="panel-body">
                 <div class="flex items-center justify-between border-b border-[#1f1f1f] pb-3 mb-3">
                     <div>
-                        <h2 class="text-xs font-black text-white uppercase tracking-wider gff">Extracted Files</h2>
-                        <p id="cacheCounterText" class="text-[11px] text-zinc-500">No data nodes processed yet.</p>
+                        <h2 class="text-xs font-black text-white uppercase tracking-wider gff">Extracted List</h2>
+                        <p id="cacheCounterText" class="text-[11px] text-zinc-500">No content files extracted yet.</p>
                     </div>
-                    <button id="downloadAllBtn" class="hidden h-9 w-9 bg-[#121212] border border-[#2a2a2a] hover:border-[#ffde00] text-[#ffde00] rounded-xl flex items-center justify-center transition-colors">
-                        <i class="fa-solid fa-file-zipper text-xs"></i>
+                    <button id="downloadAllBtn" class="hidden h-8 w-8 bg-[#121212] border border-[#2a2a2a] hover:border-[#ffde00] text-[#ffde00] rounded-lg flex items-center justify-center transition-colors">
+                        <i class="fa-solid fa-download text-xs"></i>
                     </button>
                 </div>
 
-                <div class="live-display-box p-2 custom-scrollbar">
-                    <div class="w-full h-full flex flex-col justify-center items-center text-center p-4" id="listEmptyState">
-                        <i class="fa-solid fa-folder-open text-2xl text-zinc-800 mb-2"></i>
-                        <div class="gff text-[9px] text-zinc-600 uppercase tracking-widest">Files will appear here after extraction</div>
+                <!-- Custom Scroller Window matching Upload Box dimensions perfectly -->
+                <div class="scrollable-content-box">
+                    <div class="w-full h-full flex flex-col justify-center items-center text-center p-4 absolute inset-0" id="listEmptyState">
+                        <i class="fa-solid fa-list-ul text-lg text-zinc-800 mb-1.5"></i>
+                        <div class="gff text-[9px] text-zinc-600 uppercase tracking-widest">Parsed assets item list view area</div>
                     </div>
-                    <div class="hidden space-y-1.5" id="fileList">
-                        <!-- File Row Nodes Drop-in Injection point -->
+                    <div class="w-full h-full overflow-y-auto custom-scrollbar hidden space-y-1 p-2" id="fileList">
+                        <!-- Items injected dynamically -->
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Window Module 3: Separated Focused Live Inspection Preview -->
-        <div class="lg:col-span-4">
-            <div class="equal-window-panel p-5">
+        <!-- Panel 3: Live Preview File Visual Inspection Area -->
+        <div class="uniform-panel">
+            <div class="panel-body">
                 <div class="border-b border-[#1f1f1f] pb-3 mb-3">
-                    <h2 class="text-xs font-black text-white uppercase tracking-wider gff">Preview Window</h2>
-                    <p class="text-[11px] text-zinc-500">Inspect content values in real-time.</p>
+                    <h2 class="text-xs font-black text-white uppercase tracking-wider gff">File Preview</h2>
+                    <p class="text-[11px] text-zinc-500">View images, listen to audio files, or see details instantly.</p>
                 </div>
 
-                <div class="live-display-box bg-[#0a0a0c] flex flex-col items-center justify-center p-4">
-                    <div id="previewFallback" class="text-center text-zinc-600 p-2 flex flex-col items-center">
-                        <i class="fa-solid fa-eye text-2xl text-zinc-800 mb-2"></i>
-                        <p class="text-[9px] font-bold uppercase tracking-wider gff text-zinc-600">Select a file to look closer</p>
+                <!-- Dynamic Render Area matching Upload Box dimensions perfectly -->
+                <div class="scrollable-content-box bg-[#0a0a0c]">
+                    <div id="previewFallback" class="w-full h-full flex flex-col justify-center items-center text-center p-4 absolute inset-0 text-zinc-600">
+                        <i class="fa-solid fa-eye text-lg text-zinc-800 mb-1.5"></i>
+                        <p class="text-[9px] font-bold uppercase tracking-wider gff text-zinc-600">Select an item from list to preview</p>
                     </div>
 
-                    <div id="previewContentBox" class="hidden w-full h-full flex flex-col justify-between items-center space-y-4">
-                        <div class="flex-1 w-full flex items-center justify-center overflow-hidden rounded-xl bg-[#121215] border border-[#1f1f23] p-3 custom-scrollbar" id="mediaBox">
-                            <!-- Premium media element structures appear here -->
+                    <div id="previewContentBox" class="hidden w-full h-full flex flex-col justify-between p-2 absolute inset-0">
+                        <div class="flex-1 w-full flex items-center justify-center overflow-hidden rounded-xl bg-[#121215] border border-[#1f1f23] relative" id="mediaBox">
+                            <!-- Dynamic Code Asset Media Injection Nodes -->
                         </div>
-                        <div class="w-full flex items-center justify-between gap-3 bg-[#111115] p-3 rounded-xl border border-[#1f1f25]">
+                        <div class="w-full flex items-center justify-between gap-3 bg-[#111115] p-2 mt-2 rounded-xl border border-[#1f1f25]">
                             <p id="mediaTitle" class="text-[11px] text-zinc-400 font-bold truncate flex-1 text-left px-1"></p>
-                            <a id="singleSaveBtn" href="#" class="h-9 w-9 bg-[#1a1a22] hover:bg-[#ffde00] hover:text-black text-zinc-400 rounded-xl border border-[#2d2d35] transition-colors flex items-center justify-center flex-shrink-0 shadow-lg">
-                                <i class="fa-solid fa-download text-xs"></i>
+                            <a id="singleSaveBtn" href="#" class="h-8 w-8 bg-[#1a1a22] hover:bg-[#ffde00] hover:text-black text-zinc-400 rounded-lg border border-[#2d2d35] transition-colors flex items-center justify-center flex-shrink-0 shadow-md">
+                                <i class="fa-solid fa-arrow-down text-xs"></i>
                             </a>
                         </div>
                     </div>
@@ -339,7 +333,7 @@
 </main>
 
 <footer class="w-full text-center py-4 text-[10px] font-bold text-zinc-700 border-t border-[#141419] bg-[#050507] tracking-widest uppercase mt-8">
-    Elite Extractor Suite &bull; Minimal Functional Workspace
+    Extractor Suite &bull; Clean Dashboard Layout
 </footer>
 
 <script>
@@ -348,12 +342,11 @@
     const fileLabel = document.getElementById("fileLabel");
     const fileStatusText = document.getElementById("fileStatusText");
     const uploadIcon = document.getElementById("uploadIcon");
-    const dropZone = document.getElementById("dropZone");
-    
     const statusBadge = document.getElementById("statusBadge");
     const statusText = document.getElementById("statusText");
     const statusDescText = document.getElementById("statusDescText");
     const statusIcon = document.getElementById("statusIcon");
+    const dropZone = document.getElementById("dropZone");
     
     const listEmptyState = document.getElementById("listEmptyState");
     const fileList = document.getElementById("fileList");
@@ -366,12 +359,24 @@
     const mediaTitle = document.getElementById("mediaTitle");
     const singleSaveBtn = document.getElementById("singleSaveBtn");
 
-    const ICON_TEXT = `<div class="w-7 h-7 bg-zinc-900 rounded-lg flex items-center justify-center border border-zinc-800"><i class="fa-solid fa-file-code text-zinc-400 text-xs"></i></div>`;
-    const ICON_IMAGE = `<div class="w-7 h-7 bg-yellow-950/40 rounded-lg flex items-center justify-center border border-yellow-900/50"><i class="fa-solid fa-image text-[#ffde00] text-xs"></i></div>`;
-    const ICON_AUDIO = `<div class="w-7 h-7 bg-cyan-950/40 rounded-lg flex items-center justify-center border border-cyan-900/50"><i class="fa-solid fa-volume-high text-cyan-400 text-xs"></i></div>`;
-    const ICON_VIDEO = `<div class="w-7 h-7 bg-red-950/40 rounded-lg flex items-center justify-center border border-red-900/50"><i class="fa-solid fa-clapperboard text-red-500 text-xs"></i></div>`;
+    const ICON_TEXT = `<div class="w-6 h-6 bg-zinc-900 rounded-lg flex items-center justify-center border border-zinc-800 flex-shrink-0"><i class="fa-solid fa-file-lines text-zinc-400 text-[10px]"></i></div>`;
+    const ICON_IMAGE = `<div class="w-6 h-6 bg-yellow-950/40 rounded-lg flex items-center justify-center border border-yellow-900/50 flex-shrink-0"><i class="fa-solid fa-image text-[#ffde00] text-[10px]"></i></div>`;
+    const ICON_AUDIO = `<div class="w-6 h-6 bg-cyan-950/40 rounded-lg flex items-center justify-center border border-cyan-900/50 flex-shrink-0"><i class="fa-solid fa-volume-high text-cyan-400 text-[10px]"></i></div>`;
+    const ICON_VIDEO = `<div class="w-6 h-6 bg-red-950/40 rounded-lg flex items-center justify-center border border-red-900/50 flex-shrink-0"><i class="fa-solid fa-clapperboard text-red-500 text-[10px]"></i></div>`;
 
-    // High Reliability Drag & Drop Event Detection Pipeline
+    // High fidelity Dropdown handling setup
+    function handleFileSelection(file) {
+        if (!file) return;
+        fileLabel.innerText = file.name;
+        fileLabel.style.color = "var(--ff-yellow)";
+        uploadIcon.className = "fa-solid fa-circle-check text-lg text-[#ffde00]";
+        fileStatusText.innerText = "FILE RECOGNIZED";
+        fileStatusText.style.color = "var(--ff-yellow)";
+    }
+
+    fileInput.addEventListener("change", function() { handleFileSelection(this.files[0]); });
+
+    // Desktop Drag & Drop API Handlers
     ['dragenter', 'dragover'].forEach(eventName => {
         dropZone.addEventListener(eventName, (e) => {
             e.preventDefault();
@@ -391,23 +396,11 @@
     dropZone.addEventListener('drop', (e) => {
         const dt = e.dataTransfer;
         const files = dt.files;
-        if (files.length) {
+        if(files.length) {
             fileInput.files = files;
-            updateFileInputDisplay(files[0]);
+            handleFileSelection(files[0]);
         }
     }, false);
-
-    fileInput.addEventListener("change", function() {
-        if (this.files[0]) updateFileInputDisplay(this.files[0]);
-    });
-
-    function updateFileInputDisplay(file) {
-        fileLabel.innerText = file.name;
-        fileLabel.style.color = "var(--ff-yellow)";
-        uploadIcon.style.color = "var(--ff-yellow)";
-        fileStatusText.innerText = "READY TO PROCESS";
-        fileStatusText.style.color = "var(--ff-yellow)";
-    }
 
     function selectFileNode(index, element) {
         document.querySelectorAll('.file-row-node').forEach(node => node.classList.remove('border-[#ffde00]', 'bg-[#18181f]'));
@@ -428,20 +421,24 @@
         const ext = item.name.split('.').pop().toLowerCase();
 
         if (["png", "jpg", "jpeg", "webp"].includes(ext)) {
-            mediaBox.innerHTML = `<img src="${fileUrl}" class="pixelated-render">`;
+            mediaBox.innerHTML = `<div class="w-full h-full flex items-center justify-center p-2"><img src="${fileUrl}" class="pixelated-render"></div>`;
         } 
         else if (["mp3", "wav", "ogg"].includes(ext)) {
+            // Enhanced Premium Cyberpunk Themed Custom Audio Core Interface UI
             mediaBox.innerHTML = `
-                <div class="custom-audio-card">
-                    <div class="flex items-center gap-4 mb-4">
-                        <button id="customAudioPlayBtn" class="w-12 h-12 rounded-full bg-[#ffde00] text-black flex items-center justify-center text-sm shadow-lg transition-transform active:scale-90"><i class="fa-solid fa-play ml-0.5"></i></button>
+                <div class="premium-audio-player w-full" id="audioPlayerContainer">
+                    <div class="audio-wave-visualizer">
+                        ${Array(18).fill().map(() => `<div class="wave-bar"></div>`).join('')}
+                    </div>
+                    <div class="flex items-center gap-4 bg-[#0a0a0c] p-3 rounded-xl border border-[#1f1f23]">
+                        <button id="customAudioPlayBtn" class="w-9 h-9 rounded-full bg-cyan-400 hover:bg-cyan-300 text-black flex items-center justify-center text-xs shadow-md transition-transform active:scale-95 flex-shrink-0"><i class="fa-solid fa-play ml-0.5"></i></button>
                         <div class="flex flex-col min-w-0 flex-1">
-                            <span class="text-[9px] uppercase font-bold tracking-wider text-zinc-500 gff">AUDIO CHANNEL</span>
-                            <span id="audioTimeDisplay" class="text-xs font-mono text-zinc-300 mt-0.5">00:00 / 00:00</span>
+                            <span class="text-[9px] font-bold tracking-widest text-zinc-500 gff uppercase">AUDIO OUTPUT</span>
+                            <span id="audioTimeDisplay" class="text-xs font-mono text-cyan-400 mt-0.5">00:00 / 00:00</span>
                         </div>
                     </div>
-                    <div class="player-seek-bar" id="audioProgressDeck">
-                        <div class="player-seek-fill" id="audioFillNode"></div>
+                    <div class="player-slider mx-1" id="audioProgressDeck">
+                        <div class="player-slider-fill bg-cyan-400" id="audioFillNode"></div>
                     </div>
                     <audio id="hiddenAudioNode" src="${fileUrl}" preload="metadata" class="hidden"></audio>
                 </div>`;
@@ -451,6 +448,7 @@
             const fillNode = document.getElementById("audioFillNode");
             const timeDisplay = document.getElementById("audioTimeDisplay");
             const progressDeck = document.getElementById("audioProgressDeck");
+            const playerWrap = document.getElementById("audioPlayerContainer");
 
             const formatTime = (secs) => {
                 if (isNaN(secs)) return "00:00";
@@ -465,9 +463,11 @@
             playBtn.onclick = () => {
                 if (audioObj.paused) {
                     audioObj.play();
+                    playerWrap.classList.add("playing");
                     playBtn.innerHTML = `<i class="fa-solid fa-pause"></i>`;
                 } else {
                     audioObj.pause();
+                    playerWrap.classList.remove("playing");
                     playBtn.innerHTML = `<i class="fa-solid fa-play ml-0.5"></i>`;
                 }
             };
@@ -483,15 +483,22 @@
                 let pct = (e.clientX - rect.left) / rect.width;
                 audioObj.currentTime = pct * audioObj.duration;
             };
+
+            audioObj.addEventListener("ended", () => {
+                playerWrap.classList.remove("playing");
+                playBtn.innerHTML = `<i class="fa-solid fa-play ml-0.5"></i>`;
+                fillNode.style.width = "0%";
+            });
         } 
         else if (["mp4"].includes(ext)) {
+            // Enhanced Fluid Custom Overlay Web Video Deck Interface
             mediaBox.innerHTML = `
-                <div class="custom-video-card group">
-                    <video id="customVideoNode" src="${fileUrl}"></video>
-                    <div class="video-control-strip">
-                        <button id="customVideoPlayBtn" class="w-9 h-9 rounded-xl bg-[#ffde00] text-black flex items-center justify-center text-xs shadow-md transition-transform active:scale-95"><i class="fa-solid fa-play ml-0.5"></i></button>
-                        <div class="player-seek-bar flex-1" id="videoProgressDeck">
-                            <div class="player-seek-fill" id="videoFillNode"></div>
+                <div class="premium-video-player w-full h-full">
+                    <video id="customVideoNode" src="${fileUrl}" class="w-full h-full object-contain"></video>
+                    <div class="video-control-bar">
+                        <button id="customVideoPlayBtn" class="w-8 h-8 rounded-lg bg-red-500 text-white flex items-center justify-center text-xs shadow-md transition-transform active:scale-95 flex-shrink-0"><i class="fa-solid fa-play ml-0.5"></i></button>
+                        <div class="player-slider flex-1" id="videoProgressDeck">
+                            <div class="player-slider-fill bg-red-500" id="videoFillNode"></div>
                         </div>
                     </div>
                 </div>`;
@@ -525,21 +532,21 @@
             videoObj.onclick = () => vPlayBtn.click();
         } 
         else if (["json", "txt", "xml", "yaml", "ini", "atlas"].includes(ext)) {
-            mediaBox.innerHTML = `<div class="text-[10px] font-mono text-zinc-500 text-left w-full h-full max-h-[290px] overflow-y-auto bg-[#07070a] p-3 border border-[#1c1c22] rounded-xl custom-scrollbar whitespace-pre-wrap select-text" id="textContentView">Loading contents...</div>`;
+            mediaBox.innerHTML = `<div class="absolute inset-0 text-[11px] font-mono text-zinc-500 text-left overflow-y-auto bg-[#07070a] p-3 custom-scrollbar whitespace-pre-wrap select-text" id="textContentView">Loading structure log...</div>`;
             fetch(fileUrl)
                 .then(r => r.text())
                 .then(text => {
                     const view = document.getElementById("textContentView");
-                    if(view) view.innerText = text.slice(0, 10000) + (text.length > 10000 ? "\n\n[Content truncated for performance]" : "");
+                    if(view) view.innerText = text.slice(0, 8000) + (text.length > 8000 ? "\n\n[Truncated for visual performance]" : "");
                 }).catch(() => {
                     const view = document.getElementById("textContentView");
-                    if(view) view.innerText = "Error loading context document stream.";
+                    if(view) view.innerText = "Error parsing text document data pipeline.";
                 });
         } else {
             mediaBox.innerHTML = `
-                <div class="text-center text-zinc-600 space-y-2 p-4">
-                    <i class="fa-solid fa-cube text-3xl text-zinc-800"></i>
-                    <span class="text-[9px] font-bold uppercase tracking-widest block text-zinc-500 gff">Raw Binary File</span>
+                <div class="text-center text-zinc-600 space-y-1">
+                    <i class="fa-solid fa-cube text-xl text-zinc-800"></i>
+                    <span class="text-[9px] font-bold uppercase tracking-widest block text-zinc-500 gff">Raw Binary Data File</span>
                 </div>`;
         }
     }
@@ -550,9 +557,9 @@
         if (!file) return;
 
         listEmptyState.innerHTML = `
-            <div class="text-center space-y-2">
-                <i class="fa-solid fa-circle-notch text-xl text-[#ffde00] animate-spin"></i>
-                <p class="text-[9px] uppercase tracking-widest font-bold text-zinc-500">Extracting data...</p>
+            <div class="text-center space-y-1">
+                <i class="fa-solid fa-circle-notch text-lg text-[#ffde00] animate-spin"></i>
+                <p class="text-[9px] uppercase tracking-widest font-bold text-zinc-500">Extracting content...</p>
             </div>`;
         
         listEmptyState.style.display = "flex";
@@ -562,7 +569,7 @@
         statusBadge.innerText = "RUNNING";
         statusBadge.style.color = "var(--ff-yellow)";
         statusText.innerText = "Processing File";
-        statusDescText.innerText = "Decompressing data components...";
+        statusDescText.innerText = "Decompressing and searching target parameters...";
         statusIcon.innerHTML = `<i class="fa-solid fa-gear text-sm text-yellow-500 animate-spin"></i>`;
 
         const formData = new FormData();
@@ -570,7 +577,7 @@
 
         try {
             const response = await fetch("/api/extract", { method: "POST", body: formData });
-            if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || "Extraction task failed.");
+            if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || "Extraction task runtime error.");
 
             const data = await response.json();
             activeCache = data.files || [];
@@ -578,7 +585,7 @@
             fileList.innerHTML = "";
             activeCache.forEach(item => {
                 const row = document.createElement("div");
-                row.className = "file-row-node w-full p-2.5 text-left text-xs bg-[#111115] border border-[#1c1c22] rounded-xl flex items-center justify-between cursor-pointer hover:border-zinc-500 transition-all truncate group";
+                row.className = "file-row-node w-full p-2 text-left text-xs bg-[#111115] border border-[#1c1c22] rounded-xl flex items-center justify-between cursor-pointer hover:border-zinc-500 transition-all truncate group";
                 row.onclick = () => selectFileNode(item.index, row);
                 
                 const ext = item.name.split('.').pop().toLowerCase();
@@ -588,14 +595,14 @@
                 else if (["mp4"].includes(ext)) currentIcon = ICON_VIDEO;
 
                 row.innerHTML = `
-                    <div class="flex items-center gap-3 truncate">
+                    <div class="flex items-center gap-2.5 truncate">
                         ${currentIcon}
                         <div class="flex flex-col truncate">
                             <span class="truncate font-semibold text-zinc-300 text-[11px] group-hover:text-white">${item.name}</span>
-                            <span class="text-[8px] font-black tracking-wider uppercase text-zinc-500 mt-0.5 gff">${item.label}</span>
+                            <span class="text-[8px] font-bold text-zinc-500 mt-0.5 uppercase tracking-wide">${item.label}</span>
                         </div>
                     </div>
-                    <i class="fa-solid fa-chevron-right text-zinc-700 text-[10px] flex-shrink-0 pr-1 group-hover:text-white group-hover:translate-x-0.5 transition-transform"></i>`;
+                    <i class="fa-solid fa-angle-right text-zinc-700 text-[10px] flex-shrink-0 pr-0.5 group-hover:text-white group-hover:translate-x-0.5 transition-transform"></i>`;
                 fileList.appendChild(row);
             });
 
@@ -604,11 +611,11 @@
             downloadAllBtn.classList.remove("hidden");
             downloadAllBtn.onclick = () => { window.location.href = "/api/extract?download_type=zip"; };
             
-            cacheCounterText.innerText = `Total files saved in memory: ${activeCache.length}`;
+            cacheCounterText.innerText = `Total items loaded: ${activeCache.length}`;
             statusBadge.innerText = "SUCCESS";
             statusBadge.style.color = "var(--ff-emerald)";
             statusText.innerText = "Finished";
-            statusDescText.innerText = `Successfully found ${activeCache.length} individual items.`;
+            statusDescText.innerText = `Successfully unpacked ${activeCache.length} operational elements.`;
             statusIcon.innerHTML = `<i class="fa-solid fa-circle-check text-sm text-[#00ffa3]"></i>`;
 
             previewFallback.style.display = "flex";
@@ -622,8 +629,8 @@
             statusIcon.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-sm text-[#ff3e3e]"></i>`;
             
             listEmptyState.innerHTML = `
-                <i class="fa-solid fa-triangle-exclamation text-xl text-red-500 mb-1"></i>
-                <p class="text-xs text-red-500 font-bold uppercase tracking-wide px-4">${err.message}</p>`;
+                <i class="fa-solid fa-triangle-exclamation text-base text-red-500 mb-1"></i>
+                <p class="text-[11px] text-red-500 font-bold px-2">${err.message}</p>`;
         }
     });
 </script>
