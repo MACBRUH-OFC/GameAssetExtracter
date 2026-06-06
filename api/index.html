@@ -3,185 +3,300 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Assets Extractor</title>
+    <title>Assets Extractor | ELITE</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background: #060606;
-            color: #f4f4f5;
-            background-image: url('https://dl.dir.freefiremobile.com/common/web_event/official2/dist/client/img/bg_pc.617c669.jpg');
-            background-size: cover;
-            background-attachment: fixed;
+        @font-face { 
+            font-family: 'GFF-Bold'; 
+            src: url('https://dl.dir.freefiremobile.com/common/web_event/common/fonts/website/GFFLatinW05-Bold.woff') format('woff'); 
         }
-        body::before {
-            content: "";
-            position: fixed;
-            inset: 0;
-            background: rgba(6, 6, 6, 0.96);
-            z-index: -1;
+        
+        :root { 
+            --ff-yellow: #ffde00; 
+            --ff-emerald: #00ffa3; 
+            --ff-red: #ff3e3e; 
+            --ff-cyan: #38bdf8;
         }
-        .premium-panel {
-            background: #0f0f12;
-            border: 2px solid #222229;
-            border-top: 4px solid #ffde00;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+
+        body { 
+            background: #000; 
+            color: #fff; 
+            min-height: 100vh; 
+            background-image: url('https://dl.dir.freefiremobile.com/common/web_event/official2/dist/client/img/bg_pc.617c669.jpg'); 
+            background-size: cover; 
+            background-attachment: fixed; 
+            font-family: 'Inter', sans-serif; 
+            overflow-x: hidden; 
         }
-        .btn-elite {
-            font-weight: 900;
-            text-transform: uppercase;
-            font-style: italic;
-            background: #ffde00;
-            color: #000;
-            box-shadow: 0 4px 0 #b39c00;
-            transition: all 0.1s ease;
+        
+        body::before { 
+            content: ""; 
+            position: fixed; 
+            inset: 0; 
+            background: rgba(0, 0, 0, 0.93); 
+            z-index: -1; 
         }
-        .btn-elite:hover {
-            background: #ffe633;
+
+        .gff { font-family: 'GFF-Bold', sans-serif; }
+
+        .panel-container { 
+            background: #0a0a0a; 
+            border: 1px solid #1f1f1f; 
+            border-radius: 24px; 
+            position: relative; 
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8);
         }
-        .btn-elite:active {
+        
+        .panel-container::before { 
+            content: ""; 
+            position: absolute; 
+            top: 0; left: 0; width: 4px; height: 100%; 
+            background: var(--ff-yellow); 
+            border-radius: 24px 0 0 24px; 
+        }
+
+        .btn-mechanical { 
+            cursor: pointer; 
+            font-family: 'GFF-Bold'; 
+            text-transform: uppercase; 
+            font-style: italic; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            border-radius: 16px; 
+            gap: 12px; 
+            position: relative;
+            background: var(--ff-yellow); 
+            color: #000; 
+            box-shadow: 0 5px 0 #c2a900;
+            transition: background 0.1s ease;
+        }
+        .btn-mechanical:hover { background: #ffe526; }
+        .btn-mechanical:active { 
             transform: translateY(2px);
-            box-shadow: 0 2px 0 #b39c00;
+            box-shadow: 0 3px 0 #c2a900;
         }
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
+
+        .btn-mechanical-dark {
+            cursor: pointer; 
+            font-family: 'GFF-Bold'; 
+            text-transform: uppercase; 
+            font-style: italic; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            border-radius: 12px; 
+            gap: 8px; 
+            position: relative;
+            background: #141414; 
+            color: #fff; 
+            border: 1px solid #262626;
+            box-shadow: 0 4px 0 #080808;
+            transition: background 0.1s ease, border-color 0.1s ease;
         }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: #0a0a0c;
+        .btn-mechanical-dark:hover { background: #1a1a1a; border-color: #333; }
+        .btn-mechanical-dark:active { transform: translateY(2px); box-shadow: 0 2px 0 #080808; }
+
+        .upload-deck {
+            background: #121212;
+            border: 1px solid #2a2a2a;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            height: 110px;
+            cursor: pointer;
+            overflow: hidden;
+            transition: all 0.2s ease;
         }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #222229;
-            border-radius: 3px;
+        .upload-deck:hover { border-color: #444; background: #161616; }
+
+        .deck-port {
+            width: 80px;
+            height: 100%;
+            background: #181818;
+            border-right: 1px solid #2a2a2a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
         }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #ffde00;
+        .deck-port::after {
+            content: ''; position: absolute; width: 36px; height: 36px;
+            border-radius: 50%; border: 1px dashed #333; animation: spin 12s linear infinite;
         }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        .deck-body { flex: 1; padding: 0 20px; display: flex; flex-direction: column; justify-content: center; }
+
+        .status-window { 
+            background: #121212; border: 1px solid #2a2a2a; height: 64px; 
+            border-radius: 16px; display: flex; align-items: center; padding: 0 20px; gap: 15px; 
+        }
+
+        .live-render-box {
+            position: relative;
+            width: 100%;
+            border-radius: 16px;
+            background: #121212;
+            border: 1px solid #2a2a2a;
+            min-height: 340px;
+            overflow: hidden;
+        }
+
+        .pixelated-render {
+            image-rendering: pixelated;
+            border: 1px solid #333;
+            border-radius: 8px;
+            max-height: 180px;
+            object-fit: contain;
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #0c0c0e; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #222227; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--ff-yellow); }
+
+        .badge {
+            display: flex; align-items: center; gap: 8px; padding: 6px 16px;
+            border-radius: 999px; background: rgba(255, 255, 255, 0.04); border: 1px solid #222;
+        }
+        .badge-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ff-yellow); box-shadow: 0 0 10px var(--ff-yellow); }
     </style>
 </head>
-<body class="min-h-screen flex flex-col justify-between">
+<body class="flex flex-col justify-between">
 
-    <header class="w-full bg-[#0a0a0c]/90 backdrop-blur border-b-2 border-[#ffde00] py-4 px-6 sticky top-0 z-50">
-        <div class="max-w-6xl mx-auto flex justify-between items-center">
-            <h1 class="text-xl font-black tracking-wider text-white italic">ASSETS EXTRACTOR</h1>
-            <div id="runtimeBadge" class="flex items-center gap-2 text-[11px] font-bold text-[#ffde00] bg-[#141419] px-3 py-1.5 rounded border border-[#222229] uppercase tracking-widest">
-                <span class="w-2 h-2 rounded-full bg-[#ffde00] animate-pulse"></span> Ready
+<header class="w-full flex justify-center items-center h-16 bg-black border-b-2 border-[#ffde00] sticky top-0 z-50 px-4">
+    <img src="https://dl.dir.freefiremobile.com/common/web_event/official2/dist/client/img/full_logo.969f536.png" class="h-7" alt="Logo">
+</header>
+
+<main class="flex-1 w-full max-w-6xl mx-auto p-4 md:p-8">
+    
+    <div class="text-center my-6 gff">
+        <div class="flex justify-center mb-3">
+            <div class="badge">
+                <div class="badge-dot"></div>
+                <span class="text-[10px] uppercase tracking-widest font-bold text-zinc-400">Universal Core Extraction System</span>
             </div>
         </div>
-    </header>
+        <span class="text-[44px] md:text-[54px] font-black italic block leading-[0.75]">ASSETS</span>
+        <span class="text-[44px] md:text-[54px] font-black italic block text-[#ffde00] leading-[0.85]">EXTRACTOR</span>
+    </div>
 
-    <main class="flex-1 w-full max-w-6xl mx-auto p-4 md:p-8">
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
-            
-            <div class="lg:col-span-5 flex flex-col">
-                <div class="premium-panel rounded-xl p-6 flex flex-col justify-between h-full space-y-6">
-                    <div>
-                        <h2 class="text-sm font-black text-white uppercase tracking-wider mb-1">Source Interface</h2>
-                        <p class="text-xs text-zinc-500">Drop your file directly into the deck. Mode will automatically adjust.</p>
-                    </div>
-
-                    <form id="extractorForm" class="space-y-6">
-                        <div class="border border-[#222229] rounded-xl p-8 text-center cursor-pointer transition-all bg-[#0a0a0c] hover:border-[#ffde00]/50" onclick="document.getElementById('fileInput').click()">
-                            <div class="w-14 h-14 bg-[#131317] rounded-xl flex items-center justify-center mx-auto mb-4 border border-[#222229]" id="uploadIconWrapper">
-                                <svg class="w-6 h-6 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v1m-4-8l-4-4m0 0l-4 4m4-4v12"/></svg>
-                            </div>
-                            <p id="fileLabel" class="text-xs font-bold text-zinc-300 uppercase tracking-wide truncate px-2">Select Target File</p>
-                            <p id="fileSubLabel" class="text-[10px] text-zinc-600 uppercase tracking-widest mt-1">Automatic System Routing</p>
-                        </div>
-                        <input type="file" id="fileInput" class="hidden" required>
-
-                        <div class="bg-[#0a0a0c] p-4 rounded-xl border border-[#222229] flex items-center justify-between">
-                            <div>
-                                <span class="block text-[10px] font-bold text-zinc-600 uppercase tracking-wider">Detected Routing Mode</span>
-                                <span id="routingLabel" class="text-xs font-bold text-zinc-400 uppercase tracking-wider">Awaiting Stream Input</span>
-                            </div>
-                            <div id="routingIcon" class="text-zinc-600">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.381-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
-                            </div>
-                        </div>
-
-                        <button type="submit" class="w-full h-14 btn-elite text-sm rounded-xl flex items-center justify-center gap-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                            Execute Action
-                        </button>
-                    </form>
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+        
+        <div class="lg:col-span-5 flex flex-col justify-between space-y-4">
+            <div class="panel-container p-6 space-y-5 h-full flex flex-col justify-center">
+                <div>
+                    <h2 class="text-xs font-black text-white uppercase tracking-wider mb-1 gff">Upload Core</h2>
+                    <p class="text-[11px] text-zinc-500">Drop your file bundle or texture below to extract automatically.</p>
                 </div>
-            </div>
 
-            <div class="lg:col-span-7 flex flex-col">
-                <div class="premium-panel rounded-xl p-6 flex flex-col justify-between h-full min-h-[460px] space-y-4">
+                <form id="extractorForm" class="space-y-4">
+                    <div class="upload-deck" onclick="document.getElementById('fileInput').click()">
+                        <div class="deck-port">
+                            <i id="uploadIcon" class="fa-solid fa-cloud-arrow-up text-xl text-zinc-500"></i>
+                        </div>
+                        <div class="deck-body">
+                            <span id="fileStatusText" class="text-[9px] font-bold tracking-widest text-zinc-500 gff mb-1 uppercase">UPLOAD FILE</span>
+                            <p id="fileLabel" class="gff text-[12px] text-zinc-300 uppercase tracking-wide truncate">Click to Load File</p>
+                        </div>
+                    </div>
+                    <input type="file" id="fileInput" class="hidden" required>
                     
-                    <div class="flex items-center justify-between border-b border-[#1f1f24] pb-4">
-                        <div>
-                            <h2 id="manifestTitle" class="text-sm font-black text-white uppercase tracking-wider">Storage Index</h2>
-                            <p id="statusText" class="text-xs text-zinc-500">No active extraction registry cached.</p>
-                        </div>
-                        <button id="downloadAllBtn" class="hidden text-xs bg-[#0a0a0c] border border-[#222229] hover:border-[#ffde00] text-[#ffde00] p-2.5 rounded-xl font-bold uppercase tracking-wider transition-colors">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                        </button>
+                    <button type="submit" class="btn-mechanical w-full h-16 text-md font-bold italic">
+                        <i class="fa-solid fa-bolt text-md"></i>
+                        Process File Elements
+                    </button>
+                </form>
+
+                <div class="status-window">
+                    <div id="statusIcon" class="w-5 h-5 flex items-center justify-center text-zinc-500">
+                        <i class="fa-solid fa-border-all text-sm"></i>
+                    </div>
+                    <div class="flex flex-col flex-1 gap-0.5">
+                        <span id="statusText" class="gff text-[9px] uppercase tracking-widest text-zinc-400">Output Window</span>
+                        <p id="statusDescText" class="text-[11px] text-zinc-500 truncate">Awaiting file input layout data connection.</p>
+                    </div>
+                    <span id="statusBadge" class="text-[9px] font-black uppercase text-zinc-400 bg-zinc-900 px-2.5 py-1 rounded-md border border-zinc-800 gff tracking-wider">Unmapped</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="lg:col-span-7 flex flex-col">
+            <div class="panel-container p-6 h-full flex flex-col justify-between space-y-4 min-h-[440px]">
+                
+                <div class="flex items-center justify-between border-b border-[#1f1f1f] pb-3">
+                    <div>
+                        <h2 class="text-xs font-black text-white uppercase tracking-wider gff">Storage Cache Index</h2>
+                        <p id="cacheCounterText" class="text-[11px] text-zinc-500">No active operational assets cached.</p>
+                    </div>
+                    <button id="downloadAllBtn" class="hidden h-10 w-10 bg-[#121212] border border-[#2a2a2a] hover:border-[#ffde00] text-[#ffde00] rounded-xl flex items-center justify-center transition-colors">
+                        <i class="fa-solid fa-file-zipper text-sm"></i>
+                    </button>
+                </div>
+
+                <div class="live-render-box flex-1 flex items-center justify-center" id="displayArea">
+                    <div class="text-center space-y-2 p-4" id="outputEmptyState">
+                        <i class="fa-solid fa-circle-nodes text-2xl text-zinc-800"></i>
+                        <div class="gff text-[9px] text-zinc-600 uppercase tracking-widest">Extracted assets list and preview workspace area</div>
                     </div>
 
-                    <div class="flex-1 w-full bg-[#0a0a0c] border border-[#1f1f24] rounded-xl flex items-center justify-center relative min-h-[320px]" id="displayArea">
+                    <div class="w-full h-full hidden grid grid-cols-1 md:grid-cols-2 p-3 gap-3 absolute inset-0" id="resultsGrid">
                         
-                        <div class="text-center space-y-2" id="emptyState">
-                            <svg class="w-6 h-6 text-zinc-700 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 11m8 4V4.5"/></svg>
-                            <p class="text-xs text-zinc-600 uppercase tracking-widest font-medium">Awaiting active data connection layout...</p>
-                        </div>
-
-                        <div class="w-full h-full hidden grid grid-cols-1 md:grid-cols-2 p-3 gap-3" id="resultsGrid">
-                            
-                            <div class="border border-[#1f1f24] rounded-lg overflow-y-auto custom-scrollbar bg-[#060608] p-2 space-y-1 max-h-[340px]" id="fileList">
-                                </div>
-
-                            <div class="border border-[#1f1f24] rounded-lg bg-[#060608] p-4 flex flex-col items-center justify-between relative max-h-[340px]">
-                                <div id="previewFallback" class="my-auto text-center text-zinc-600 space-y-1">
-                                    <svg class="w-5 h-5 mx-auto text-zinc-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                                    <p class="text-[10px] font-bold uppercase tracking-wider">Select asset item</p>
-                                </div>
-
-                                <div id="previewContentBox" class="hidden w-full h-full flex flex-col justify-between items-center space-y-3">
-                                    <div class="flex-1 w-full flex items-center justify-center overflow-hidden rounded-lg bg-[#0a0a0c] border border-[#1f1f24] p-2" id="mediaBox">
-                                        </div>
-                                    <div class="w-full flex items-center justify-between gap-3 bg-[#0a0a0c] p-2 rounded-lg border border-[#1f1f24]">
-                                        <p id="mediaTitle" class="text-xs text-zinc-400 font-bold truncate px-1 flex-1 text-left"></p>
-                                        <a id="singleSaveBtn" href="#" class="h-8 w-8 bg-[#131317] hover:bg-[#ffde00] hover:text-black text-zinc-400 rounded-md border border-[#222229] transition-colors flex items-center justify-center">
-                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                                        </a>
-                                    </div>
-                                </div>
+                        <div class="border border-[#1f1f1f] rounded-xl overflow-y-auto custom-scrollbar bg-[#060608] p-2 space-y-1.5 max-h-[360px]" id="fileList">
                             </div>
 
+                        <div class="border border-[#1f1f1f] rounded-xl bg-[#060608] p-3 flex flex-col items-center justify-between relative max-h-[360px]">
+                            <div id="previewFallback" class="my-auto text-center text-zinc-600 space-y-1 p-2">
+                                <i class="fa-solid fa-eye text-xl text-zinc-800 mb-1"></i>
+                                <p class="text-[9px] font-bold uppercase tracking-wider gff">Pick a manifest entry node</p>
+                            </div>
+
+                            <div id="previewContentBox" class="hidden w-full h-full flex flex-col justify-between items-center space-y-2">
+                                <div class="flex-1 w-full flex items-center justify-center overflow-hidden rounded-xl bg-[#121212] border border-[#1f1f1f] p-2 custom-scrollbar" id="mediaBox">
+                                    </div>
+                                <div class="w-full flex items-center justify-between gap-2 bg-[#121212] p-2 rounded-xl border border-[#1f1f1f]">
+                                    <p id="mediaTitle" class="text-[11px] text-zinc-400 font-bold truncate px-1 flex-1 text-left"></p>
+                                    <a id="singleSaveBtn" href="#" class="h-8 w-8 bg-[#181818] hover:bg-[#ffde00] hover:text-black text-zinc-400 rounded-lg border border-[#2a2a2a] transition-colors flex items-center justify-center">
+                                        <i class="fa-solid fa-download text-xs"></i>
+                                    </a>
+                                </div>
+                            </div>
                         </div>
 
                     </div>
 
                 </div>
+
             </div>
-
         </div>
-    </main>
 
-    <footer class="w-full text-center py-4 text-[10px] font-bold text-zinc-700 border-t border-[#141419] bg-[#0a0a0c] tracking-widest uppercase">
-        Extractor Suite &bull; Dark Core System
-    </footer>
+    </div>
+</main>
+
+<footer class="w-full text-center py-4 text-[10px] font-bold text-zinc-700 border-t border-[#141419] bg-[#050507] tracking-widest uppercase mt-8">
+    Elite Extractor Suite &bull; Dark Production Core
+</footer>
 
 <script>
     let activeCache = [];
-    let detectedMode = "extract";
-
     const fileInput = document.getElementById("fileInput");
     const fileLabel = document.getElementById("fileLabel");
-    const routingLabel = document.getElementById("routingLabel");
-    const routingIcon = document.getElementById("routingIcon");
-    const emptyState = document.getElementById("emptyState");
+    const fileStatusText = document.getElementById("fileStatusText");
+    const uploadIcon = document.getElementById("uploadIcon");
+    const statusBadge = document.getElementById("statusBadge");
+    const statusText = document.getElementById("statusText");
+    const statusDescText = document.getElementById("statusDescText");
+    const statusIcon = document.getElementById("statusIcon");
+    
+    const outputEmptyState = document.getElementById("outputEmptyState");
     const resultsGrid = document.getElementById("resultsGrid");
     const fileList = document.getElementById("fileList");
+    const cacheCounterText = document.getElementById("cacheCounterText");
     const downloadAllBtn = document.getElementById("downloadAllBtn");
-    const statusText = document.getElementById("statusText");
-    const runtimeBadge = document.getElementById("runtimeBadge");
-    const manifestTitle = document.getElementById("manifestTitle");
-    const uploadIconWrapper = document.getElementById("uploadIconWrapper");
 
     const previewFallback = document.getElementById("previewFallback");
     const previewContentBox = document.getElementById("previewContentBox");
@@ -189,36 +304,23 @@
     const mediaTitle = document.getElementById("mediaTitle");
     const singleSaveBtn = document.getElementById("singleSaveBtn");
 
-    // Content Type SVGs
-    const SVG_TEXT = `<svg class="w-3.5 h-3.5 text-zinc-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>`;
-    const SVG_IMAGE = `<svg class="w-3.5 h-3.5 text-[#ffde00] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>`;
-    const SVG_AUDIO = `<svg class="w-3.5 h-3.5 text-cyan-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/></svg>`;
-    const SVG_VIDEO = `<svg class="w-3.5 h-3.5 text-red-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>`;
+    // Predefined Content Representation Icon Maps
+    const ICON_TEXT = `<i class="fa-solid fa-file-lines text-zinc-500 text-xs"></i>`;
+    const ICON_IMAGE = `<i class="fa-solid fa-image text-[#ffde00] text-xs"></i>`;
+    const ICON_AUDIO = `<i class="fa-solid fa-music text-cyan-400 text-xs"></i>`;
+    const ICON_VIDEO = `<i class="fa-solid fa-video text-red-500 text-xs"></i>`;
 
-    // File Input Routing Analysis Hook
     fileInput.addEventListener("change", function() {
         if (!this.files[0]) return;
         const name = this.files[0].name;
-        const ext = name.split('.').pop().toLowerCase();
-        
         fileLabel.innerText = name;
-        fileLabel.style.color = "#ffde00";
-        uploadIconWrapper.innerHTML = `<svg class="w-5 h-5 text-[#ffde00]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>`;
-
-        if (ext === "ktx") {
-            detectedMode = "ktx_to_png";
-            routingLabel.innerText = "Convert KTX Image";
-            routingLabel.style.color = "#ffde00";
-            routingIcon.innerHTML = `<svg class="w-5 h-5 text-[#ffde00]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>`;
-        } else {
-            detectedMode = "extract";
-            routingLabel.innerText = "Extract Game Bundle";
-            routingLabel.style.color = "#a1a1aa";
-            routingIcon.innerHTML = `<svg class="w-5 h-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>`;
-        }
+        fileLabel.style.color = "var(--ff-yellow)";
+        uploadIcon.style.color = "var(--ff-yellow)";
+        fileStatusText.innerText = "SOURCE DECK CHARGED";
+        fileStatusText.style.color = "var(--ff-yellow)";
     });
 
-    async function selectFileNode(index) {
+    function selectFileNode(index) {
         const item = activeCache[index];
         if (!item) return;
 
@@ -234,29 +336,28 @@
         const ext = item.name.split('.').pop().toLowerCase();
 
         if (["png", "jpg", "jpeg", "webp"].includes(ext)) {
-            mediaBox.innerHTML = `<img src="${fileUrl}" class="max-w-full max-h-[160px] object-contain rounded drop-shadow">`;
+            mediaBox.innerHTML = `<img src="${fileUrl}" class="pixelated-render">`;
         } else if (["mp3", "wav", "ogg"].includes(ext)) {
-            mediaBox.innerHTML = `<audio controls src="${fileUrl}" class="w-full px-2"></audio>`;
-        } else if (["txt", "json", "xml", "yaml", "ini", "csv"].includes(ext)) {
-            mediaBox.innerHTML = `<div class="w-full h-[160px] flex items-center justify-center"><div class="w-6 h-6 border-2 border-[#ffde00] border-t-transparent rounded-full animate-spin"></div></div>`;
-            try {
-                const textRes = await fetch(fileUrl);
-                const rawText = await textRes.text();
-                mediaBox.innerHTML = `<pre class="w-full h-full text-[10px] text-zinc-400 font-mono text-left bg-[#060608] border border-[#1f1f24] p-2 rounded overflow-auto custom-scrollbar whitespace-pre-wrap select-text">${escapeHtml(rawText)}</pre>`;
-            } catch {
-                mediaBox.innerHTML = `<span class="text-xs text-red-400 font-bold uppercase tracking-wider">Failed to load string array buffer</span>`;
-            }
+            mediaBox.innerHTML = `<audio controls src="${fileUrl}" class="w-full px-1"></audio>`;
+        } else if (["json", "txt", "xml", "yaml", "ini"].includes(ext)) {
+            // Text asset stream direct injection preview rendering matrix
+            mediaBox.innerHTML = `<div class="text-[10px] font-mono text-zinc-500 text-left w-full h-full max-h-[170px] overflow-y-auto bg-[#060608] p-2 border border-[#1f1f1f] rounded custom-scrollbar whitespace-pre-wrap" id="textContentView">Loading preview node...</div>`;
+            fetch(fileUrl)
+                .then(r => r.text())
+                .then(text => {
+                    const view = document.getElementById("textContentView");
+                    if(view) view.innerText = text.slice(0, 8000) + (text.length > 8000 ? "\n\n[Manifest stream data truncated for preview view buffer]" : "");
+                }).catch(() => {
+                    const view = document.getElementById("textContentView");
+                    if(view) view.innerText = "Error pulling content data preview asset template.";
+                });
         } else {
             mediaBox.innerHTML = `
                 <div class="text-center text-zinc-600 space-y-1">
-                    <svg class="w-6 h-6 text-zinc-700 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-                    <span class="text-[10px] font-bold uppercase tracking-wider block text-zinc-500">Binary Asset Node</span>
+                    <i class="fa-solid fa-cube text-xl text-zinc-700"></i>
+                    <span class="text-[9px] font-bold uppercase tracking-wider block text-zinc-500">Binary Asset Node</span>
                 </div>`;
         }
-    }
-
-    function escapeHtml(text) {
-        return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
     }
 
     document.getElementById("extractorForm").addEventListener("submit", async function(e) {
@@ -264,112 +365,80 @@
         const file = fileInput.files[0];
         if (!file) return;
 
-        emptyState.innerHTML = `
+        outputEmptyState.innerHTML = `
             <div class="text-center space-y-2">
-                <div class="w-5 h-5 border-2 border-[#ffde00] border-t-transparent rounded-full animate-spin mx-auto"></div>
-                <p class="text-[10px] uppercase tracking-widest font-bold text-zinc-500">Streaming...</p>
+                <i class="fa-solid fa-gear text-xl text-[#ffde00] animate-spin"></i>
+                <p class="text-[9px] uppercase tracking-widest font-bold text-zinc-500">Processing Stream Matrix...</p>
             </div>`;
         
-        emptyState.style.display = "block";
+        outputEmptyState.style.display = "flex";
         resultsGrid.classList.add("hidden");
         downloadAllBtn.classList.add("hidden");
-        statusText.innerText = "Parsing asset targets...";
+        
+        statusBadge.innerText = "EXTRACTING";
+        statusBadge.style.color = "var(--ff-yellow)";
+        statusText.innerText = "Processing Pipeline Operation";
+        statusDescText.innerText = "Analyzing file formats dynamically...";
+        statusIcon.innerHTML = `<i class="fa-solid fa-microchip text-sm text-yellow-500 animate-pulse"></i>`;
 
         const formData = new FormData();
+        formData.append("asset_bundle", file);
 
-        if (detectedMode === "extract") {
-            formData.append("asset_bundle", file);
-            try {
-                const response = await fetch("/api/extract", { method: "POST", body: formData });
-                if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || "File validation missing.");
+        try {
+            const response = await fetch("/api/extract", { method: "POST", body: formData });
+            if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || "Stream conversion matrix failed.");
 
-                const data = await response.json();
-                activeCache = data.files || [];
+            const data = await response.json();
+            activeCache = data.files || [];
 
-                fileList.innerHTML = "";
-                activeCache.forEach(item => {
-                    const row = document.createElement("div");
-                    row.className = "w-full p-2 text-left text-xs text-zinc-400 bg-[#0a0a0c] border border-[#1f1f24] rounded-lg flex items-center justify-between cursor-pointer hover:border-[#ffde00] transition-colors truncate";
-                    row.onclick = () => selectFileNode(item.index);
-                    
-                    const ext = item.name.split('.').pop().toLowerCase();
-                    let currentSvg = SVG_TEXT;
-                    if (["png", "jpg", "jpeg", "webp"].includes(ext)) currentSvg = SVG_IMAGE;
-                    else if (["mp3", "wav", "ogg"].includes(ext)) currentSvg = SVG_AUDIO;
-                    else if (["mp4"].includes(ext)) currentSvg = SVG_VIDEO;
+            fileList.innerHTML = "";
+            activeCache.forEach(item => {
+                const row = document.createElement("div");
+                row.className = "w-full p-2 text-left text-xs bg-[#121212] border border-[#1f1f1f] rounded-xl flex items-center justify-between cursor-pointer hover:border-[#ffde00] transition-colors truncate";
+                row.onclick = () => selectFileNode(item.index);
+                
+                const ext = item.name.split('.').pop().toLowerCase();
+                let currentIcon = ICON_TEXT;
+                if (["png", "jpg", "jpeg", "webp"].includes(ext)) currentIcon = ICON_IMAGE;
+                else if (["mp3", "wav", "ogg"].includes(ext)) currentIcon = ICON_AUDIO;
+                else if (["mp4"].includes(ext)) currentIcon = ICON_VIDEO;
 
-                    row.innerHTML = `
-                        <div class="flex items-center gap-2 truncate">
-                            ${currentSvg}
-                            <span class="truncate font-medium text-zinc-300">${item.name}</span>
+                row.innerHTML = `
+                    <div class="flex items-center gap-2.5 truncate">
+                        ${currentIcon}
+                        <div class="flex flex-col truncate">
+                            <span class="truncate font-medium text-zinc-300 text-[11px]">${item.name}</span>
+                            <span class="text-[8px] font-black tracking-wider uppercase text-zinc-600 gff">${item.label}</span>
                         </div>
-                        <svg class="w-3 h-3 text-zinc-700 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>`;
-                    fileList.appendChild(row);
-                });
+                    </div>
+                    <i class="fa-solid fa-angle-right text-zinc-700 text-[10px] flex-shrink-0 pr-1"></i>`;
+                fileList.appendChild(row);
+            });
 
-                emptyState.style.display = "none";
-                resultsGrid.classList.remove("hidden");
-                downloadAllBtn.classList.remove("hidden");
-                downloadAllBtn.onclick = () => { window.location.href = "/api/extract?download_type=zip"; };
-                
-                manifestTitle.innerText = "Game Asset Extracted";
-                statusText.innerText = `Registry Manifest Elements: ${activeCache.length}`;
-                runtimeBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-green-500"></span> Extracted`;
-                runtimeBadge.className = "flex items-center gap-2 text-[11px] font-bold text-green-400 bg-[#141419] px-3 py-1.5 rounded border border-[#222229] uppercase tracking-widest";
+            outputEmptyState.style.display = "none";
+            resultsGrid.classList.remove("hidden");
+            downloadAllBtn.classList.remove("hidden");
+            downloadAllBtn.onclick = () => { window.location.href = "/api/extract?download_type=zip"; };
+            
+            cacheCounterText.innerText = `Cached element nodes inside registry matrix: ${activeCache.length}`;
+            statusBadge.innerText = "COMPLETE";
+            statusBadge.style.color = "var(--ff-emerald)";
+            statusText.innerText = "Operation Success";
+            statusDescText.innerText = `Extracted ${activeCache.length} pristine elements successfully.`;
+            statusIcon.innerHTML = `<i class="fa-solid fa-circle-check text-sm text-[#00ffa3]"></i>`;
 
-                previewFallback.style.display = "flex";
-                previewContentBox.classList.add("hidden");
+            previewFallback.style.display = "flex";
+            previewContentBox.classList.add("hidden");
 
-            } catch (err) {
-                statusText.innerText = "Error encountered.";
-                emptyState.innerHTML = `<p class="text-xs text-red-500 font-bold uppercase tracking-wide">${err.message}</p>`;
-            }
-        } else {
-            formData.append("file", file);
-            formData.append("mode", "ktx_to_png");
-            try {
-                const response = await fetch("/api/convert", { method: "POST", body: formData });
-                if (!response.ok) throw new Error("Conversion failed.");
-
-                const blob = await response.blob();
-                const blobUrl = URL.createObjectURL(blob);
-                const outName = "converted.png";
-
-                fileList.innerHTML = `
-                    <div class="w-full p-2.5 text-left text-xs bg-[#0a0a0c] border border-[#ffde00]/30 rounded-lg flex items-center justify-between cursor-pointer" onclick="activeCache[0].view()">
-                        <div class="flex items-center gap-2 truncate">
-                            ${SVG_IMAGE}
-                            <span class="truncate font-bold text-white">${outName}</span>
-                        </div>
-                    </div>`;
-
-                activeCache = [{
-                    index: 0,
-                    name: outName,
-                    view: () => {
-                        previewFallback.style.display = "none";
-                        previewContentBox.classList.remove("hidden");
-                        mediaTitle.innerText = outName;
-                        singleSaveBtn.href = blobUrl;
-                        singleSaveBtn.download = outName;
-                        mediaBox.innerHTML = `<img src="${blobUrl}" class="max-w-full max-h-[160px] object-contain rounded shadow">`;
-                    }
-                }];
-
-                emptyState.style.display = "none";
-                resultsGrid.classList.remove("hidden");
-                
-                manifestTitle.innerText = "KTX Asset Extracted";
-                statusText.innerText = "File processing complete.";
-                runtimeBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500"></span> Converted`;
-                runtimeBadge.className = "flex items-center gap-2 text-[11px] font-bold text-amber-400 bg-[#141419] px-3 py-1.5 rounded border border-[#222229] uppercase tracking-widest";
-                
-                activeCache[0].view();
-
-            } catch (err) {
-                statusText.innerText = "Error encountered.";
-                emptyState.innerHTML = `<p class="text-xs text-red-500 font-bold uppercase tracking-wide">Operation matrix failure.</p>`;
-            }
+        } catch (err) {
+            statusBadge.innerText = "FAILED";
+            statusBadge.style.color = "var(--ff-red)";
+            statusText.innerText = "Process Error";
+            statusDescText.innerText = err.message;
+            statusIcon.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-sm text-[#ff3e3e]"></i>`;
+            outputEmptyState.innerHTML = `
+                <i class="fa-solid fa-triangle-exclamation text-xl text-red-500 mb-1"></i>
+                <p class="text-xs text-red-500 font-bold uppercase tracking-wide">${err.message}</p>`;
         }
     });
 </script>

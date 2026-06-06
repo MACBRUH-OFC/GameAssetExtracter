@@ -52,23 +52,23 @@ def process_object_unrestricted(obj, raw_env_data: bytes):
             raw = getattr(data, "m_Script", b"")
             if isinstance(raw, str): raw = raw.encode('utf-8', errors='replace')
             ext = ".json" if raw.startswith((b"{", b"[")) else ".txt"
-            return f"{safe_name}{ext}", raw, f"Text/{safe_name}{ext}"
+            return f"{safe_name}{ext}", raw, f"Text/{safe_name}{ext}", "Script Asset Extracted"
 
         elif t in ["Texture2D", "Sprite"] and hasattr(data, 'image'):
             buf = io.BytesIO()
             data.image.save(buf, format="PNG", optimize=False)
             img_bytes = buf.getvalue()
             buf.close()
-            return f"{safe_name}.png", img_bytes, f"Textures/{safe_name}.png"
+            return f"{safe_name}.png", img_bytes, f"Textures/{safe_name}.png", "Game Image Extracted"
 
         elif t == "AudioClip":
             samples = getattr(data, "samples", None)
             if samples and list(samples.keys()):
                 audio_filename = list(samples.keys())[0]
-                return audio_filename, samples[audio_filename], f"Audio/{audio_filename}"
+                return audio_filename, samples[audio_filename], f"Audio/{audio_filename}", "Game Audio Extracted"
             raw = obj.get_raw_data()
             ext = ".ogg" if raw.startswith(b'OggS') else ".wav"
-            return f"{safe_name}{ext}", raw, f"Audio/{safe_name}{ext}"
+            return f"{safe_name}{ext}", raw, f"Audio/{safe_name}{ext}", "Game Audio Extracted"
 
         elif t == "VideoClip":
             raw = obj.get_raw_data()
@@ -77,18 +77,16 @@ def process_object_unrestricted(obj, raw_env_data: bytes):
                 if match != -1:
                     start_pos = max(0, match - 4)
                     raw = raw_env_data[start_pos:start_pos + 12_000_000]
-            return f"{safe_name}.mp4", raw, f"Video/{safe_name}.mp4"
+            return f"{safe_name}.mp4", raw, f"Video/{safe_name}.mp4", "Video Asset Extracted"
     except:
         pass
     return None
 
-def convert_ktx_to_png(file_bytes):
+def convert_ktx_to_png_fallback(file_bytes) -> bytes:
     f = io.BytesIO(file_bytes)
     header = f.read(64)
-    if len(header) < 64:
-        raise Exception("Invalid KTX file")
-    if header[:12] != b'\xABKTX 11\xBB\r\n\x1A\n':
-        raise Exception("Not a valid KTX file")
+    if len(header) < 64 or header[:12] != b'\xABKTX 11\xBB\r\n\x1A\n':
+        raise Exception("Not a valid KTX file signature format.")
 
     gl_internal_format = struct.unpack('<I', header[28:32])[0]
     width = struct.unpack('<I', header[36:40])[0]
@@ -112,8 +110,7 @@ def convert_ktx_to_png(file_bytes):
         decoded = texture2ddecoder.decode_astc(data, width, height, bx, by)
     elif gl_internal_format == 0x8058:
         expected = width * height * 4
-        if len(data) < expected:
-            raise Exception(f"Texture data too small. Expected: {expected} Found: {len(data)}")
+        if len(data) < expected: raise Exception("Truncated texture storage bounds loop inside data stream mapping.")
         decoded = data[:expected]
     else:
         raise Exception(f"Unsupported format: {hex(gl_internal_format)}")
@@ -125,45 +122,16 @@ def convert_ktx_to_png(file_bytes):
     
     output = io.BytesIO()
     img.save(output, format="PNG")
-    output.seek(0)
-    return output
-
-def convert_png_to_ktx(file_bytes):
-    img = Image.open(io.BytesIO(file_bytes)).convert("RGBA")
-    img = img.transpose(Image.FLIP_TOP_BOTTOM)
-    r, g, b, a = img.split()
-    img = Image.merge("RGBA", (b, g, r, a))
-    width, height = img.size
-    pixel_data = img.tobytes()
-
-    kv_pair = b"KTXorientation\x00S=r,T=d\x00"
-    kv_entry = struct.pack('<I', len(kv_pair)) + kv_pair
-    padding = (4 - (len(kv_entry) % 4)) % 4
-    kv_block = kv_entry + (b'\x00' * padding)
-
-    header = struct.pack(
-        '<12sIIIIIIIIIIII',
-        b'\xABKTX 11\xBB\r\n\x1A\n',
-        0x04030201, 0x1401, 1, 0x1908, 0x8058, 0x1908,
-        width, height, 0, 0, 1, len(kv_block)
-    )
-
-    output = io.BytesIO()
-    output.write(header)
-    output.write(kv_block)
-    output.write(struct.pack('<I', len(pixel_data)))
-    output.write(pixel_data)
-    output.seek(0)
-    return output
+    return output.getvalue()
 
 @app.route('/api/extract', methods=['GET', 'POST'])
-def handle_direct_extraction_stream():
+def handle_universal_extraction_pipeline():
     global GLOBAL_CACHE_REGISTRY
     download_type = request.args.get('download_type', '')
 
     if download_type == 'zip':
         if not GLOBAL_CACHE_REGISTRY.get('extracted'):
-            return jsonify({"error": "No files found in cache."}), 400
+            return jsonify({"error": "No elements found in cache registry."}), 400
         zip_io = io.BytesIO()
         with zipfile.ZipFile(zip_io, "w", zipfile.ZIP_DEFLATED, compresslevel=1) as zf:
             for item in GLOBAL_CACHE_REGISTRY['extracted']:
@@ -174,73 +142,102 @@ def handle_direct_extraction_stream():
     elif download_type == 'single':
         file_idx = int(request.args.get('file_index', -1))
         if not GLOBAL_CACHE_REGISTRY.get('extracted') or file_idx < 0 or file_idx >= len(GLOBAL_CACHE_REGISTRY['extracted']):
-            return jsonify({"error": "File index missing."}), 400
+            return jsonify({"error": "Target mapping index reference missing inside context bounds."}), 400
         item = GLOBAL_CACHE_REGISTRY['extracted'][file_idx]
         
         ext = item['name'].split('.')[-1].lower()
         mimetype = 'application/octet-stream'
         if ext in ['png', 'jpg', 'jpeg', 'webp']: mimetype = 'image/png'
         elif ext in ['mp3', 'wav', 'ogg']: mimetype = 'audio/mpeg'
+        elif ext in ['json', 'txt', 'xml']: mimetype = 'text/plain; charset=utf-8'
         
         return send_file(io.BytesIO(item['bytes']), mimetype=mimetype, as_attachment=True, download_name=item['name'])
 
     if 'asset_bundle' not in request.files:
-        return jsonify({"error": "No file uploaded."}), 400
+        return jsonify({"error": "No file uploaded layout."}), 400
 
     try:
-        raw_bundle_bytes = request.files['asset_bundle'].read()
-        final_data = decompress_stream(raw_bundle_bytes)
-        try:
-            env = UnityPy.load(final_data)
-            objects_array = env.objects
-        except:
-            return jsonify({"error": "Invalid bundle file."}), 400
+        uploaded_file = request.files['asset_bundle']
+        orig_name = os.path.basename(uploaded_file.filename)
+        raw_bytes = uploaded_file.read()
+        decompressed_data = decompress_stream(raw_bytes)
 
-        seen_md5 = set()
         extracted_list = []
         json_metadata_manifest = []
         tracking_index_counter = 0
 
+        # Step 1: Intelligent Dynamic Try Logic - Check if file is a valid raw binary KTX layout container stream first
+        if decompressed_data.startswith(b'\xABKTX 11\xBB\r\n\x1A\n'):
+            try:
+                png_bytes = convert_ktx_to_png_fallback(decompressed_data)
+                clean_base_title = os.path.splitext(orig_name)[0]
+                extracted_list.append({
+                    'name': f"{clean_base_title}.png", 
+                    'zip_path': f"Textures/{clean_base_title}.png", 
+                    'bytes': png_bytes
+                })
+                json_metadata_manifest.append({
+                    'index': 0, 
+                    'name': f"{clean_base_title}.png", 
+                    'path': f"Textures/{clean_base_title}.png", 
+                    'label': "KTX Texture Extracted"
+                })
+                GLOBAL_CACHE_REGISTRY['extracted'] = extracted_list
+                return jsonify({"files": json_metadata_manifest})
+            except Exception as e:
+                pass
+
+        # Step 2: Fallback Logic - Run Unity Asset Bundle object unpacking sequence
+        try:
+            env = UnityPy.load(decompressed_data)
+            objects_array = env.objects
+        except:
+            # Step 3: Ultimate Fallback Logic - If Unity loading fails, check if the raw file can process directly as KTX format layout anyway
+            try:
+                png_bytes = convert_ktx_to_png_fallback(decompressed_data)
+                clean_base_title = os.path.splitext(orig_name)[0]
+                extracted_list.append({
+                    'name': f"{clean_base_title}.png", 
+                    'zip_path': f"Textures/{clean_base_title}.png", 
+                    'bytes': png_bytes
+                })
+                json_metadata_manifest.append({
+                    'index': 0, 
+                    'name': f"{clean_base_title}.png", 
+                    'path': f"Textures/{clean_base_title}.png", 
+                    'label': "KTX Texture Extracted"
+                })
+                GLOBAL_CACHE_REGISTRY['extracted'] = extracted_list
+                return jsonify({"files": json_metadata_manifest})
+            except:
+                return jsonify({"error": "Unsupported file layout: Eventually failed both asset and raw texture extraction matrices."}), 400
+
+        seen_md5 = set()
         for obj in objects_array:
-            res = process_object_unrestricted(obj, final_data)
+            res = process_object_unrestricted(obj, decompressed_data)
             if res:
-                filename, file_bytes, zip_folder_path = res
+                filename, file_bytes, zip_folder_path, type_label = res
                 h = hashlib.md5(file_bytes).hexdigest()
                 if h not in seen_md5:
                     seen_md5.add(h)
                     extracted_list.append({'name': filename, 'zip_path': zip_folder_path, 'bytes': file_bytes})
-                    json_metadata_manifest.append({'index': tracking_index_counter, 'name': filename, 'path': zip_folder_path})
+                    json_metadata_manifest.append({
+                        'index': tracking_index_counter, 
+                        'name': filename, 
+                        'path': zip_folder_path,
+                        'label': type_label
+                    })
                     tracking_index_counter += 1
         del env
         gc.collect()
 
         if tracking_index_counter == 0:
-            return jsonify({"error": "No supported elements found inside this file."}), 400
+            return jsonify({"error": "No recognizable asset elements tracked inside package container."}), 400
 
         GLOBAL_CACHE_REGISTRY['extracted'] = extracted_list
         return jsonify({"files": json_metadata_manifest})
     except Exception as e:
-        return jsonify({"error": f"Error: {str(e)}"}), 500
-
-@app.route("/api/convert", methods=["POST"])
-def api_convert():
-    try:
-        mode = request.form.get("mode")
-        file = request.files.get("file")
-        if not file:
-            return jsonify({"success": False, "error": "No file uploaded."}), 400
-
-        file_bytes = file.read()
-        if mode == "ktx_to_png":
-            output = convert_ktx_to_png(file_bytes)
-            return send_file(output, mimetype="image/png", as_attachment=True, download_name="converted.png")
-        elif mode == "png_to_ktx":
-            output = convert_png_to_ktx(file_bytes)
-            return send_file(output, mimetype="application/octet-stream", as_attachment=True, download_name="converted.ktx")
-        else:
-            return jsonify({"success": False, "error": "Invalid mode selected."}), 400
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e), "traceback": traceback.format_exc()}), 500
+        return jsonify({"error": f"Internal Core Matrix Failure: {str(e)}"}), 500
 
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
@@ -249,7 +246,7 @@ def serve_ui_layout(path):
         with open(HTML_PATH, 'r', encoding='utf-8') as f:
             return f.read()
     except Exception as e:
-        return f"File missing: {str(e)}", 500
+        return f"File target system missing: {str(e)}", 500
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=10000, debug=True)
