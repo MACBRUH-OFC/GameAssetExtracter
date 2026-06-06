@@ -20,7 +20,7 @@ HTML_PATH = os.path.join(BASE_DIR, 'index.html')
 GLOBAL_CACHE_REGISTRY = {}
 
 def decompress_stream(data: bytes) -> bytes:
-    """Strips compression layers from incoming stream arrays."""
+    """Strips compression wrappers from incoming data array payloads."""
     try:
         if data.startswith(b'\x1f\x8b'): return decompress_stream(gzip.decompress(data))
         if data.startswith((b'\x78\x9c', b'\x78\x01', b'\x78\xda')): return decompress_stream(zlib.decompress(data))
@@ -28,7 +28,7 @@ def decompress_stream(data: bytes) -> bytes:
     return data
 
 def extract_clean_name(obj, data, default_type: str) -> str:
-    """Extracts internal identifier keys mapped to individual class objects."""
+    """Extracts internal active identifier tags bound to individual classes."""
     if hasattr(obj, 'container') and obj.container:
         base_mapped_path = os.path.basename(obj.container)
         if base_mapped_path:
@@ -42,7 +42,7 @@ def extract_clean_name(obj, data, default_type: str) -> str:
     return f"{default_type}_{obj.path_id}"
 
 def process_object_unrestricted(obj, raw_env_data: bytes):
-    """Processes target binary assets matching core structural definitions."""
+    """Processes asset structure blocks matching targeted extraction rules."""
     try:
         t = obj.type.name
         data = obj.read()
@@ -88,12 +88,12 @@ def process_object_unrestricted(obj, raw_env_data: bytes):
 @app.route('/<path:path>')
 def serve_ui_layout(path):
     if path in ["api/extract", "api/extract/"] and request.method == "POST":
-        return "POST stream requests must access explicit action target vectors.", 405
+        return "POST stream pathways execute on specific backend routes exclusively.", 405
     try:
         with open(HTML_PATH, 'r', encoding='utf-8') as f:
             return f.read()
     except Exception as e:
-        return f"Interface layout resource stream missing: {str(e)}", 500
+        return f"Interface layout missing or broken: {str(e)}", 500
 
 @app.route('/api/extract', methods=['POST'])
 def handle_direct_extraction_stream():
@@ -103,7 +103,7 @@ def handle_direct_extraction_stream():
 
     if download_type == 'zip':
         if not GLOBAL_CACHE_REGISTRY.get('extracted'):
-            return jsonify({"error": "Cache layer framework context empty."}), 400
+            return jsonify({"error": "Cache registry empty. Re-stream source package container."}), 400
         
         zip_io = io.BytesIO()
         with zipfile.ZipFile(zip_io, "w", zipfile.ZIP_DEFLATED, compresslevel=1) as zf:
@@ -115,13 +115,13 @@ def handle_direct_extraction_stream():
     elif download_type == 'single':
         file_idx = int(request.args.get('file_index', -1))
         if not GLOBAL_CACHE_REGISTRY.get('extracted') or file_idx < 0 or file_idx >= len(GLOBAL_CACHE_REGISTRY['extracted']):
-            return jsonify({"error": "Target index allocation reference dropped."}), 400
+            return jsonify({"error": "Target mapping index reference lost."}), 400
         
         item = GLOBAL_CACHE_REGISTRY['extracted'][file_idx]
         return send_file(io.BytesIO(item['bytes']), mimetype='application/octet-stream', as_attachment=True, download_name=item['name'])
 
     if 'asset_bundle' not in request.files:
-        return jsonify({"error": "Incoming multipart stream payload block missing."}), 400
+        return jsonify({"error": "Multipart byte payload context missing."}), 400
 
     try:
         raw_bundle_bytes = request.files['asset_bundle'].read()
@@ -131,7 +131,7 @@ def handle_direct_extraction_stream():
             env = UnityPy.load(final_data)
             objects_array = env.objects
         except Exception:
-            return jsonify({"error": "Failed parsing structural definitions. Validate formatting header keys."}), 400
+            return jsonify({"error": "Invalid format layout. Standard package headers not verified."}), 400
         
         seen_md5 = set()
         extracted_list = []
@@ -163,10 +163,10 @@ def handle_direct_extraction_stream():
         gc.collect()
 
         if tracking_index_counter == 0:
-            return jsonify({"error": "No valid structured definitions located inside file headers."}), 400
+            return jsonify({"error": "No valid supported structural elements recognized inside files."}), 400
 
         GLOBAL_CACHE_REGISTRY['extracted'] = extracted_list
         return jsonify({"files": json_metadata_manifest})
 
     except Exception as e:
-        return jsonify({"error": f"Internal mapping failure thread break: {str(e)}"}), 500
+        return jsonify({"error": f"Internal execution thread pipeline exception: {str(e)}"}), 500
