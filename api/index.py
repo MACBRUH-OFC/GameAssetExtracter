@@ -22,15 +22,19 @@ HTML_PATH = os.path.join(BASE_DIR, 'index.html')
 
 GLOBAL_CACHE_REGISTRY = {}
 
+
 def decompress_stream(data: bytes) -> bytes:
     try:
-        if data.startswith(b'\x1f\x8b'): return decompress_stream(gzip.decompress(data))
-        if data.startswith((b'\x78\x9c', b'\x78\x01', b'\x78\xda')): return decompress_stream(zlib.decompress(data))
-    except: pass
+        if data.startswith(b'\x1f\x8b'):
+            return decompress_stream(gzip.decompress(data))
+        if data.startswith((b'\x78\x9c', b'\x78\x01', b'\x78\xda')):
+            return decompress_stream(zlib.decompress(data))
+    except:
+        pass
     return data
 
-def extract_original_asset_name(obj, data, default_type: str) -> str:
-    """Extracts the pure original internal name from the asset maps without modifications."""
+
+def extract_clean_name(obj, data, default_type: str) -> str:
     if hasattr(obj, 'container') and obj.container:
         base_mapped_path = os.path.basename(obj.container)
         if base_mapped_path:
@@ -41,108 +45,201 @@ def extract_original_asset_name(obj, data, default_type: str) -> str:
             return val.strip()
     return f"{default_type}_{obj.path_id}"
 
-def build_wavefront_obj_file(mesh_data) -> bytes:
-    """Parses Unity Mesh channels directly into standard Wavefront 3D .obj asset strings."""
-    try:
-        out = io.StringIO()
-        out.write(f"# Extracted Wavefront OBJ - Mesh: {getattr(mesh_data, 'name', 'Mesh')}\n")
-        
-        # Pull geometric channel maps safely from the engine reader
-        if hasattr(mesh_data, "m_Vertices") and mesh_data.m_Vertices:
-            verts = mesh_data.m_Vertices
-            for i in range(0, len(verts), 3):
-                if i+2 < len(verts):
-                    out.write(f"v {verts[i]} {verts[i+1]} {verts[i+2]}\n")
-                    
-        if hasattr(mesh_data, "m_Normals") and mesh_data.m_Normals:
-            norms = mesh_data.m_Normals
-            for i in range(0, len(norms), 3):
-                if i+2 < len(norms):
-                    out.write(f"vn {norms[i]} {norms[i+1]} {norms[i+2]}\n")
-
-        if hasattr(mesh_data, "m_UV0") and mesh_data.m_UV0:
-            uvs = mesh_data.m_UV0
-            for i in range(0, len(uvs), 2):
-                if i+1 < len(uvs):
-                    out.write(f"vt {uvs[i]} {uvs[i+1]}\n")
-
-        # Reconstruct face indices vectors smoothly
-        if hasattr(mesh_data, "m_Indices") and mesh_data.m_Indices:
-            indices = mesh_data.m_Indices
-            for i in range(0, len(indices), 3):
-                if i+2 < len(indices):
-                    # OBJ index structure counts from 1 base offset
-                    v1, v2, v3 = indices[i]+1, indices[i+1]+1, indices[i+2]+1
-                    out.write(f"f {v1}/{v1}/{v1} {v2}/{v2}/{v2} {v3}/{v3}/{v3}\n")
-                    
-        return out.getvalue().encode('utf-8')
-    except:
-        return b""
 
 def dump_obj_to_dict(obj_data) -> dict:
+    """Helper method to robustly pull serialized type tree properties safely into dictionaries."""
     out = {}
     try:
-        if hasattr(obj_data, "read_typetree"): return obj_data.read_typetree()
-    except: pass
+        if hasattr(obj_data, "read_typetree"):
+            return obj_data.read_typetree()
+    except:
+        pass
     for attr in dir(obj_data):
-        if attr.startswith('_') or attr in ['read', 'assets_file', 'reader', 'image', 'samples']: continue
+        if attr.startswith('_') or attr in ['read', 'assets_file', 'reader', 'image', 'samples']:
+            continue
         try:
             val = getattr(obj_data, attr)
-            if isinstance(val, (int, float, str, bool)): out[attr] = val
-        except: pass
+            if isinstance(val, (int, float, str, bool)):
+                out[attr] = val
+            elif isinstance(val, bytes):
+                out[attr] = val.hex()[:500] + "..." if len(val) > 500 else val.hex()
+        except:
+            pass
     return out
+
+
+def export_mesh_as_obj(data, name: str):
+    """
+    Attempt to export a Mesh as a Wavefront OBJ file.
+    Falls back to JSON if mesh data is not accessible.
+    Returns (bytes, extension) tuple.
+    """
+    try:
+        tree = {}
+        if hasattr(data, "read_typetree"):
+            try:
+                tree = data.read_typetree()
+            except:
+                pass
+
+        vertices = []
+        normals = []
+        uvs = []
+        indices = []
+
+        # Try to extract vertex data from type tree
+        if tree:
+            # Attempt direct vertex/index arrays from type tree
+            vdata = tree.get("m_VertexData", {})
+            if isinstance(vdata, dict):
+                # Raw packed vertex data - skip to JSON fallback
+                pass
+
+            # Try readable sub-mesh indices
+            submeshes = tree.get("m_SubMeshes", [])
+            idx_buf = tree.get("m_IndexBuffer", [])
+            if isinstance(idx_buf, list) and len(idx_buf) > 0:
+                for i in range(0, len(idx_buf) - 2, 2):
+                    try:
+                        lo = idx_buf[i]
+                        hi = idx_buf[i + 1]
+                        indices.append(lo | (hi << 8))
+                    except:
+                        pass
+
+        # Try UnityPy's higher-level mesh attributes
+        if hasattr(data, 'vertices') and data.vertices:
+            for v in data.vertices:
+                if hasattr(v, '__iter__'):
+                    coords = list(v)
+                    if len(coords) >= 3:
+                        vertices.append((coords[0], coords[1], coords[2]))
+                else:
+                    vertices.append((float(v), 0.0, 0.0))
+
+        if hasattr(data, 'normals') and data.normals:
+            for n in data.normals:
+                if hasattr(n, '__iter__'):
+                    coords = list(n)
+                    if len(coords) >= 3:
+                        normals.append((coords[0], coords[1], coords[2]))
+
+        if hasattr(data, 'uv') and data.uv:
+            for u in data.uv:
+                if hasattr(u, '__iter__'):
+                    coords = list(u)
+                    if len(coords) >= 2:
+                        uvs.append((coords[0], coords[1]))
+
+        if hasattr(data, 'indices') and data.indices:
+            indices = list(data.indices)
+
+        if not vertices:
+            raise ValueError("No vertex data available")
+
+        # Build OBJ file content
+        lines = [f"# Exported by Assets Extractor", f"# Mesh: {name}", ""]
+        lines.append(f"o {name}")
+        lines.append("")
+
+        for vx, vy, vz in vertices:
+            lines.append(f"v {vx:.6f} {vy:.6f} {vz:.6f}")
+        lines.append("")
+
+        if uvs:
+            for uu, uv in uvs:
+                lines.append(f"vt {uu:.6f} {uv:.6f}")
+            lines.append("")
+
+        if normals:
+            for nx, ny, nz in normals:
+                lines.append(f"vn {nx:.6f} {ny:.6f} {nz:.6f}")
+            lines.append("")
+
+        lines.append("# Faces")
+        has_uv = len(uvs) > 0
+        has_norm = len(normals) > 0
+
+        for i in range(0, len(indices) - 2, 3):
+            try:
+                i0 = indices[i] + 1
+                i1 = indices[i + 1] + 1
+                i2 = indices[i + 2] + 1
+                if has_uv and has_norm:
+                    lines.append(f"f {i0}/{i0}/{i0} {i1}/{i1}/{i1} {i2}/{i2}/{i2}")
+                elif has_uv:
+                    lines.append(f"f {i0}/{i0} {i1}/{i1} {i2}/{i2}")
+                elif has_norm:
+                    lines.append(f"f {i0}//{i0} {i1}//{i1} {i2}//{i2}")
+                else:
+                    lines.append(f"f {i0} {i1} {i2}")
+            except:
+                pass
+
+        obj_content = "\n".join(lines)
+        return obj_content.encode('utf-8'), ".obj"
+
+    except Exception:
+        pass
+
+    # Fallback: JSON dump
+    try:
+        tree_data = dump_obj_to_dict(data)
+        js_bytes = json.dumps(tree_data, indent=2, ensure_ascii=False).encode('utf-8')
+        return js_bytes, ".json"
+    except:
+        pass
+
+    return None, None
+
 
 def process_object_unrestricted(obj, raw_env_data: bytes):
     try:
         t = obj.type.name
         data = obj.read()
-        pristine_name = extract_original_asset_name(obj, data, t)
+        pristine_name = extract_clean_name(obj, data, t)
         safe_name = re.sub(r'[<>:"/\\|?*\x00-\x1f]', "_", pristine_name)
 
-        # 3D Objects / Mesh Extraction Matrix Route
-        if t == "Mesh":
-            obj_mesh_bytes = build_wavefront_obj_file(data)
-            if obj_mesh_bytes and len(obj_mesh_bytes) > 50:
-                return f"{safe_name}.obj", obj_mesh_bytes, f"Geometry/{safe_name}.obj", "3D Mesh Object", pristine_name
-
-        # Text Configurations Assets Handling
-        elif t == "TextAsset":
+        # 1 & 2. Standard Text and Specialized Config Mappings
+        if t == "TextAsset":
             raw = getattr(data, "m_Script", b"")
-            if isinstance(raw, str): raw = raw.encode('utf-8', errors='replace')
+            if isinstance(raw, str):
+                raw = raw.encode('utf-8', errors='replace')
             ext = ".txt"
             label = "Text File"
-            if safe_name.lower().endswith('.atlas') or b"size:" in raw:
-                if not safe_name.lower().endswith('.atlas'): ext = ".atlas.txt"
+            if safe_name.lower().endswith('.atlas') or raw.startswith(b"\n") or b"size:" in raw:
+                if not safe_name.lower().endswith('.atlas'):
+                    ext = ".atlas.txt"
                 label = "Atlas Sheet"
             elif raw.startswith((b"{", b"[")):
                 ext = ".json"
                 label = "Data Config"
-            return f"{safe_name}{ext}", raw, f"Text/{safe_name}{ext}", label, pristine_name
+            return f"{safe_name}{ext}", raw, f"Text/{safe_name}{ext}", label
 
-        # Textures and Sprite Systems
+        # 3 & 4. Textures, Sprite Elements & SpriteAtlas Packaging
         elif t in ["Texture2D", "Sprite"] and hasattr(data, 'image'):
             buf = io.BytesIO()
             data.image.save(buf, format="PNG", optimize=False)
             img_bytes = buf.getvalue()
             buf.close()
-            return f"{safe_name}.png", img_bytes, f"Textures/{safe_name}.png", f"{t} Asset", pristine_name
+            return f"{safe_name}.png", img_bytes, f"Textures/{safe_name}.png", f"{t} Asset"
 
         elif t == "SpriteAtlas":
             tree_data = dump_obj_to_dict(data)
             js_bytes = json.dumps(tree_data, indent=2, ensure_ascii=False).encode('utf-8')
-            return f"{safe_name}_atlas_map.json", js_bytes, f"Mapping/{safe_name}_atlas_map.json", "SpriteAtlas Map", pristine_name
+            return f"{safe_name}_atlas_map.json", js_bytes, f"Mapping/{safe_name}_atlas_map.json", "SpriteAtlas Map"
 
-        # Audio Track Framework Core Handling
+        # 5. Audio Processing Structures
         elif t == "AudioClip":
             samples = getattr(data, "samples", None)
             if samples and list(samples.keys()):
                 audio_filename = list(samples.keys())[0]
-                return audio_filename, samples[audio_filename], f"Audio/{audio_filename}", "Audio Track", pristine_name
+                return audio_filename, samples[audio_filename], f"Audio/{audio_filename}", "Audio Track"
             raw = obj.get_raw_data()
             ext = ".ogg" if raw.startswith(b'OggS') else ".wav"
-            return f"{safe_name}{ext}", raw, f"Audio/{safe_name}{ext}", "Audio Track", pristine_name
+            return f"{safe_name}{ext}", raw, f"Audio/{safe_name}{ext}", "Audio Track"
 
-        # Video Streaming Clips Engine
+        # 6. Video Component Substructures
         elif t == "VideoClip":
             raw = obj.get_raw_data()
             if len(raw) < 1024:
@@ -150,93 +247,249 @@ def process_object_unrestricted(obj, raw_env_data: bytes):
                 if match != -1:
                     start_pos = max(0, match - 4)
                     raw = raw_env_data[start_pos:start_pos + 12_000_000]
-            return f"{safe_name}.mp4", raw, f"Video/{safe_name}.mp4", "Video Clip", pristine_name
+            return f"{safe_name}.mp4", raw, f"Video/{safe_name}.mp4", "Video Clip"
 
-        # Structural Schemas / Hierarchies Fallbacks
-        elif t in ["GameObject", "MonoBehaviour", "ScriptableObject", "Material", "Shader", "SkinnedMeshRenderer", "AnimationClip", "AnimatorController", "Animator", "AssetBundle"]:
+        # 7, 8, & 9. Scene Hierarchy / Nodes (GameObject, MonoBehaviour, ScriptableObject)
+        elif t in ["GameObject", "MonoBehaviour", "ScriptableObject"]:
             tree_data = dump_obj_to_dict(data)
             js_bytes = json.dumps(tree_data, indent=2, ensure_ascii=False).encode('utf-8')
-            return f"{safe_name}_{t}.json", js_bytes, f"Structures/{t}/{safe_name}.json", f"{t} Layout", pristine_name
+            return f"{safe_name}_{t}.json", js_bytes, f"Hierarchy/{t}/{safe_name}.json", f"{t} Schema"
 
-        # Typography Data Arrays Mapping
+        # 10 & 11. Visual Engine Renderers (Material, Shader)
+        elif t in ["Material", "Shader"]:
+            tree_data = dump_obj_to_dict(data)
+            js_bytes = json.dumps(tree_data, indent=2, ensure_ascii=False).encode('utf-8')
+            return f"{safe_name}_{t}.json", js_bytes, f"Shaders_Materials/{t}/{safe_name}.json", f"{t} Config"
+
+        # 12 & 13. Engine Geometric Structural Frameworks (Mesh, SkinnedMeshRenderer, MeshRenderer, MeshFilter)
+        elif t in ["Mesh", "SkinnedMeshRenderer", "MeshRenderer", "MeshFilter"]:
+            if t == "Mesh":
+                mesh_bytes, mesh_ext = export_mesh_as_obj(data, safe_name)
+                if mesh_bytes is not None:
+                    if mesh_ext == ".obj":
+                        return f"{safe_name}.obj", mesh_bytes, f"Meshes/{safe_name}.obj", "3D Mesh (OBJ)"
+                    else:
+                        return f"{safe_name}_Mesh.json", mesh_bytes, f"Meshes/{safe_name}.json", "Mesh Data"
+            tree_data = dump_obj_to_dict(data)
+            js_bytes = json.dumps(tree_data, indent=2, ensure_ascii=False).encode('utf-8')
+            return f"{safe_name}_{t}.json", js_bytes, f"Meshes/{t}/{safe_name}.json", f"{t} Layout"
+
+        # 14, 15, & 16. Structural System Movements (AnimationClip, AnimatorController, Animator)
+        elif t in ["AnimationClip", "AnimatorController", "Animator"]:
+            tree_data = dump_obj_to_dict(data)
+            js_bytes = json.dumps(tree_data, indent=2, ensure_ascii=False).encode('utf-8')
+            return f"{safe_name}_{t}.json", js_bytes, f"Animations/{t}/{safe_name}.json", "Animation Timeline Map"
+
+        # 17. Typography Engine Packages (Font)
         elif t == "Font":
             raw_font_data = getattr(data, "m_FontData", b"")
             if raw_font_data and len(raw_font_data) > 10:
                 ext = ".ttf"
-                if raw_font_data.startswith(b'OTTO'): ext = ".otf"
-                return f"{safe_name}{ext}", raw_font_data, f"Fonts/{safe_name}{ext}", "Font File", pristine_name
+                if raw_font_data.startswith(b'OTTO'):
+                    ext = ".otf"
+                return f"{safe_name}{ext}", raw_font_data, f"Fonts/{safe_name}{ext}", "TrueType Font File"
+            else:
+                tree_data = dump_obj_to_dict(data)
+                js_bytes = json.dumps(tree_data, indent=2, ensure_ascii=False).encode('utf-8')
+                return f"{safe_name}_font_meta.json", js_bytes, f"Fonts/{safe_name}_font_meta.json", "Font Metadata"
 
-        # Unified Structured Catch-All Extraction Routines
-        tree_data = dump_obj_to_dict(data)
-        if tree_data:
+        # 18. Main Containers (AssetBundle)
+        elif t == "AssetBundle":
+            tree_data = dump_obj_to_dict(data)
             js_bytes = json.dumps(tree_data, indent=2, ensure_ascii=False).encode('utf-8')
-            return f"{safe_name}_{t}.json", js_bytes, f"Other_Metadata/{t}/{safe_name}.json", f"{t} Node Data", pristine_name
-    except: pass
+            return f"{safe_name}_manifest.json", js_bytes, f"Containers/{safe_name}_manifest.json", "Bundle Manifest Container"
+
+        # 19. Transform / RectTransform
+        elif t in ["Transform", "RectTransform"]:
+            tree_data = dump_obj_to_dict(data)
+            js_bytes = json.dumps(tree_data, indent=2, ensure_ascii=False).encode('utf-8')
+            return f"{safe_name}_{t}.json", js_bytes, f"Hierarchy/{t}/{safe_name}.json", f"{t} Data"
+
+        # 20. Physics Colliders
+        elif t in ["BoxCollider", "SphereCollider", "MeshCollider", "CapsuleCollider",
+                   "BoxCollider2D", "CircleCollider2D", "PolygonCollider2D"]:
+            tree_data = dump_obj_to_dict(data)
+            js_bytes = json.dumps(tree_data, indent=2, ensure_ascii=False).encode('utf-8')
+            return f"{safe_name}_{t}.json", js_bytes, f"Physics/{t}/{safe_name}.json", f"Collider ({t})"
+
+        # 21. Particle Systems
+        elif t in ["ParticleSystem", "ParticleSystemRenderer"]:
+            tree_data = dump_obj_to_dict(data)
+            js_bytes = json.dumps(tree_data, indent=2, ensure_ascii=False).encode('utf-8')
+            return f"{safe_name}_{t}.json", js_bytes, f"Particles/{t}/{safe_name}.json", "Particle System"
+
+        # 22. Terrain
+        elif t in ["TerrainData", "Terrain"]:
+            tree_data = dump_obj_to_dict(data)
+            js_bytes = json.dumps(tree_data, indent=2, ensure_ascii=False).encode('utf-8')
+            return f"{safe_name}_{t}.json", js_bytes, f"Terrain/{t}/{safe_name}.json", "Terrain Data"
+
+        # 23. Lighting
+        elif t in ["Light", "LightProbes", "ReflectionProbe", "LightingDataAsset"]:
+            tree_data = dump_obj_to_dict(data)
+            js_bytes = json.dumps(tree_data, indent=2, ensure_ascii=False).encode('utf-8')
+            return f"{safe_name}_{t}.json", js_bytes, f"Lighting/{t}/{safe_name}.json", "Lighting Data"
+
+        # 24. Camera
+        elif t == "Camera":
+            tree_data = dump_obj_to_dict(data)
+            js_bytes = json.dumps(tree_data, indent=2, ensure_ascii=False).encode('utf-8')
+            return f"{safe_name}_Camera.json", js_bytes, f"Hierarchy/Camera/{safe_name}.json", "Camera Config"
+
+        # 25. NavMesh
+        elif t in ["NavMeshData", "NavMeshAgent", "NavMeshObstacle"]:
+            tree_data = dump_obj_to_dict(data)
+            js_bytes = json.dumps(tree_data, indent=2, ensure_ascii=False).encode('utf-8')
+            return f"{safe_name}_{t}.json", js_bytes, f"NavMesh/{t}/{safe_name}.json", "NavMesh Data"
+
+        # 26. Cubemap
+        elif t == "Cubemap":
+            try:
+                buf = io.BytesIO()
+                data.image.save(buf, format="PNG", optimize=False)
+                img_bytes = buf.getvalue()
+                buf.close()
+                return f"{safe_name}.png", img_bytes, f"Textures/Cubemap/{safe_name}.png", "Cubemap Texture"
+            except:
+                tree_data = dump_obj_to_dict(data)
+                js_bytes = json.dumps(tree_data, indent=2, ensure_ascii=False).encode('utf-8')
+                return f"{safe_name}_Cubemap.json", js_bytes, f"Textures/Cubemap/{safe_name}.json", "Cubemap Data"
+
+        # 27. RenderTexture
+        elif t == "RenderTexture":
+            tree_data = dump_obj_to_dict(data)
+            js_bytes = json.dumps(tree_data, indent=2, ensure_ascii=False).encode('utf-8')
+            return f"{safe_name}_RenderTex.json", js_bytes, f"Textures/RenderTexture/{safe_name}.json", "Render Texture"
+
+        # 28+. Global Catch-All Fallback Routine for Any Other Unlisted Types
+        else:
+            try:
+                tree_data = dump_obj_to_dict(data)
+                if tree_data:
+                    js_bytes = json.dumps(tree_data, indent=2, ensure_ascii=False).encode('utf-8')
+                    return f"{safe_name}_{t}.json", js_bytes, f"Other/{t}/{safe_name}.json", f"Raw Data Container ({t})"
+            except:
+                pass
+            raw_bytes = obj.get_raw_data()
+            if raw_bytes and len(raw_bytes) > 0:
+                return f"{safe_name}_{t}.dat", raw_bytes, f"Other/{t}/{safe_name}.dat", f"Binary Block Object ({t})"
+
+    except:
+        pass
+
     return None
+
 
 def convert_ktx_to_png_fallback(file_bytes) -> bytes:
     f = io.BytesIO(file_bytes)
     header = f.read(64)
-    if len(header) < 64 or header[:12] != b'\xABKTX 11\xBB\r\n\x1A\n': raise Exception("Invalid KTX format.")
-    gl_internal_format = struct.unpack('<I', header[28:32])[0]
-    width, height = struct.unpack('<I', header[36:40])[0], struct.unpack('<I', header[40:44])[0]
-    f.seek(64 + struct.unpack('<I', header[60:64])[0])
-    data = f.read(struct.unpack('<I', f.read(4))[0])
+    if len(header) < 64 or header[:12] != b'\xABKTX 11\xBB\r\n\x1A\n':
+        raise Exception("Not a valid KTX format structure.")
 
-    if gl_internal_format == 0x8D64: decoded = texture2ddecoder.decode_etc1(data, width, height)
+    gl_internal_format = struct.unpack('<I', header[28:32])[0]
+    width = struct.unpack('<I', header[36:40])[0]
+    height = struct.unpack('<I', header[40:44])[0]
+    bytes_of_kv = struct.unpack('<I', header[60:64])[0]
+
+    f.seek(64 + bytes_of_kv)
+    image_size = struct.unpack('<I', f.read(4))[0]
+    data = f.read(image_size)
+
+    if gl_internal_format == 0x8D64:
+        decoded = texture2ddecoder.decode_etc1(data, width, height)
     elif 0x93B0 <= gl_internal_format <= 0x93BD:
-        astc_formats = {0x93B0:(4,4), 0x93B1:(5,4), 0x93B2:(5,5), 0x93B3:(6,5), 0x93B4:(6,6), 0x93B5:(8,5), 0x93B6:(8,6), 0x93B7:(8,8)}
-        bx, by = astc_formats.get(gl_internal_format, (4,4))
+        astc_formats = {
+            0x93B0: (4, 4), 0x93B1: (5, 4), 0x93B2: (5, 5), 0x93B3: (6, 5),
+            0x93B4: (6, 6), 0x93B5: (8, 5), 0x93B6: (8, 6), 0x93B7: (8, 8),
+            0x93B8: (10, 5), 0x93B9: (10, 6), 0x93BA: (10, 8), 0x93BB: (10, 10),
+            0x93BC: (12, 10), 0x93BD: (12, 12)
+        }
+        bx, by = astc_formats[gl_internal_format]
         decoded = texture2ddecoder.decode_astc(data, width, height, bx, by)
-    else: decoded = data[:width*height*4]
+    elif gl_internal_format == 0x8058:
+        expected = width * height * 4
+        if len(data) < expected:
+            raise Exception("Truncated texture buffer array maps.")
+        decoded = data[:expected]
+    else:
+        raise Exception(f"Unsupported encoding structure format: {hex(gl_internal_format)}")
 
     img = Image.frombytes("RGBA", (width, height), decoded)
     r, g, b, a = img.split()
-    img = Image.merge("RGBA", (b, g, r, a)).transpose(Image.FLIP_TOP_BOTTOM)
-    out = io.BytesIO()
-    img.save(out, format="PNG")
-    return out.getvalue()
+    img = Image.merge("RGBA", (b, g, r, a))
+    img = img.transpose(Image.FLIP_TOP_BOTTOM)
+
+    output = io.BytesIO()
+    img.save(output, format="PNG")
+    return output.getvalue()
+
+
+def build_zip(items: list, mode: str = "normal", filter_labels: list = None) -> io.BytesIO:
+    """
+    Build a ZIP file from extracted items.
+    mode: "normal" = flat structure, "grouped" = folder-grouped by type
+    filter_labels: if provided, only include items whose label is in this list
+    """
+    zip_io = io.BytesIO()
+    with zipfile.ZipFile(zip_io, "w", zipfile.ZIP_DEFLATED, compresslevel=1) as zf:
+        for item in items:
+            # Apply label filter if provided
+            if filter_labels and item.get('label') not in filter_labels:
+                continue
+
+            if mode == "grouped":
+                # Use the structured zip_path (already includes folder grouping)
+                path = item['zip_path']
+            else:
+                # Normal: just filename, no folder
+                path = item['name']
+
+            zf.writestr(path, item['bytes'])
+    zip_io.seek(0)
+    return zip_io
+
 
 @app.route('/api/extract', methods=['GET', 'POST'])
 def handle_universal_extraction_pipeline():
     global GLOBAL_CACHE_REGISTRY
+
     download_type = request.args.get('download_type', '')
 
     if download_type == 'zip':
-        if not GLOBAL_CACHE_REGISTRY.get('extracted'): return jsonify({"error": "Cache empty."}), 400
-        
-        target_indices = request.args.get('indices', '')
-        group_by_name = request.args.get('group_mapped', 'false') == 'true'
-        
-        allowed_indices = []
-        if target_indices:
-            allowed_indices = [int(x) for x in target_indices.split(',') if x.strip()]
+        if not GLOBAL_CACHE_REGISTRY.get('extracted'):
+            return jsonify({"error": "Cache is currently unpopulated."}), 400
 
-        zip_io = io.BytesIO()
-        with zipfile.ZipFile(zip_io, "w", zipfile.ZIP_DEFLATED, compresslevel=1) as zf:
-            for item in GLOBAL_CACHE_REGISTRY['extracted']:
-                if allowed_indices and item['index'] not in allowed_indices: continue
-                
-                # Dynamic file architecture layout mapping routine
-                if group_by_name:
-                    clean_folder_ref = re.sub(r'[<>:"/\\|?*\x00-\x1f]', "_", item['orig_name'])
-                    final_path = f"Grouped_Assets/{clean_folder_ref}/{item['name']}"
-                else:
-                    final_path = item['zip_path']
-                    
-                zf.writestr(final_path, item['bytes'])
-                
-        zip_io.seek(0)
-        return send_file(zip_io, mimetype='application/zip', as_attachment=True, download_name="extracted_package.zip")
+        mode = request.args.get('zip_mode', 'normal')  # normal | grouped | filtered
+        filter_labels_raw = request.args.get('filter_labels', '')
+        filter_labels = [l.strip() for l in filter_labels_raw.split(',') if l.strip()] if filter_labels_raw else None
+
+        zip_io = build_zip(GLOBAL_CACHE_REGISTRY['extracted'], mode=mode, filter_labels=filter_labels)
+        return send_file(zip_io, mimetype='application/zip', as_attachment=True, download_name="extracted_assets.zip")
 
     elif download_type == 'single':
         file_idx = int(request.args.get('file_index', -1))
         if not GLOBAL_CACHE_REGISTRY.get('extracted') or file_idx < 0 or file_idx >= len(GLOBAL_CACHE_REGISTRY['extracted']):
-            return jsonify({"error": "Out of bounds."}), 400
-        item = GLOBAL_CACHE_REGISTRY['extracted'][file_idx]
-        return send_file(io.BytesIO(item['bytes']), mimetype='application/octet-stream', as_attachment=True, download_name=item['name'])
+            return jsonify({"error": "Target node out of bounds data index reference."}), 400
 
-    if 'asset_bundle' not in request.files: return jsonify({"error": "Missing file file stream."}), 400
+        item = GLOBAL_CACHE_REGISTRY['extracted'][file_idx]
+
+        ext = item['name'].split('.')[-1].lower()
+        mimetype = 'application/octet-stream'
+        if ext in ['png', 'jpg', 'jpeg', 'webp']:
+            mimetype = 'image/png'
+        elif ext in ['mp3', 'wav', 'ogg']:
+            mimetype = 'audio/mpeg'
+        elif ext in ['json', 'txt', 'xml', 'atlas']:
+            mimetype = 'text/plain; charset=utf-8'
+        elif ext in ['ttf', 'otf']:
+            mimetype = 'font/ttf'
+        elif ext == 'obj':
+            mimetype = 'text/plain; charset=utf-8'
+
+        return send_file(io.BytesIO(item['bytes']), mimetype=mimetype, as_attachment=True, download_name=item['name'])
+
+    if 'asset_bundle' not in request.files:
+        return jsonify({"error": "No file upload source found."}), 400
 
     try:
         uploaded_file = request.files['asset_bundle']
@@ -244,18 +497,20 @@ def handle_universal_extraction_pipeline():
         raw_bytes = uploaded_file.read()
         decompressed_data = decompress_stream(raw_bytes)
 
-        extracted_list, json_metadata_manifest = [], []
+        extracted_list = []
+        json_metadata_manifest = []
         tracking_index_counter = 0
 
         if decompressed_data.startswith(b'\xABKTX 11\xBB\r\n\x1A\n'):
             try:
                 png_bytes = convert_ktx_to_png_fallback(decompressed_data)
-                clean_title = os.path.splitext(orig_name)[0]
-                extracted_list.append({'index': 0, 'name': f"{clean_title}.png", 'zip_path': f"Textures/{clean_title}.png", 'bytes': png_bytes, 'orig_name': clean_title})
-                json_metadata_manifest.append({'index': 0, 'name': f"{clean_title}.png", 'path': f"Textures/{clean_title}.png", 'label': "KTX Image"})
+                clean_base_title = os.path.splitext(orig_name)[0]
+                extracted_list.append({'name': f"{clean_base_title}.png", 'zip_path': f"Textures/{clean_base_title}.png", 'bytes': png_bytes, 'label': "KTX Image"})
+                json_metadata_manifest.append({'index': 0, 'name': f"{clean_base_title}.png", 'path': f"Textures/{clean_base_title}.png", 'label': "KTX Image"})
                 GLOBAL_CACHE_REGISTRY['extracted'] = extracted_list
                 return jsonify({"files": json_metadata_manifest})
-            except: pass
+            except:
+                pass
 
         try:
             env = UnityPy.load(decompressed_data)
@@ -263,45 +518,58 @@ def handle_universal_extraction_pipeline():
         except:
             try:
                 png_bytes = convert_ktx_to_png_fallback(decompressed_data)
-                clean_title = os.path.splitext(orig_name)[0]
-                extracted_list.append({'index': 0, 'name': f"{clean_title}.png", 'zip_path': f"Textures/{clean_title}.png", 'bytes': png_bytes, 'orig_name': clean_title})
-                json_metadata_manifest.append({'index': 0, 'name': f"{clean_title}.png", 'path': f"Textures/{clean_title}.png", 'label': "KTX Image"})
+                clean_base_title = os.path.splitext(orig_name)[0]
+                extracted_list.append({'name': f"{clean_base_title}.png", 'zip_path': f"Textures/{clean_base_title}.png", 'bytes': png_bytes, 'label': "KTX Image"})
+                json_metadata_manifest.append({'index': 0, 'name': f"{clean_base_title}.png", 'path': f"Textures/{clean_base_title}.png", 'label': "KTX Image"})
                 GLOBAL_CACHE_REGISTRY['extracted'] = extracted_list
                 return jsonify({"files": json_metadata_manifest})
-            except: return jsonify({"error": "Failed parsing archive layers."}), 400
+            except:
+                return jsonify({"error": "Unrecognized package: Unpacking execution routines failed."}), 400
 
         seen_md5 = set()
         for obj in objects_array:
             res = process_object_unrestricted(obj, decompressed_data)
             if res:
-                filename, file_bytes, zip_path, type_label, original_raw_name = res
+                filename, file_bytes, zip_folder_path, type_label = res
                 h = hashlib.md5(file_bytes).hexdigest()
                 if h not in seen_md5:
                     seen_md5.add(h)
                     extracted_list.append({
-                        'index': tracking_index_counter, 'name': filename, 
-                        'zip_path': zip_path, 'bytes': file_bytes, 'orig_name': original_raw_name
+                        'name': filename,
+                        'zip_path': zip_folder_path,
+                        'bytes': file_bytes,
+                        'label': type_label
                     })
                     json_metadata_manifest.append({
-                        'index': tracking_index_counter, 'name': filename, 
-                        'path': zip_path, 'label': type_label
+                        'index': tracking_index_counter,
+                        'name': filename,
+                        'path': zip_folder_path,
+                        'label': type_label
                     })
                     tracking_index_counter += 1
+
         del env
         gc.collect()
 
-        if tracking_index_counter == 0: return jsonify({"error": "No elements found inside asset mappings."}), 400
+        if tracking_index_counter == 0:
+            return jsonify({"error": "No elements matched within the file blocks."}), 400
+
         GLOBAL_CACHE_REGISTRY['extracted'] = extracted_list
         return jsonify({"files": json_metadata_manifest})
+
     except Exception as e:
-        return jsonify({"error": f"Process crash log: {str(e)}"}), 500
+        return jsonify({"error": f"Internal process error: {str(e)}"}), 500
+
 
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def serve_ui_layout(path):
     try:
-        with open(HTML_PATH, 'r', encoding='utf-8') as f: return f.read()
-    except Exception as e: return f"Missing layout index maps: {str(e)}", 500
+        with open(HTML_PATH, 'r', encoding='utf-8') as f:
+            return f.read()
+    except Exception as e:
+        return f"Source asset mapping system missing: {str(e)}", 500
+
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=10000, debug=True)
