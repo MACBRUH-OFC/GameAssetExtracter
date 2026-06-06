@@ -17,7 +17,6 @@
             --ff-yellow: #ffde00; 
             --ff-emerald: #00ffa3; 
             --ff-red: #ff3e3e; 
-            --ff-cyan: #38bdf8;
         }
 
         body { 
@@ -35,18 +34,20 @@
             content: ""; 
             position: fixed; 
             inset: 0; 
-            background: rgba(0, 0, 0, 0.93); 
+            background: rgba(0, 0, 0, 0.94); 
             z-index: -1; 
         }
 
         .gff { font-family: 'GFF-Bold', sans-serif; }
 
+        /* Separate, standalone panels */
         .panel-container { 
-            background: #0a0a0a; 
-            border: 1px solid #1f1f1f; 
-            border-radius: 24px; 
+            background: #0b0b0c; 
+            border: 1px solid #1a1a1c; 
+            border-radius: 20px; 
             position: relative; 
-            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9);
+            padding: 24px;
         }
         
         .panel-container::before { 
@@ -54,7 +55,7 @@
             position: absolute; 
             top: 0; left: 0; width: 4px; height: 100%; 
             background: var(--ff-yellow); 
-            border-radius: 24px 0 0 24px; 
+            border-radius: 20px 0 0 20px; 
         }
 
         .btn-mechanical { 
@@ -65,7 +66,7 @@
             display: flex; 
             align-items: center; 
             justify-content: center; 
-            border-radius: 16px; 
+            border-radius: 14px; 
             gap: 12px; 
             position: relative;
             background: var(--ff-yellow); 
@@ -90,108 +91,113 @@
             border-radius: 12px; 
             gap: 8px; 
             position: relative;
-            background: #141414; 
+            background: #121214; 
             color: #fff; 
-            border: 1px solid #262626;
-            box-shadow: 0 4px 0 #080808;
+            border: 1px solid #222225;
+            box-shadow: 0 4px 0 #050506;
             transition: background 0.1s ease, border-color 0.1s ease;
         }
-        .btn-mechanical-dark:hover { background: #1a1a1a; border-color: #333; }
-        .btn-mechanical-dark:active { transform: translateY(2px); box-shadow: 0 2px 0 #080808; }
+        .btn-mechanical-dark:hover { background: #18181c; border-color: #33333a; }
+        .btn-mechanical-dark:active { transform: translateY(2px); box-shadow: 0 2px 0 #050506; }
 
         .upload-deck {
-            background: #121212;
-            border: 1px solid #2a2a2a;
-            border-radius: 20px;
+            background: #121215;
+            border: 1px solid #222225;
+            border-radius: 16px;
             display: flex;
             align-items: center;
-            height: 110px;
+            height: 100px;
             cursor: pointer;
-            overflow: hidden;
             transition: all 0.2s ease;
         }
-        .upload-deck:hover { border-color: #444; background: #161616; }
+        .upload-deck:hover { border-color: #444; background: #16161a; }
 
         .deck-port {
-            width: 80px;
+            width: 74px;
             height: 100%;
-            background: #181818;
-            border-right: 1px solid #2a2a2a;
+            background: #16161a;
+            border-right: 1px solid #222225;
             display: flex;
             align-items: center;
             justify-content: center;
-            position: relative;
         }
-        .deck-port::after {
-            content: ''; position: absolute; width: 36px; height: 36px;
-            border-radius: 50%; border: 1px dashed #333; animation: spin 12s linear infinite;
-        }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
-
-        .deck-body { flex: 1; padding: 0 20px; display: flex; flex-direction: column; justify-content: center; }
 
         .status-window { 
-            background: #121212; border: 1px solid #2a2a2a; height: 64px; 
-            border-radius: 16px; display: flex; align-items: center; padding: 0 20px; gap: 15px; 
+            background: #121215; border: 1px solid #222225; height: 60px; 
+            border-radius: 14px; display: flex; align-items: center; padding: 0 16px; gap: 12px; 
         }
 
-        .live-render-box {
-            position: relative;
-            width: 100%;
+        /* Scroller Node Config */
+        .scroller-zone {
+            background: #121215;
+            border: 1px solid #222225;
             border-radius: 16px;
-            background: #121212;
-            border: 1px solid #2a2a2a;
-            min-height: 340px;
-            overflow: hidden;
+            padding: 12px;
+            overflow-y: auto;
+        }
+
+        /* Preview Display Frame */
+        .preview-display-frame {
+            background: #121215;
+            border: 1px solid #222225;
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 280px;
         }
 
         .pixelated-render {
             image-rendering: pixelated;
-            border: 1px solid #333;
-            border-radius: 8px;
-            max-height: 180px;
+            border: 1px solid #222225;
+            border-radius: 12px;
+            max-height: 260px;
             object-fit: contain;
-            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
         }
 
-        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #0c0c0e; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #222227; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #0c0c0e; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #222227; border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--ff-yellow); }
 
         .badge {
             display: flex; align-items: center; gap: 8px; padding: 6px 16px;
-            border-radius: 999px; background: rgba(255, 255, 255, 0.04); border: 1px solid #222;
+            border-radius: 999px; background: rgba(255, 255, 255, 0.03); border: 1px solid #1a1a1c;
         }
         .badge-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ff-yellow); box-shadow: 0 0 10px var(--ff-yellow); }
     </style>
 </head>
-<body class="flex flex-col justify-between">
+<body class="flex flex-col min-height-screen justify-between">
 
 <header class="w-full flex justify-center items-center h-16 bg-black border-b-2 border-[#ffde00] sticky top-0 z-50 px-4">
     <img src="https://dl.dir.freefiremobile.com/common/web_event/official2/dist/client/img/full_logo.969f536.png" class="h-7" alt="Logo">
 </header>
 
-<main class="flex-1 w-full max-w-6xl mx-auto p-4 md:p-8">
+<main class="flex-1 w-full max-w-7xl mx-auto p-4 md:p-6 lg:p-8">
     
-    <div class="text-center my-6 gff">
+    <div class="text-center my-4 gff">
         <div class="flex justify-center mb-3">
             <div class="badge">
                 <div class="badge-dot"></div>
                 <span class="text-[10px] uppercase tracking-widest font-bold text-zinc-400">Universal Core Extraction System</span>
             </div>
         </div>
-        <span class="text-[44px] md:text-[54px] font-black italic block leading-[0.75]">ASSETS</span>
-        <span class="text-[44px] md:text-[54px] font-black italic block text-[#ffde00] leading-[0.85]">EXTRACTOR</span>
+        <span class="text-[42px] md:text-[52px] font-black italic block leading-[0.75]">ASSETS</span>
+        <span class="text-[42px] md:text-[52px] font-black italic block text-[#ffde00] leading-[0.85]">EXTRACTOR</span>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+    <!-- Perfected Modular Tri-Panel Architecture Structure Layout Mapping Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start mt-6">
         
-        <div class="lg:col-span-5 flex flex-col justify-between space-y-4">
-            <div class="panel-container p-6 space-y-5 h-full flex flex-col justify-center">
+        <!-- Left Column Panel: File Core Controls Console (lg:span-4) -->
+        <div class="lg:col-span-4 space-y-4">
+            <div class="panel-container space-y-5">
                 <div>
                     <h2 class="text-xs font-black text-white uppercase tracking-wider mb-1 gff">Upload Core</h2>
-                    <p class="text-[11px] text-zinc-500">Drop your file bundle or texture below to extract automatically.</p>
+                    <p class="text-[11px] text-zinc-500">Drop your file bundle layout system below to map data nodes.</p>
                 </div>
 
                 <form id="extractorForm" class="space-y-4">
@@ -200,14 +206,14 @@
                             <i id="uploadIcon" class="fa-solid fa-cloud-arrow-up text-xl text-zinc-500"></i>
                         </div>
                         <div class="deck-body">
-                            <span id="fileStatusText" class="text-[9px] font-bold tracking-widest text-zinc-500 gff mb-1 uppercase">UPLOAD FILE</span>
+                            <span id="fileStatusText" class="text-[9px] font-bold tracking-widest text-zinc-500 gff mb-0.5 uppercase">UPLOAD FILE</span>
                             <p id="fileLabel" class="gff text-[12px] text-zinc-300 uppercase tracking-wide truncate">Click to Load File</p>
                         </div>
                     </div>
                     <input type="file" id="fileInput" class="hidden" required>
                     
-                    <button type="submit" class="btn-mechanical w-full h-16 text-md font-bold italic">
-                        <i class="fa-solid fa-bolt text-md"></i>
+                    <button type="submit" class="btn-mechanical w-full h-14 text-sm font-bold italic">
+                        <i class="fa-solid fa-bolt text-sm"></i>
                         Process File Elements
                     </button>
                 </form>
@@ -216,73 +222,79 @@
                     <div id="statusIcon" class="w-5 h-5 flex items-center justify-center text-zinc-500">
                         <i class="fa-solid fa-border-all text-sm"></i>
                     </div>
-                    <div class="flex flex-col flex-1 gap-0.5">
+                    <div class="flex flex-col flex-1 gap-0.5 min-w-0">
                         <span id="statusText" class="gff text-[9px] uppercase tracking-widest text-zinc-400">Output Window</span>
-                        <p id="statusDescText" class="text-[11px] text-zinc-500 truncate">Awaiting file input layout data connection.</p>
+                        <p id="statusDescText" class="text-[11px] text-zinc-500 truncate">Awaiting file input layout deployment initialization.</p>
                     </div>
-                    <span id="statusBadge" class="text-[9px] font-black uppercase text-zinc-400 bg-zinc-900 px-2.5 py-1 rounded-md border border-zinc-800 gff tracking-wider">Unmapped</span>
+                    <span id="statusBadge" class="text-[9px] font-black uppercase text-zinc-400 bg-zinc-900 px-2.5 py-1 rounded-md border border-zinc-800 gff tracking-wider flex-shrink-0">Unmapped</span>
                 </div>
             </div>
         </div>
 
-        <div class="lg:col-span-7 flex flex-col">
-            <div class="panel-container p-6 h-full flex flex-col justify-between space-y-4 min-h-[440px]">
-                
-                <div class="flex items-center justify-between border-b border-[#1f1f1f] pb-3">
-                    <div>
+        <!-- Center Column Panel: Standalone Storage Cache Registry Index (lg:span-4) -->
+        <div class="lg:col-span-4 flex flex-col">
+            <div class="panel-container flex flex-col space-y-4">
+                <div class="flex items-center justify-between border-b border-[#1a1a1c] pb-3">
+                    <div class="min-w-0">
                         <h2 class="text-xs font-black text-white uppercase tracking-wider gff">Storage Cache Index</h2>
-                        <p id="cacheCounterText" class="text-[11px] text-zinc-500">No active operational assets cached.</p>
+                        <p id="cacheCounterText" class="text-[11px] text-zinc-500 truncate">No active operational elements.</p>
                     </div>
-                    <button id="downloadAllBtn" class="hidden h-10 w-10 bg-[#121212] border border-[#2a2a2a] hover:border-[#ffde00] text-[#ffde00] rounded-xl flex items-center justify-center transition-colors">
-                        <i class="fa-solid fa-file-zipper text-sm"></i>
+                    <button id="downloadAllBtn" class="hidden h-9 w-9 bg-[#121215] border border-[#222225] hover:border-[#ffde00] text-[#ffde00] rounded-xl flex items-center justify-center transition-colors flex-shrink-0">
+                        <i class="fa-solid fa-file-zipper text-xs"></i>
                     </button>
                 </div>
 
-                <div class="live-render-box flex-1 flex items-center justify-center" id="displayArea">
-                    <div class="text-center space-y-2 p-4" id="outputEmptyState">
-                        <i class="fa-solid fa-circle-nodes text-2xl text-zinc-800"></i>
-                        <div class="gff text-[9px] text-zinc-600 uppercase tracking-widest">Extracted assets list and preview workspace area</div>
+                <!-- Fully Separate Scroller Frame: Actions do not spill into the visualizer preview console pane -->
+                <div class="scroller-zone h-[480px] custom-scrollbar space-y-2" id="fileListDeck">
+                    <div class="text-center py-12 text-zinc-600 space-y-2">
+                        <i class="fa-solid fa-folder-tree text-xl text-zinc-800 block"></i>
+                        <span class="text-[9px] font-bold uppercase tracking-widest gff block">Index Registry Empty</span>
                     </div>
+                </div>
+            </div>
+        </div>
 
-                    <div class="w-full h-full hidden grid grid-cols-1 md:grid-cols-2 p-3 gap-3 absolute inset-0" id="resultsGrid">
-                        
-                        <div class="border border-[#1f1f1f] rounded-xl overflow-y-auto custom-scrollbar bg-[#060608] p-2 space-y-1.5 max-h-[360px]" id="fileList">
-                            </div>
-
-                        <div class="border border-[#1f1f1f] rounded-xl bg-[#060608] p-3 flex flex-col items-center justify-between relative max-h-[360px]">
-                            <div id="previewFallback" class="my-auto text-center text-zinc-600 space-y-1 p-2">
-                                <i class="fa-solid fa-eye text-xl text-zinc-800 mb-1"></i>
-                                <p class="text-[9px] font-bold uppercase tracking-wider gff">Pick a manifest entry node</p>
-                            </div>
-
-                            <div id="previewContentBox" class="hidden w-full h-full flex flex-col justify-between items-center space-y-2">
-                                <div class="flex-1 w-full flex items-center justify-center overflow-hidden rounded-xl bg-[#121212] border border-[#1f1f1f] p-2 custom-scrollbar" id="mediaBox">
-                                    </div>
-                                <div class="w-full flex items-center justify-between gap-2 bg-[#121212] p-2 rounded-xl border border-[#1f1f1f]">
-                                    <p id="mediaTitle" class="text-[11px] text-zinc-400 font-bold truncate px-1 flex-1 text-left"></p>
-                                    <a id="singleSaveBtn" href="#" class="h-8 w-8 bg-[#181818] hover:bg-[#ffde00] hover:text-black text-zinc-400 rounded-lg border border-[#2a2a2a] transition-colors flex items-center justify-center">
-                                        <i class="fa-solid fa-download text-xs"></i>
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-
+        <!-- Right Column Panel: Standalone High-Fidelity Preview Box Viewport (lg:span-4) -->
+        <div class="lg:col-span-4 flex flex-col">
+            <div class="panel-container flex flex-col space-y-4">
+                <div class="border-b border-[#1a1a1c] pb-3">
+                    <h2 class="text-xs font-black text-white uppercase tracking-wider gff">Focused Asset Preview</h2>
+                    <p id="previewSubtitle" class="text-[11px] text-zinc-500">Real-time graphic data preview compiler container.</p>
                 </div>
 
+                <!-- Isolated Visual Engine Engine Port Box Container Deck -->
+                <div class="preview-display-frame flex-1 h-[480px] relative" id="previewContainer">
+                    <div id="previewFallback" class="text-center text-zinc-600 space-y-1">
+                        <i class="fa-solid fa-eye text-xl text-zinc-800 mb-1"></i>
+                        <p class="text-[9px] font-bold uppercase tracking-wider block gff">Awaiting File Selected State Node</p>
+                    </div>
+
+                    <div id="previewContentBox" class="hidden w-full h-full flex flex-col justify-between items-center space-y-4">
+                        <div class="flex-1 w-full flex items-center justify-center overflow-hidden rounded-xl bg-[#08080a] border border-[#1a1a1c] p-3 custom-scrollbar" id="mediaViewportPort">
+                            <!-- Dynamic target asset canvas objects injected cleanly dynamically here -->
+                        </div>
+                        
+                        <div class="w-full flex flex-col space-y-2 bg-[#121215] p-3 rounded-xl border border-[#222225]">
+                            <p id="mediaTitle" class="text-[11px] text-zinc-400 font-bold tracking-wide text-center truncate w-full"></p>
+                            <a id="singleSaveBtn" href="#" class="btn-mechanical-dark w-full h-11 text-[11px] tracking-widest">
+                                <i class="fa-solid fa-download text-xs text-zinc-400"></i> Save File Asset Node
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
     </div>
 </main>
 
-<footer class="w-full text-center py-4 text-[10px] font-bold text-zinc-700 border-t border-[#141419] bg-[#050507] tracking-widest uppercase mt-8">
-    Elite Extractor Suite &bull; Dark Production Core
+<footer class="w-full text-center py-4 text-[10px] font-bold text-zinc-700 border-t border-[#121215] bg-[#050506] tracking-widest uppercase mt-12">
+    Elite Extractor Suite &bull; Isolated Grid Architecture Core
 </footer>
 
 <script>
     let activeCache = [];
+    let selectedActiveIndex = null;
     const fileInput = document.getElementById("fileInput");
     const fileLabel = document.getElementById("fileLabel");
     const fileStatusText = document.getElementById("fileStatusText");
@@ -292,42 +304,54 @@
     const statusDescText = document.getElementById("statusDescText");
     const statusIcon = document.getElementById("statusIcon");
     
-    const outputEmptyState = document.getElementById("outputEmptyState");
-    const resultsGrid = document.getElementById("resultsGrid");
-    const fileList = document.getElementById("fileList");
+    const fileListDeck = document.getElementById("fileListDeck");
     const cacheCounterText = document.getElementById("cacheCounterText");
     const downloadAllBtn = document.getElementById("downloadAllBtn");
 
     const previewFallback = document.getElementById("previewFallback");
     const previewContentBox = document.getElementById("previewContentBox");
-    const mediaBox = document.getElementById("mediaBox");
+    const mediaViewportPort = document.getElementById("mediaViewportPort");
     const mediaTitle = document.getElementById("mediaTitle");
+    const previewSubtitle = document.getElementById("previewSubtitle");
     const singleSaveBtn = document.getElementById("singleSaveBtn");
 
-    // Predefined Content Representation Icon Maps
-    const ICON_TEXT = `<i class="fa-solid fa-file-lines text-zinc-500 text-xs"></i>`;
-    const ICON_IMAGE = `<i class="fa-solid fa-image text-[#ffde00] text-xs"></i>`;
-    const ICON_AUDIO = `<i class="fa-solid fa-music text-cyan-400 text-xs"></i>`;
-    const ICON_VIDEO = `<i class="fa-solid fa-video text-red-500 text-xs"></i>`;
+    const ICON_TEXT = `<i class="fa-solid fa-file-lines text-zinc-500 text-xs flex-shrink-0"></i>`;
+    const ICON_IMAGE = `<i class="fa-solid fa-image text-[#ffde00] text-xs flex-shrink-0"></i>`;
+    const ICON_AUDIO = `<i class="fa-solid fa-music text-cyan-400 text-xs flex-shrink-0"></i>`;
+    const ICON_VIDEO = `<i class="fa-solid fa-video text-red-500 text-xs flex-shrink-0"></i>`;
 
     fileInput.addEventListener("change", function() {
         if (!this.files[0]) return;
-        const name = this.files[0].name;
-        fileLabel.innerText = name;
+        fileLabel.innerText = this.files[0].name;
         fileLabel.style.color = "var(--ff-yellow)";
         uploadIcon.style.color = "var(--ff-yellow)";
-        fileStatusText.innerText = "SOURCE DECK CHARGED";
+        fileStatusText.innerText = "SOURCE DECK FULLY CHARGED";
         fileStatusText.style.color = "var(--ff-yellow)";
     });
 
     function selectFileNode(index) {
+        selectedActiveIndex = index;
+        
+        // Remove active visual borders on list nodes
+        document.querySelectorAll(".file-item-node").forEach(node => {
+            node.style.borderColor = "#222225";
+            node.style.background = "#121215";
+        });
+
+        const activeNode = document.getElementById(`node-idx-${index}`);
+        if(activeNode) {
+            activeNode.style.borderColor = "var(--ff-yellow)";
+            activeNode.style.background = "#16161c";
+        }
+
         const item = activeCache[index];
         if (!item) return;
 
         previewFallback.style.display = "none";
         previewContentBox.classList.remove("hidden");
         mediaTitle.innerText = item.name;
-        mediaBox.innerHTML = "";
+        previewSubtitle.innerText = `Compiled Type: ${item.label}`;
+        mediaViewportPort.innerHTML = "";
 
         const fileUrl = `/api/extract?download_type=single&file_index=${item.index}`;
         singleSaveBtn.href = fileUrl;
@@ -336,26 +360,25 @@
         const ext = item.name.split('.').pop().toLowerCase();
 
         if (["png", "jpg", "jpeg", "webp"].includes(ext)) {
-            mediaBox.innerHTML = `<img src="${fileUrl}" class="pixelated-render">`;
+            mediaViewportPort.innerHTML = `<img src="${fileUrl}" class="pixelated-render">`;
         } else if (["mp3", "wav", "ogg"].includes(ext)) {
-            mediaBox.innerHTML = `<audio controls src="${fileUrl}" class="w-full px-1"></audio>`;
-        } else if (["json", "txt", "xml", "yaml", "ini"].includes(ext)) {
-            // Text asset stream direct injection preview rendering matrix
-            mediaBox.innerHTML = `<div class="text-[10px] font-mono text-zinc-500 text-left w-full h-full max-h-[170px] overflow-y-auto bg-[#060608] p-2 border border-[#1f1f1f] rounded custom-scrollbar whitespace-pre-wrap" id="textContentView">Loading preview node...</div>`;
+            mediaViewportPort.innerHTML = `<div class="w-full text-center px-2"><i class="fa-solid fa-music text-3xl text-cyan-500 mb-3 block"></i><audio controls src="${fileUrl}" class="w-full"></audio></div>`;
+        } else if (["json", "txt", "xml", "yaml", "ini", "txt", "atlas"].includes(ext)) {
+            mediaViewportPort.innerHTML = `<div class="text-[10px] font-mono text-zinc-500 text-left w-full h-full min-h-[220px] max-h-[250px] overflow-y-auto bg-[#060608] p-3 border border-[#1a1a1c] rounded-xl custom-scrollbar whitespace-pre-wrap" id="textContentView">Reading text streams...</div>`;
             fetch(fileUrl)
                 .then(r => r.text())
                 .then(text => {
                     const view = document.getElementById("textContentView");
-                    if(view) view.innerText = text.slice(0, 8000) + (text.length > 8000 ? "\n\n[Manifest stream data truncated for preview view buffer]" : "");
+                    if(view) view.innerText = text.slice(0, 8000) + (text.length > 8000 ? "\n\n[Manifest engine buffer limit reached. Content capped.]" : "");
                 }).catch(() => {
                     const view = document.getElementById("textContentView");
-                    if(view) view.innerText = "Error pulling content data preview asset template.";
+                    if(view) view.innerText = "Error pulling content data manifest element.";
                 });
         } else {
-            mediaBox.innerHTML = `
+            mediaViewportPort.innerHTML = `
                 <div class="text-center text-zinc-600 space-y-1">
-                    <i class="fa-solid fa-cube text-xl text-zinc-700"></i>
-                    <span class="text-[9px] font-bold uppercase tracking-wider block text-zinc-500">Binary Asset Node</span>
+                    <i class="fa-solid fa-cube text-2xl text-zinc-700 block mb-1"></i>
+                    <span class="text-[9px] font-bold uppercase tracking-wider block text-zinc-500">Binary Element Manifest</span>
                 </div>`;
         }
     }
@@ -365,37 +388,43 @@
         const file = fileInput.files[0];
         if (!file) return;
 
-        outputEmptyState.innerHTML = `
-            <div class="text-center space-y-2">
-                <i class="fa-solid fa-gear text-xl text-[#ffde00] animate-spin"></i>
-                <p class="text-[9px] uppercase tracking-widest font-bold text-zinc-500">Processing Stream Matrix...</p>
+        fileListDeck.innerHTML = `
+            <div class="text-center py-20 space-y-3">
+                <i class="fa-solid fa-circle-notch text-xl text-[#ffde00] animate-spin"></i>
+                <p class="text-[9px] uppercase tracking-widest font-bold text-zinc-500">Analyzing Archive Tree Map...</p>
             </div>`;
         
-        outputEmptyState.style.display = "flex";
-        resultsGrid.classList.add("hidden");
+        previewFallback.style.display = "flex";
+        previewContentBox.classList.add("hidden");
         downloadAllBtn.classList.add("hidden");
         
-        statusBadge.innerText = "EXTRACTING";
+        statusBadge.innerText = "RUNNING";
         statusBadge.style.color = "var(--ff-yellow)";
-        statusText.innerText = "Processing Pipeline Operation";
-        statusDescText.innerText = "Analyzing file formats dynamically...";
-        statusIcon.innerHTML = `<i class="fa-solid fa-microchip text-sm text-yellow-500 animate-pulse"></i>`;
+        statusText.innerText = "Parsing Matrix System";
+        statusDescText.innerText = "Decompressing assets arrays...";
+        statusIcon.innerHTML = `<i class="fa-solid fa-shuffle text-sm text-yellow-500 animate-pulse"></i>`;
 
         const formData = new FormData();
         formData.append("asset_bundle", file);
 
         try {
             const response = await fetch("/api/extract", { method: "POST", body: formData });
-            if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || "Stream conversion matrix failed.");
+            if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || "Stream array decompression failed.");
 
             const data = await response.json();
             activeCache = data.files || [];
 
-            fileList.innerHTML = "";
-            activeCache.forEach(item => {
+            fileListDeck.innerHTML = "";
+            if (activeCache.length === 0) {
+                fileListDeck.innerHTML = `<div class="text-center py-12 text-zinc-600"><p class="text-xs">No active nodes detected inside file matrix.</p></div>`;
+                return;
+            }
+
+            activeCache.forEach((item, idx) => {
                 const row = document.createElement("div");
-                row.className = "w-full p-2 text-left text-xs bg-[#121212] border border-[#1f1f1f] rounded-xl flex items-center justify-between cursor-pointer hover:border-[#ffde00] transition-colors truncate";
-                row.onclick = () => selectFileNode(item.index);
+                row.id = `node-idx-${idx}`;
+                row.className = "file-item-node w-full p-2.5 text-left bg-[#121215] border border-[#222225] rounded-xl flex items-center justify-between cursor-pointer hover:border-zinc-500 transition-all truncate";
+                row.onclick = () => selectFileNode(idx);
                 
                 const ext = item.name.split('.').pop().toLowerCase();
                 let currentIcon = ICON_TEXT;
@@ -404,41 +433,43 @@
                 else if (["mp4"].includes(ext)) currentIcon = ICON_VIDEO;
 
                 row.innerHTML = `
-                    <div class="flex items-center gap-2.5 truncate">
+                    <div class="flex items-center gap-3 truncate min-w-0">
                         ${currentIcon}
-                        <div class="flex flex-col truncate">
-                            <span class="truncate font-medium text-zinc-300 text-[11px]">${item.name}</span>
-                            <span class="text-[8px] font-black tracking-wider uppercase text-zinc-600 gff">${item.label}</span>
+                        <div class="flex flex-col truncate min-w-0">
+                            <span class="truncate font-semibold text-zinc-200 text-[11px] tracking-wide">${item.name}</span>
+                            <span class="text-[8px] font-black tracking-wider uppercase text-zinc-600 gff mt-0.5">${item.label}</span>
                         </div>
                     </div>
-                    <i class="fa-solid fa-angle-right text-zinc-700 text-[10px] flex-shrink-0 pr-1"></i>`;
-                fileList.appendChild(row);
+                    <i class="fa-solid fa-angle-right text-zinc-700 text-[10px] flex-shrink-0 pl-1"></i>`;
+                fileListDeck.appendChild(row);
             });
 
-            outputEmptyState.style.display = "none";
-            resultsGrid.classList.remove("hidden");
             downloadAllBtn.classList.remove("hidden");
             downloadAllBtn.onclick = () => { window.location.href = "/api/extract?download_type=zip"; };
             
-            cacheCounterText.innerText = `Cached element nodes inside registry matrix: ${activeCache.length}`;
-            statusBadge.innerText = "COMPLETE";
+            cacheCounterText.innerText = `Total cached element registry items: ${activeCache.length}`;
+            statusBadge.innerText = "SUCCESS";
             statusBadge.style.color = "var(--ff-emerald)";
-            statusText.innerText = "Operation Success";
-            statusDescText.innerText = `Extracted ${activeCache.length} pristine elements successfully.`;
+            statusText.innerText = "Extraction Finished";
+            statusDescText.innerText = `Cached ${activeCache.length} operational registry nodes successfully.`;
             statusIcon.innerHTML = `<i class="fa-solid fa-circle-check text-sm text-[#00ffa3]"></i>`;
 
-            previewFallback.style.display = "flex";
-            previewContentBox.classList.add("hidden");
+            // Auto-trigger selection highlight on the first asset extracted
+            if(activeCache.length > 0) {
+                selectFileNode(0);
+            }
 
         } catch (err) {
             statusBadge.innerText = "FAILED";
             statusBadge.style.color = "var(--ff-red)";
-            statusText.innerText = "Process Error";
+            statusText.innerText = "Pipeline Interrupted";
             statusDescText.innerText = err.message;
             statusIcon.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-sm text-[#ff3e3e]"></i>`;
-            outputEmptyState.innerHTML = `
-                <i class="fa-solid fa-triangle-exclamation text-xl text-red-500 mb-1"></i>
-                <p class="text-xs text-red-500 font-bold uppercase tracking-wide">${err.message}</p>`;
+            fileListDeck.innerHTML = `
+                <div class="text-center py-16 text-red-500 space-y-1">
+                    <i class="fa-solid fa-triangle-exclamation text-lg block"></i>
+                    <p class="text-[10px] font-bold uppercase tracking-wide">${err.message}</p>
+                </div>`;
         }
     });
 </script>
