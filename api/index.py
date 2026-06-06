@@ -16,6 +16,7 @@ import UnityPy
 
 app = Flask(__name__)
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 GLOBAL_CACHE_REGISTRY = {}
 
 def decompress_stream(data: bytes) -> bytes:
@@ -34,36 +35,37 @@ def extract_clean_name(obj, data, default_type: str) -> str:
         if isinstance(val, str) and val.strip(): return val.strip()
     return f"{default_type}_{obj.path_id}"
 
-def export_mesh_to_obj(data) -> str:
+def export_mesh_to_obj(mesh_data) -> str:
     try:
-        vertices = data.m_Vertices
-        indices = data.m_Indices if hasattr(data, 'm_Indices') else []
-        if not indices and hasattr(data, 'm_SubMeshes'):
-            indices = []
-            for sub in data.m_SubMeshes:
-                indices.extend(sub.indexArray)
+        # Accessing Mesh data via UnityPy helper attributes
+        verts = mesh_data.vertices
+        indices = mesh_data.indices
+        normals = mesh_data.normals
+        uvs = mesh_data.uv
         
-        if not vertices: return ""
+        if not verts: return ""
         
-        sb = [f"g {data.name}"]
-        for v in vertices:
-            sb.append(f"v {v.x} {v.y} {v.z}")
+        sb = [f"o {mesh_data.name}"]
+        for v in verts:
+            sb.append(f"v {-v.x} {v.y} {v.z}") # Unity X is inverted in OBJ
         
-        # Normals
-        if hasattr(data, 'm_Normals') and data.m_Normals:
-            for n in data.m_Normals:
-                sb.append(f"vn {n.x} {n.y} {n.z}")
-        
-        # UVs
-        if hasattr(data, 'm_UV0') and data.m_UV0:
-            for uv in data.m_UV0:
+        if uvs:
+            for uv in uvs:
                 sb.append(f"vt {uv.x} {uv.y}")
+        
+        if normals:
+            for n in normals:
+                sb.append(f"vn {-n.x} {n.y} {n.z}")
 
-        # Faces (Unity uses Clockwise, OBJ uses Counter-Clockwise usually, but simple f is enough)
         for i in range(0, len(indices), 3):
-            if i + 2 < len(indices):
-                v1, v2, v3 = indices[i]+1, indices[i+1]+1, indices[i+2]+1
+            v1, v2, v3 = indices[i]+1, indices[i+1]+1, indices[i+2]+1
+            # Simple vertex/uv/normal mapping
+            if uvs and normals:
                 sb.append(f"f {v1}/{v1}/{v1} {v2}/{v2}/{v2} {v3}/{v3}/{v3}")
+            elif uvs:
+                sb.append(f"f {v1}/{v1} {v2}/{v2} {v3}/{v3}")
+            else:
+                sb.append(f"f {v1} {v2} {v3}")
         
         return "\n".join(sb)
     except: return ""
@@ -72,7 +74,7 @@ def dump_tree(obj_data):
     try:
         if hasattr(obj_data, "read_typetree"): return obj_data.read_typetree()
     except: pass
-    return {"info": "Serialized data only"}
+    return {"m_Name": getattr(obj_data, "name", "Unknown")}
 
 def process_object_unrestricted(obj, raw_env_data: bytes):
     try:
@@ -108,34 +110,30 @@ def process_object_unrestricted(obj, raw_env_data: bytes):
                 ext = ".otf" if raw.startswith(b'OTTO') else ".ttf"
                 return f"{safe_name}{ext}", raw, f"Fonts/{safe_name}{ext}", "Font"
 
-        elif t in ["MonoBehaviour", "GameObject", "Material", "Shader", "AnimationClip"]:
+        elif t in ["MonoBehaviour", "GameObject", "Material", "Shader", "AnimationClip", "AnimatorController"]:
             return f"{safe_name}.json", json.dumps(dump_tree(data)).encode(), f"{t}/{safe_name}.json", t
 
         return f"{safe_name}.dat", obj.get_raw_data(), f"Other/{t}/{safe_name}.dat", t
     except: return None
 
-def decode_astc_complex(rgb_data, alpha_data=None):
-    # Header: 13 ab a1 5c
-    bw, bh = rgb_data[4], rgb_data[5]
-    w = struct.unpack('<I', rgb_data[7:10] + b'\x00')[0]
-    h = struct.unpack('<I', rgb_data[10:13] + b'\x00')[0]
+def decode_astc_complex(rgb_bytes, alpha_bytes=None):
+    # Header check
+    if not rgb_bytes.startswith(b'\x13\xab\xa1\x5c'): return None
+    bw, bh = rgb_bytes[4], rgb_bytes[5]
+    w = struct.unpack('<I', rgb_bytes[7:10] + b'\x00')[0]
+    h = struct.unpack('<I', rgb_bytes[10:13] + b'\x00')[0]
     
-    rgb_dec = texture2ddecoder.decode_astc(rgb_data[16:], w, h, bw, bh)
+    rgb_dec = texture2ddecoder.decode_astc(rgb_bytes[16:], w, h, bw, bh)
     img_rgb = Image.frombytes("RGBA", (w, h), rgb_dec)
     
-    if alpha_data:
-        alpha_dec = texture2ddecoder.decode_astc(alpha_data[16:], w, h, bw, bh)
+    if alpha_bytes and alpha_bytes.startswith(b'\x13\xab\xa1\x5c'):
+        alpha_dec = texture2ddecoder.decode_astc(alpha_bytes[16:], w, h, bw, bh)
         img_alpha = Image.frombytes("RGBA", (w, h), alpha_dec)
-        # Use Red channel of alpha texture as the Alpha channel for RGB
         r, g, b, _ = img_rgb.split()
         a, _, _, _ = img_alpha.split()
         final_img = Image.merge("RGBA", (r, g, b, a))
-    else:
-        final_img = img_rgb
-        
-    out = io.BytesIO()
-    final_img.save(out, format="PNG")
-    return out.getvalue()
+        return final_img
+    return img_rgb
 
 @app.route('/api/extract', methods=['GET', 'POST'])
 def handle_extraction():
@@ -143,7 +141,7 @@ def handle_extraction():
     dtype = request.args.get('download_type', '')
     
     if dtype in ['zip', 'zip_filtered']:
-        if 'extracted' not in GLOBAL_CACHE_REGISTRY: return jsonify({"error": "No cache"}), 400
+        if 'extracted' not in GLOBAL_CACHE_REGISTRY: return jsonify({"error": "Cache empty"}), 400
         indices = request.args.get('indices', '')
         idx_list = [int(i) for i in indices.split(',') if i.strip()] if indices else []
         
@@ -151,6 +149,7 @@ def handle_extraction():
         with zipfile.ZipFile(zip_io, "w", zipfile.ZIP_DEFLATED) as zf:
             for idx, item in enumerate(GLOBAL_CACHE_REGISTRY['extracted']):
                 if idx_list and idx not in idx_list: continue
+                # All ZIP downloads are now grouped by path automatically
                 zf.writestr(item['zip_path'], item['bytes'])
         zip_io.seek(0)
         
@@ -158,65 +157,77 @@ def handle_extraction():
         zip_name = re.split(r'[.\-]', orig)[0] + "[Extracted].zip"
         return send_file(zip_io, mimetype='application/zip', as_attachment=True, download_name=zip_name)
 
-    if 'asset_bundle' not in request.files: return jsonify({"error": "No file"}), 400
+    if 'asset_bundle' not in request.files: return jsonify({"error": "No file uploaded"}), 400
     
-    files = request.files.getlist('asset_bundle')
+    upload_files = request.files.getlist('asset_bundle')
     extracted_list = []
     manifest = []
     seen_md5 = set()
     
-    # Handle ASTC Pairing
-    astc_files = [f for f in files if f.filename.lower().endswith('.astc')]
-    if astc_files:
-        rgb = next((f for f in astc_files if 'rgb' in f.filename.lower()), astc_files[0])
-        alpha = next((f for f in astc_files if 'sa' in f.filename.lower() or 'alpha' in f.filename.lower()), None)
+    astc_list = [f for f in upload_files if f.filename.lower().endswith('.astc')]
+    
+    if astc_list:
+        # ASTC Pairing Logic
+        rgb_file = next((f for f in astc_list if 'rgb' in f.filename.lower()), astc_list[0])
+        sa_file = next((f for f in astc_list if 'sa' in f.filename.lower() or 'alpha' in f.filename.lower()), None)
         try:
-            png_bytes = decode_astc_complex(rgb.read(), alpha.read() if alpha else None)
-            extracted_list.append({'name': 'astc_export.png', 'zip_path': 'Textures/astc_export.png', 'bytes': png_bytes})
-            manifest.append({'index': 0, 'name': 'astc_export.png', 'label': 'Texture2D'})
-        except Exception as e: return jsonify({"error": f"ASTC Fail: {str(e)}"}), 500
+            img = decode_astc_complex(rgb_file.read(), sa_file.read() if sa_file else None)
+            if img:
+                out = io.BytesIO()
+                img.save(out, format="PNG")
+                extracted_list.append({'name': 'astc_output.png', 'zip_path': 'Textures/astc_output.png', 'bytes': out.getvalue()})
+                manifest.append({'index': 0, 'name': 'astc_output.png', 'label': 'Texture2D'})
+        except Exception as e: return jsonify({"error": f"ASTC Decode Failed: {str(e)}"}), 500
     else:
-        # Standard AssetBundle logic
-        uploaded_file = files[0]
-        raw_data = uploaded_file.read()
-        decomp = decompress_stream(raw_data)
+        # Standard Unity / KTX Logic
+        u_file = upload_files[0]
+        raw = u_file.read()
+        decomp = decompress_stream(raw)
         
         if decomp.startswith(b'\xABKTX 11'):
-            # Simple KTX
-            w = struct.unpack('<I', decomp[36:40])[0]
-            h = struct.unpack('<I', decomp[40:44])[0]
-            kv = struct.unpack('<I', decomp[60:64])[0]
-            pix = decomp[64 + kv + 4:]
-            dec = texture2ddecoder.decode_etc1(pix, w, h)
-            img = Image.frombytes("RGBA", (w, h), dec)
-            r,g,b,a = img.split()
-            img = Image.merge("RGBA", (b,g,r,a)).transpose(Image.FLIP_TOP_BOTTOM)
-            out = io.BytesIO()
-            img.save(out, format="PNG")
-            extracted_list.append({'name': 'ktx_export.png', 'zip_path': 'Textures/ktx_export.png', 'bytes': out.getvalue()})
-            manifest.append({'index': 0, 'name': 'ktx_export.png', 'label': 'Texture2D'})
+            try:
+                w = struct.unpack('<I', decomp[36:40])[0]
+                h = struct.unpack('<I', decomp[40:44])[0]
+                kv = struct.unpack('<I', decomp[60:64])[0]
+                pix = decomp[64 + kv + 4:]
+                dec = texture2ddecoder.decode_etc1(pix, w, h)
+                img = Image.frombytes("RGBA", (w, h), dec)
+                # KTX typically needs Blue/Red swap and Flip
+                b, g, r, a = img.split()
+                img = Image.merge("RGBA", (r, g, b, a)).transpose(Image.FLIP_TOP_BOTTOM)
+                out = io.BytesIO()
+                img.save(out, format="PNG")
+                extracted_list.append({'name': 'ktx_output.png', 'zip_path': 'Textures/ktx_output.png', 'bytes': out.getvalue()})
+                manifest.append({'index': 0, 'name': 'ktx_output.png', 'label': 'Texture2D'})
+            except: pass
         else:
-            env = UnityPy.load(decomp)
-            count = 0
-            for obj in env.objects:
-                res = process_object_unrestricted(obj, decomp)
-                if res:
-                    fname, fbytes, zpath, label = res
-                    h_val = hashlib.md5(fbytes).hexdigest()
-                    if h_val not in seen_md5:
-                        seen_md5.add(h_val)
-                        extracted_list.append({'name': fname, 'zip_path': zpath, 'bytes': fbytes})
-                        manifest.append({'index': count, 'name': fname, 'label': label})
-                        count += 1
+            try:
+                env = UnityPy.load(decomp)
+                count = 0
+                for obj in env.objects:
+                    res = process_object_unrestricted(obj, decomp)
+                    if res:
+                        fname, fbytes, zpath, label = res
+                        h_val = hashlib.md5(fbytes).hexdigest()
+                        if h_val not in seen_md5:
+                            seen_md5.add(h_val)
+                            extracted_list.append({'name': fname, 'zip_path': zpath, 'bytes': fbytes})
+                            manifest.append({'index': count, 'name': fname, 'label': label})
+                            count += 1
+            except Exception as e: return jsonify({"error": f"UnityPy Error: {str(e)}"}), 500
     
     GLOBAL_CACHE_REGISTRY['extracted'] = extracted_list
-    GLOBAL_CACHE_REGISTRY['original_name'] = files[0].filename
+    GLOBAL_CACHE_REGISTRY['original_name'] = upload_files[0].filename
     return jsonify({"files": manifest})
 
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
-def serve(path):
-    with open('index.html', 'r', encoding='utf-8') as f: return f.read()
+def serve_ui(path):
+    # Using full path to prevent 500 errors on deployment
+    try:
+        with open(os.path.join(BASE_DIR, 'index.html'), 'r', encoding='utf-8') as f:
+            return f.read()
+    except: return "index.html not found in root directory.", 404
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=10000)
