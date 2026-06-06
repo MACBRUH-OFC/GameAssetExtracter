@@ -68,7 +68,7 @@
             left: 0; 
             width: 4px; 
             height: 100%; 
-            background: var(--ff-emerald); 
+            background: var(--ff-yellow); 
             border-radius: 24px 0 0 24px; 
         }
 
@@ -84,22 +84,22 @@
             border-radius: 16px; 
             gap: 12px; 
             position: relative;
-            background: var(--ff-emerald); 
+            background: var(--ff-yellow); 
             color: #000; 
-            box-shadow: 0 5px 0 #00b875;
+            box-shadow: 0 5px 0 #c2a900;
             transition: background 0.1s ease;
         }
         
         .btn-mechanical:hover {
-            background: #2effb3;
+            background: #ffe526;
         }
 
         .btn-mechanical:active { 
             transform: translateY(2px);
-            box-shadow: 0 3px 0 #00b875;
+            box-shadow: 0 3px 0 #c2a900;
         }
 
-        /* Premium Dark Mechanical Button */
+        /* Premium Dark Mechanical Button Variation for Download */
         .btn-mechanical-dark {
             cursor: pointer; 
             font-family: 'GFF-Bold'; 
@@ -128,7 +128,7 @@
             box-shadow: 0 3px 0 #080808;
         }
 
-        /* Dropzone Deck Architecture */
+        /* Modular Dropzone Deck Architecture */
         .upload-deck {
             background: #121212;
             border: 1px solid #2a2a2a;
@@ -210,8 +210,8 @@
         .arrow {
             width: 8px;
             height: 8px;
-            border-right: 2px solid var(--ff-emerald);
-            border-bottom: 2px solid var(--ff-emerald);
+            border-right: 2px solid var(--ff-yellow);
+            border-bottom: 2px solid var(--ff-yellow);
             transform: rotate(45deg);
             transition: 0.25s ease;
             margin-top: -3px;
@@ -259,7 +259,7 @@
         }
 
         .dropdown-item:hover {
-            background: var(--ff-emerald);
+            background: var(--ff-yellow);
             color: #000;
         }
 
@@ -288,12 +288,12 @@
             position: absolute; 
             left: 0; top: 0; 
             height: 100%; 
-            background: var(--ff-emerald); 
+            background: var(--ff-yellow); 
             width: 0%; 
             transition: 0.2s; 
         }
 
-        /* Horizontal Ping-Pong Scanner Animation */
+        /* High-Fidelity Horizontal Ping-Pong Scanner Track Animation */
         .progress-fill-small.processing-active {
             width: 30% !important;
             animation: trackSweep 1.2s ease-in-out infinite alternate;
@@ -304,7 +304,7 @@
             100% { left: 70%; }
         }
 
-        /* Live Matrix Renderer Window Box */
+        /* Live Matrix Renderer Window box */
         .live-render-box {
             position: relative;
             width: 100%;
@@ -347,8 +347,8 @@
             left: 0;
             width: 100%;
             height: 2px;
-            background: linear-gradient(90deg, transparent, var(--ff-emerald), transparent);
-            box-shadow: 0 0 12px 2px var(--ff-emerald);
+            background: linear-gradient(90deg, transparent, var(--ff-yellow), transparent);
+            box-shadow: 0 0 12px 2px var(--ff-yellow);
             z-index: 10;
             animation: hardwareScan 2s linear infinite;
         }
@@ -370,7 +370,7 @@
             position: absolute;
             inset: 0;
             border: 2px solid transparent;
-            border-top-color: var(--ff-emerald);
+            border-top-color: var(--ff-yellow);
             border-radius: 50%;
             animation: spinning 1s cubic-bezier(0.5, 0, 0.5, 1) infinite;
         }
@@ -397,14 +397,14 @@
             width: 6px;
             height: 6px;
             border-radius: 50%;
-            background: var(--ff-emerald);
-            box-shadow: 0 0 10px var(--ff-emerald);
+            background: var(--ff-yellow);
+            box-shadow: 0 0 10px var(--ff-yellow);
         }
     </style>
 </head>
 <body>
 
-<header class="w-full flex justify-center items-center h-16 bg-black border-b-2 border-[#00ffa3] sticky top-0 z-50">
+<header class="w-full flex justify-center items-center h-16 bg-black border-b-2 border-[#ffde00] sticky top-0 z-50">
     <img src="https://dl.dir.freefiremobile.com/common/web_event/official2/dist/client/img/full_logo.969f536.png" class="h-7" alt="Logo">
 </header>
 
@@ -418,14 +418,14 @@
             </div>
         </div>
         <span class="text-[54px] font-black italic block leading-[0.75]">ASSETS</span>
-        <span class="text-[54px] font-black italic block text-[#00ffa3] leading-[0.85]">EXTRACTOR</span>
+        <span class="text-[54px] font-black italic block text-[#ffde00] leading-[0.85]">EXTRACTOR</span>
     </div>
 
     <div class="panel-container space-y-5">
         
         <form id="extractorForm" class="space-y-4">
             
-            <div class="upload-deck" onclick="fileInput.click()">
+            <div class="upload-deck" onclick="document.getElementById('fileInput').click()">
                 <div class="deck-port">
                     <i id="uploadIcon" class="fa-solid fa-file-zipper text-xl text-zinc-500 transition-colors"></i>
                 </div>
@@ -480,7 +480,7 @@
 
             <div class="w-full hidden text-center space-y-4" id="outputResultView">
                 <div class="flex flex-col items-center justify-center p-4 bg-[#161616] border border-zinc-800 rounded-xl">
-                    <i class="fa-solid fa-file-shield text-4xl text-[#00ffa3] mb-2 drop-shadow-[0_0_10px_rgba(0,255,163,0.3)]"></i>
+                    <i class="fa-solid fa-file-shield text-4xl text-[#ffde00] mb-2 drop-shadow-[0_0_10px_rgba(255,222,0,0.3)]"></i>
                     <span id="resultMetaText" class="gff text-xs text-zinc-300 uppercase tracking-wide">Payload Extracted Successfully</span>
                 </div>
                 <div class="flex justify-center">
@@ -532,10 +532,10 @@
     fileInput.addEventListener("change", function() {
         if (!this.files[0]) return;
         fileLabel.innerText = this.files[0].name;
-        fileLabel.style.color = "var(--ff-emerald)";
-        uploadIcon.style.color = "var(--ff-emerald)";
+        fileLabel.style.color = "var(--ff-yellow)";
+        uploadIcon.style.color = "var(--ff-yellow)";
         fileStatusText.innerText = "PACKAGE VALIDATED";
-        fileStatusText.style.color = "var(--ff-emerald)";
+        fileStatusText.style.color = "var(--ff-yellow)";
     });
 
     function beginProcessingState(fileName) {
@@ -546,9 +546,9 @@
         progressFill.classList.add("processing-active");
 
         statusBadge.innerText = "PARSING";
-        statusBadge.style.color = "var(--ff-emerald)";
+        statusBadge.style.color = "var(--ff-yellow)";
         statusText.innerText = "Analyzing Manifest Indexes...";
-        statusIcon.innerHTML = `<i class="fa-solid fa-microchip text-sm text-[#00ffa3] animate-pulse"></i>`;
+        statusIcon.innerHTML = `<i class="fa-solid fa-microchip text-sm text-[#ffde00] animate-pulse"></i>`;
 
         animateFilenameTransform(fileName);
     }
@@ -574,9 +574,9 @@
         scannerLine.style.display = "none";
 
         statusBadge.innerText = "SUCCESS";
-        statusBadge.style.color = "var(--ff-emerald)";
+        statusBadge.style.color = "var(--ff-yellow)";
         statusText.innerText = "Assets Dumped Successfully";
-        statusIcon.innerHTML = `<i class="fa-solid fa-circle-check text-sm text-[#00ffa3]"></i>`;
+        statusIcon.innerHTML = `<i class="fa-solid fa-circle-check text-sm text-[#ffde00]"></i>`;
     }
 
     function failProcessingState() {
@@ -604,7 +604,7 @@
         multiFormPayload.append("mode", extractionMode);
 
         try {
-            // Emulate processing lag window for mechanical validation animations
+            // Processing delay emulation
             await new Promise(resolve => setTimeout(resolve, 2000));
 
             const response = await fetch("/api/convert", { 
@@ -627,6 +627,13 @@
             fileDownloadAnchor.href = blobURL;
             fileDownloadAnchor.download = finalName;
 
-        </script>
+        } catch (error) {
+            console.error(error);
+            failProcessingState();
+            alert("Extraction matrix validation failed.");
+        }
+    });
+</script>
+
 </body>
 </html>
