@@ -176,7 +176,14 @@ def handle_direct_extraction_stream():
         if not GLOBAL_CACHE_REGISTRY.get('extracted') or file_idx < 0 or file_idx >= len(GLOBAL_CACHE_REGISTRY['extracted']):
             return jsonify({"error": "Target mapping index reference lost."}), 400
         item = GLOBAL_CACHE_REGISTRY['extracted'][file_idx]
-        return send_file(io.BytesIO(item['bytes']), mimetype='application/octet-stream', as_attachment=True, download_name=item['name'])
+        
+        # Determine content types for live preview streaming tags
+        ext = item['name'].split('.')[-1].lower()
+        mimetype = 'application/octet-stream'
+        if ext in ['png', 'jpg', 'jpeg', 'webp']: mimetype = 'image/png'
+        elif ext in ['mp3', 'wav', 'ogg']: mimetype = 'audio/mpeg'
+        
+        return send_file(io.BytesIO(item['bytes']), mimetype=mimetype, as_attachment=True, download_name=item['name'])
 
     if 'asset_bundle' not in request.files:
         return jsonify({"error": "Multipart byte payload context missing."}), 400
@@ -214,7 +221,7 @@ def handle_direct_extraction_stream():
         GLOBAL_CACHE_REGISTRY['extracted'] = extracted_list
         return jsonify({"files": json_metadata_manifest})
     except Exception as e:
-        return jsonify({"error": f"Internal execution thread pipeline exception: {str(e)}"}), 500
+        return jsonify({"error": f"Internal exception: {str(e)}"}), 500
 
 @app.route("/api/convert", methods=["POST"])
 def api_convert():
@@ -232,7 +239,7 @@ def api_convert():
             output = convert_png_to_ktx(file_bytes)
             return send_file(output, mimetype="application/octet-stream", as_attachment=True, download_name="converted.ktx")
         else:
-            return jsonify({"success": False, "error": "Invalid mode mode configuration option string parameter passed"}), 400
+            return jsonify({"success": False, "error": "Invalid mode configuration matrix option parameter passed"}), 400
     except Exception as e:
         return jsonify({"success": False, "error": str(e), "traceback": traceback.format_exc()}), 500
 
