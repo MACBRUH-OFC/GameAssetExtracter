@@ -40,6 +40,26 @@ def extract_clean_name(obj, data, default_type: str) -> str:
             return val.strip()
     return f"{default_type}_{obj.path_id}"
 
+def dump_obj_to_dict(obj_data) -> dict:
+    """Helper method to robustly pull serialized type tree properties safely into dictionaries."""
+    out = {}
+    try:
+        if hasattr(obj_data, "read_typetree"):
+            return obj_data.read_typetree()
+    except:
+        pass
+    for attr in dir(obj_data):
+        if attr.startswith('_') or attr in ['read', 'assets_file', 'reader', 'image', 'samples']: continue
+        try:
+            val = getattr(obj_data, attr)
+            if isinstance(val, (int, float, str, bool)):
+                out[attr] = val
+            elif isinstance(val, bytes):
+                out[attr] = val.hex()[:500] + "..." if len(val) > 500 else val.hex()
+        except:
+            pass
+    return out
+
 def process_object_unrestricted(obj, raw_env_data: bytes):
     try:
         t = obj.type.name
@@ -47,10 +67,10 @@ def process_object_unrestricted(obj, raw_env_data: bytes):
         pristine_name = extract_clean_name(obj, data, t)
         safe_name = re.sub(r'[<>:"/\\|?*\x00-\x1f]', "_", pristine_name)
 
+        # 1 & 2. Standard Text and Specialized Config Mappings
         if t == "TextAsset":
             raw = getattr(data, "m_Script", b"")
             if isinstance(raw, str): raw = raw.encode('utf-8', errors='replace')
-            
             ext = ".txt"
             label = "Text File"
             if safe_name.lower().endswith('.atlas') or raw.startswith(b"\n") or b"size:" in raw:
@@ -59,16 +79,22 @@ def process_object_unrestricted(obj, raw_env_data: bytes):
             elif raw.startswith((b"{", b"[")):
                 ext = ".json"
                 label = "Data Config"
-            
             return f"{safe_name}{ext}", raw, f"Text/{safe_name}{ext}", label
 
+        # 3 & 4. Textures, Sprite Elements & SpriteAtlas Packaging
         elif t in ["Texture2D", "Sprite"] and hasattr(data, 'image'):
             buf = io.BytesIO()
             data.image.save(buf, format="PNG", optimize=False)
             img_bytes = buf.getvalue()
             buf.close()
-            return f"{safe_name}.png", img_bytes, f"Textures/{safe_name}.png", "Image Element"
+            return f"{safe_name}.png", img_bytes, f"Textures/{safe_name}.png", f"{t} Asset"
 
+        elif t == "SpriteAtlas":
+            tree_data = dump_obj_to_dict(data)
+            js_bytes = json.dumps(tree_data, indent=2, ensure_ascii=False).encode('utf-8')
+            return f"{safe_name}_atlas_map.json", js_bytes, f"Mapping/{safe_name}_atlas_map.json", "SpriteAtlas Map"
+
+        # 5. Audio Processing Structures
         elif t == "AudioClip":
             samples = getattr(data, "samples", None)
             if samples and list(samples.keys()):
@@ -78,6 +104,7 @@ def process_object_unrestricted(obj, raw_env_data: bytes):
             ext = ".ogg" if raw.startswith(b'OggS') else ".wav"
             return f"{safe_name}{ext}", raw, f"Audio/{safe_name}{ext}", "Audio Track"
 
+        # 6. Video Component Substructures
         elif t == "VideoClip":
             raw = obj.get_raw_data()
             if len(raw) < 1024:
@@ -86,6 +113,61 @@ def process_object_unrestricted(obj, raw_env_data: bytes):
                     start_pos = max(0, match - 4)
                     raw = raw_env_data[start_pos:start_pos + 12_000_000]
             return f"{safe_name}.mp4", raw, f"Video/{safe_name}.mp4", "Video Clip"
+
+        # 7, 8, & 9. Scene Hierarchy / Nodes (GameObject, MonoBehaviour, ScriptableObject)
+        elif t in ["GameObject", "MonoBehaviour", "ScriptableObject"]:
+            tree_data = dump_obj_to_dict(data)
+            js_bytes = json.dumps(tree_data, indent=2, ensure_ascii=False).encode('utf-8')
+            return f"{safe_name}_{t}.json", js_bytes, f"Hierarchy/{t}/{safe_name}.json", f"{t} Schema"
+
+        # 10 & 11. Visual Engine Renderers (Material, Shader)
+        elif t in ["Material", "Shader"]:
+            tree_data = dump_obj_to_dict(data)
+            js_bytes = json.dumps(tree_data, indent=2, ensure_ascii=False).encode('utf-8')
+            return f"{safe_name}_{t}.json", js_bytes, f"Shaders_Materials/{t}/{safe_name}.json", f"{t} Config"
+
+        # 12 & 13. Engine Geometric Structural Frameworks (Mesh, SkinnedMeshRenderer)
+        elif t in ["Mesh", "SkinnedMeshRenderer"]:
+            tree_data = dump_obj_to_dict(data)
+            js_bytes = json.dumps(tree_data, indent=2, ensure_ascii=False).encode('utf-8')
+            return f"{safe_name}_{t}.json", js_bytes, f"Geometry/{t}/{safe_name}.json", f"Mesh Structural Layout"
+
+        # 14, 15, & 16. Structural System Movements (AnimationClip, AnimatorController, Animator)
+        elif t in ["AnimationClip", "AnimatorController", "Animator"]:
+            tree_data = dump_obj_to_dict(data)
+            js_bytes = json.dumps(tree_data, indent=2, ensure_ascii=False).encode('utf-8')
+            return f"{safe_name}_{t}.json", js_bytes, f"Animations/{t}/{safe_name}.json", "Animation Timeline Map"
+
+        # 17. Typography Engine Packages (Font)
+        elif t == "Font":
+            raw_font_data = getattr(data, "m_FontData", b"")
+            if raw_font_data and len(raw_font_data) > 10:
+                ext = ".ttf"
+                if raw_font_data.startswith(b'OTTO'): ext = ".otf"
+                return f"{safe_name}{ext}", raw_font_data, f"Fonts/{safe_name}{ext}", "TrueType Font File"
+            else:
+                tree_data = dump_obj_to_dict(data)
+                js_bytes = json.dumps(tree_data, indent=2, ensure_ascii=False).encode('utf-8')
+                return f"{safe_name}_font_meta.json", js_bytes, f"Fonts/{safe_name}_font_meta.json", "Font Metadata"
+
+        # 18. Main Containers (AssetBundle)
+        elif t == "AssetBundle":
+            tree_data = dump_obj_to_dict(data)
+            js_bytes = json.dumps(tree_data, indent=2, ensure_ascii=False).encode('utf-8')
+            return f"{safe_name}_manifest.json", js_bytes, f"Containers/{safe_name}_manifest.json", "Bundle Manifest Container"
+
+        # 19+. Global Catch-All Fallback Routine for Any Other Unlisted Types
+        else:
+            try:
+                tree_data = dump_obj_to_dict(data)
+                if tree_data:
+                    js_bytes = json.dumps(tree_data, indent=2, ensure_ascii=False).encode('utf-8')
+                    return f"{safe_name}_{t}.json", js_bytes, f"Other/{t}/{safe_name}.json", f"Raw Data Container ({t})"
+            except:
+                pass
+            raw_bytes = obj.get_raw_data()
+            if raw_bytes and len(raw_bytes) > 0:
+                return f"{safe_name}_{t}.dat", raw_bytes, f"Other/{t}/{safe_name}.dat", f"Binary Block Object ({t})"
     except:
         pass
     return None
@@ -158,6 +240,7 @@ def handle_universal_extraction_pipeline():
         if ext in ['png', 'jpg', 'jpeg', 'webp']: mimetype = 'image/png'
         elif ext in ['mp3', 'wav', 'ogg']: mimetype = 'audio/mpeg'
         elif ext in ['json', 'txt', 'xml', 'atlas']: mimetype = 'text/plain; charset=utf-8'
+        elif ext in ['ttf', 'otf']: mimetype = 'font/ttf'
         
         return send_file(io.BytesIO(item['bytes']), mimetype=mimetype, as_attachment=True, download_name=item['name'])
 
