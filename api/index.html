@@ -12,249 +12,58 @@
             font-family: 'GFF-Bold'; 
             src: url('https://dl.dir.freefiremobile.com/common/web_event/common/fonts/website/GFFLatinW05-Bold.woff') format('woff'); 
         }
-        
-        :root { 
-            --ff-yellow: #ffde00; 
-            --ff-emerald: #00ffa3; 
-            --ff-red: #ff3e3e; 
-            --ff-cyan: #38bdf8;
-        }
+        :root { --ff-yellow: #ffde00; --ff-emerald: #00ffa3; --ff-red: #ff3e3e; --ff-cyan: #38bdf8; }
 
         body { 
-            background: #000; 
-            color: #fff; 
-            min-height: 100vh; 
+            background: #000; color: #fff; min-height: 100vh; 
             background-image: url('https://dl.dir.freefiremobile.com/common/web_event/official2/dist/client/img/bg_pc.617c669.jpg'); 
-            background-size: cover; 
-            background-attachment: fixed; 
-            font-family: 'Inter', sans-serif; 
-            overflow-x: hidden; 
+            background-size: cover; background-attachment: fixed; font-family: 'Inter', sans-serif; overflow-x: hidden; 
         }
-        
-        body::before { 
-            content: ""; 
-            position: fixed; 
-            inset: 0; 
-            background: rgba(0, 0, 0, 0.94); 
-            z-index: -1; 
-        }
-
+        body::before { content: ""; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.94); z-index: -1; }
         .gff { font-family: 'GFF-Bold', sans-serif; }
 
-        /* Uniformed Flex Grid Layout Constraints */
         .uniform-panel {
-            background: #0a0a0a; 
-            border: 1px solid #1f1f1f; 
-            border-radius: 24px; 
-            position: relative; 
-            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8);
-            height: 380px;
-            display: flex;
-            flex-direction: column;
-            transition: height 0.3s ease-out;
+            background: #0a0a0a; border: 1px solid #1f1f1f; border-radius: 24px; position: relative; 
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8); height: 380px; display: flex; flex-direction: column; transition: height 0.3s ease-out;
         }
-        
-        .uniform-panel::before { 
-            content: ""; 
-            position: absolute; 
-            top: 0; left: 0; width: 4px; height: 100%; 
-            background: var(--ff-yellow); 
-            border-radius: 24px 0 0 24px; 
-        }
+        .uniform-panel::before { content: ""; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--ff-yellow); border-radius: 24px 0 0 24px; }
 
-        /* Responsive Mobile Scaling for the middle window list box */
-        @media (max-width: 1023px) {
-            .uniform-panel.adaptive-mobile-height {
-                height: auto;
-                min-height: 160px;
-                max-height: 380px;
-            }
-        }
+        @media (max-width: 1023px) { .uniform-panel.adaptive-mobile-height { height: auto; min-height: 160px; max-height: 380px; } }
 
-        .panel-body {
-            padding: 24px;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        .scrollable-content-box {
-            flex: 1;
-            background: #060608;
-            border: 1px solid #1a1a1f;
-            border-radius: 16px;
-            overflow-y: auto;
-            position: relative;
-            min-height: 120px;
-        }
+        .panel-body { padding: 20px; flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .scrollable-content-box { flex: 1; background: #060608; border: 1px solid #1a1a1f; border-radius: 16px; overflow-y: auto; position: relative; min-height: 120px; }
 
         .btn-mechanical { 
-            cursor: pointer; 
-            font-family: 'GFF-Bold'; 
-            text-transform: uppercase; 
-            font-style: italic; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            border-radius: 16px; 
-            gap: 12px; 
-            position: relative;
-            background: var(--ff-yellow); 
-            color: #000; 
-            box-shadow: 0 5px 0 #c2a900;
-            transition: background 0.1s ease;
+            cursor: pointer; font-family: 'GFF-Bold'; text-transform: uppercase; font-style: italic; display: flex; align-items: center; justify-content: center; border-radius: 16px; gap: 12px; position: relative; background: var(--ff-yellow); color: #000; box-shadow: 0 5px 0 #c2a900; transition: background 0.1s ease;
         }
         .btn-mechanical:hover { background: #ffe526; }
-        .btn-mechanical:active { 
-            transform: translateY(2px);
-            box-shadow: 0 3px 0 #c2a900;
-        }
+        .btn-mechanical:active { transform: translateY(2px); box-shadow: 0 3px 0 #c2a900; }
 
-        .upload-deck {
-            background: #121212;
-            border: 2px dashed #2a2a2a;
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            height: 110px;
-            cursor: pointer;
-            overflow: hidden;
-            transition: all 0.2s ease;
-        }
-        .upload-deck.dragover {
-            border-color: var(--ff-yellow);
-            background: #161612;
-        }
+        .upload-deck { background: #121212; border: 2px dashed #2a2a2a; border-radius: 20px; display: flex; align-items: center; height: 100px; cursor: pointer; transition: all 0.2s ease; }
+        .upload-deck.dragover { border-color: var(--ff-yellow); background: #161612; }
+        .deck-port { width: 60px; height: 100%; background: #161616; border-right: 1px solid #2a2a2a; display: flex; align-items: center; justify-content: center; }
 
-        .deck-port {
-            width: 70px;
-            height: 100%;
-            background: #161616;
-            border-right: 1px solid #2a2a2a;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+        .status-window { background: #121212; border: 1px solid #2a2a2a; height: 56px; border-radius: 16px; display: flex; align-items: center; padding: 0 14px; gap: 10px; }
+        .pixelated-render { image-rendering: pixelated; max-height: 100%; max-width: 100%; object-fit: contain; }
 
-        .deck-body { flex: 1; padding: 0 16px; display: flex; flex-direction: column; justify-content: center; min-width: 0; }
-
-        .status-window { 
-            background: #121212; border: 1px solid #2a2a2a; height: 60px; 
-            border-radius: 16px; display: flex; align-items: center; padding: 0 16px; gap: 12px; 
-        }
-
-        .pixelated-render {
-            image-rendering: pixelated;
-            max-height: 100%;
-            max-width: 100%;
-            object-fit: contain;
-        }
-
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #070709; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #222227; border-radius: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--ff-yellow); }
 
-        /* Game UI Filter Select Styling */
-        .filter-select {
-            background: #121216;
-            border: 1px solid #272732;
-            color: #d4d4d8;
-            font-size: 11px;
-            font-weight: 700;
-            border-radius: 8px;
-            padding: 4px 28px 4px 10px;
-            appearance: none;
-            cursor: pointer;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23ffde00'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
-            background-size: 12px;
-            background-repeat: no-repeat;
-            background-position: calc(100% - 8px) center;
-            transition: all 0.2s;
-        }
-        .filter-select:hover {
-            border-color: var(--ff-yellow);
-            color: #fff;
-        }
-        .filter-select:focus {
-            outline: none;
-            border-color: var(--ff-yellow);
-            box-shadow: 0 0 0 2px rgba(255, 222, 0, 0.15);
-        }
+        /* Integrated Custom Embedded Filter Layout */
+        .custom-menu-list { background: #111116; border: 1px solid #1f1f26; border-radius: 12px; max-height: 110px; overflow-y: auto; padding: 4px; margin-top: 6px; }
+        .custom-menu-item { padding: 6px 12px; font-size: 11px; font-weight: 600; border-radius: 8px; color: #a1a1aa; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: space-between; }
+        .custom-menu-item:hover, .custom-menu-item.active { background: #1a1a24; color: var(--ff-yellow); }
 
-        /* Premium Audio Interface Styling */
-        .premium-audio-player {
-            width: 100%;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-        .audio-wave-visualizer {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 3px;
-            height: 32px;
-        }
-        .wave-bar {
-            width: 3px;
-            height: 4px;
-            background: #1f1f2e;
-            border-radius: 2px;
-            transition: height 0.15s ease, background 0.15s ease;
-        }
-        
-        /* The bars animate ONLY when music stream audio is actually detected playing */
-        .premium-audio-player.playing .wave-bar {
-            animation: bounceWave 0.6s ease infinite alternate;
-        }
-        .premium-audio-player.playing .wave-bar:nth-child(2n) { animation-delay: 0.1s; animation-duration: 0.45s; }
-        .premium-audio-player.playing .wave-bar:nth-child(3n) { animation-delay: 0.2s; animation-duration: 0.7s; }
-        .premium-audio-player.playing .wave-bar:nth-child(4n) { animation-delay: 0.35s; animation-duration: 0.55s; }
+        /* Audio Frequency Wave Bars Display */
+        .audio-wave-visualizer { display: flex; align-items: center; justify-content: center; gap: 3px; height: 36px; width: 100%; background: #07070a; border-radius: 12px; border: 1px solid #14141a; }
+        .wave-bar { width: 3px; height: 4px; background: #222230; border-radius: 2px; transition: height 0.08s ease, background 0.08s ease; }
 
-        @keyframes bounceWave {
-            0% { height: 6px; background: #22d3ee; }
-            100% { height: 32px; background: var(--ff-cyan); }
-        }
-
-        .player-slider {
-            height: 6px;
-            background: #1a1a24;
-            border-radius: 10px;
-            position: relative;
-            cursor: pointer;
-        }
-        .player-slider-fill {
-            height: 100%;
-            border-radius: 10px;
-            width: 0%;
-        }
-
-        /* Video Deck Component Layout */
-        .premium-video-player {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #000;
-        }
-        .video-control-bar {
-            position: absolute;
-            bottom: 0; left: 0; right: 0;
-            background: linear-gradient(transparent, rgba(0,0,0,0.9));
-            padding: 16px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            opacity: 0;
-            transition: opacity 0.2s ease;
-            z-index: 10;
-        }
-        .premium-video-player:hover .video-control-bar { opacity: 1; }
+        /* Custom Form Engine Controls Checkbox Toggle */
+        .game-checkbox { appearance: none; width: 16px; height: 16px; border: 2px solid #3f3f46; border-radius: 4px; background: #121212; cursor: pointer; position: relative; transition: all 0.2s; }
+        .game-checkbox:checked { background: var(--ff-yellow); border-color: var(--ff-yellow); }
+        .game-checkbox:checked::after { content: "\f00c"; font-family: "Font Awesome 5 Free"; font-weight: 900; color: #000; font-size: 9px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
     </style>
 </head>
 <body class="flex flex-col justify-between">
@@ -263,103 +72,101 @@
     <img src="https://dl.dir.freefiremobile.com/common/web_event/official2/dist/client/img/full_logo.969f536.png" class="h-7" alt="Logo">
 </header>
 
-<main class="flex-1 w-full max-w-7xl mx-auto p-4 md:p-6 lg:p-8">
-    
-    <div class="text-center my-4 md:my-6 gff">
-        <span class="text-[40px] md:text-[54px] font-black italic block leading-[0.75]">ASSETS</span>
-        <span class="text-[40px] md:text-[54px] font-black italic block text-[#ffde00] leading-[0.85]">EXTRACTOR</span>
+<main class="flex-1 w-full max-w-7xl mx-auto p-4 md:p-6">
+    <div class="text-center my-4 gff">
+        <span class="text-[38px] md:text-[48px] font-black italic block leading-[0.75]">ASSETS</span>
+        <span class="text-[38px] md:text-[48px] font-black italic block text-[#ffde00] leading-[0.85]">EXTRACTOR</span>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        
+        <!-- Panel 1: Upload -->
         <div class="uniform-panel">
-            <div class="panel-body justify-between">
+            <div class="panel-body justify-between space-y-3">
                 <div>
-                    <h2 class="text-xs font-black text-white uppercase tracking-wider mb-1 gff">Upload File</h2>
-                    <p class="text-[11px] text-zinc-500">Select or drop your asset archive map package here.</p>
+                    <h2 class="text-xs font-black text-white uppercase tracking-wider mb-0.5 gff">Upload File</h2>
+                    <p class="text-[11px] text-zinc-500">Drop your file archive maps package here.</p>
                 </div>
 
-                <form id="extractorForm" class="flex-1 flex flex-col justify-center space-y-4 my-2">
+                <form id="extractorForm" class="flex-1 flex flex-col justify-center space-y-3">
                     <div class="upload-deck" id="dropZone" onclick="document.getElementById('fileInput').click()">
-                        <div class="deck-port">
-                            <i id="uploadIcon" class="fa-solid fa-folder-open text-lg text-zinc-500"></i>
-                        </div>
-                        <div class="deck-body">
-                            <span id="fileStatusText" class="text-[9px] font-bold tracking-widest text-zinc-500 gff mb-0.5 uppercase">CHOOSE FILE</span>
-                            <p id="fileLabel" class="gff text-[12px] text-zinc-300 uppercase tracking-wide truncate">Click or drag file here</p>
+                        <div class="deck-port"><i id="uploadIcon" class="fa-solid fa-folder-open text-zinc-500"></i></div>
+                        <div class="p-4 flex flex-col justify-center min-w-0 flex-1">
+                            <span id="fileStatusText" class="text-[8px] font-bold tracking-widest text-zinc-500 gff mb-0.5">CHOOSE FILE</span>
+                            <p id="fileLabel" class="gff text-[11px] text-zinc-300 uppercase truncate">Click or drag file</p>
                         </div>
                     </div>
                     <input type="file" id="fileInput" class="hidden" required>
                     
-                    <button type="submit" class="btn-mechanical w-full h-14 text-sm font-bold italic">
-                        <i class="fa-solid fa-bolt text-sm"></i>
-                        Extract Files
+                    <div class="flex items-center gap-2 px-1">
+                        <input type="checkbox" id="groupMapToggle" class="game-checkbox">
+                        <label Sver for="groupMapToggle" class="text-[10px] font-bold text-zinc-400 cursor-pointer uppercase tracking-wider gff select-none">Group Related Assets</label>
+                    </div>
+
+                    <button type="submit" class="btn-mechanical w-full h-12 text-xs font-bold italic">
+                        <i class="fa-solid fa-bolt"></i> Extract Files
                     </button>
                 </form>
 
                 <div class="status-window">
-                    <div id="statusIcon" class="w-5 h-5 flex items-center justify-center text-zinc-500">
-                        <i class="fa-solid fa-terminal text-xs"></i>
-                    </div>
+                    <div id="statusIcon" class="w-4 h-4 flex items-center justify-center text-zinc-500"><i class="fa-solid fa-terminal text-xs"></i></div>
                     <div class="flex flex-col flex-1 min-w-0">
-                        <span id="statusText" class="gff text-[9px] uppercase tracking-widest text-zinc-400">System Log</span>
-                        <p id="statusDescText" class="text-[11px] text-zinc-500 truncate">Awaiting file input stream.</p>
+                        <span id="statusText" class="gff text-[8px] uppercase tracking-widest text-zinc-400">System Log</span>
+                        <p id="statusDescText" class="text-[11px] text-zinc-500 truncate">Awaiting input stream.</p>
                     </div>
-                    <span id="statusBadge" class="text-[9px] font-black uppercase text-zinc-400 bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800 gff tracking-wider">Ready</span>
+                    <span id="statusBadge" class="text-[8px] font-black uppercase text-zinc-400 bg-zinc-900 px-1.5 py-0.5 rounded border border-zinc-800 gff">Ready</span>
                 </div>
             </div>
         </div>
 
+        <!-- Panel 2: List Window Output -->
         <div id="listWindowPanel" class="uniform-panel adaptive-mobile-height">
             <div class="panel-body">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#1f1f1f] pb-3 mb-3">
+                <div class="flex items-center justify-between border-b border-[#1f1f1f] pb-2 mb-2">
                     <div>
                         <h2 class="text-xs font-black text-white uppercase tracking-wider gff">Extracted List</h2>
-                        <p id="cacheCounterText" class="text-[11px] text-zinc-500">No content files extracted yet.</p>
+                        <p id="cacheCounterText" class="text-[10px] text-zinc-500">No content loaded.</p>
                     </div>
-                    
-                    <div class="flex items-center gap-2 self-end sm:self-auto">
-                        <div class="relative id-filter-container hidden" id="filterContainer">
-                            <select id="assetTypeFilter" class="filter-select">
-                                <option value="ALL">All Assets</option>
-                            </select>
-                        </div>
-                        <button id="downloadAllBtn" class="hidden h-8 w-8 bg-[#121216] border border-[#2a2a32] hover:border-[#ffde00] text-[#ffde00] rounded-lg flex items-center justify-center transition-colors">
-                            <i class="fa-solid fa-download text-xs"></i>
-                        </button>
+                    <button id="downloadAllBtn" class="hidden h-7 w-7 bg-[#121216] border border-[#2a2a32] hover:border-[#ffde00] text-[#ffde00] rounded-lg flex items-center justify-center transition-colors shadow-md">
+                        <i class="fa-solid fa-download text-xs"></i>
+                    </button>
+                </div>
+
+                <!-- Custom In-Page Filter View Container -->
+                <div id="filterMenuWrapper" class="hidden flex flex-col mb-2">
+                    <div class="custom-menu-list custom-scrollbar" id="customFilterElementBox">
+                        <!-- Selectable list entries dynamically loaded inline here -->
                     </div>
                 </div>
 
                 <div class="scrollable-content-box">
                     <div class="w-full h-full flex flex-col justify-center items-center text-center p-4 absolute inset-0" id="listEmptyState">
-                        <i class="fa-solid fa-list-ul text-lg text-zinc-800 mb-1.5"></i>
-                        <div class="gff text-[9px] text-zinc-600 uppercase tracking-widest">Parsed assets item list view area</div>
+                        <i class="fa-solid fa-list-ul text-zinc-800 mb-1"></i>
+                        <div class="gff text-[8px] text-zinc-600 uppercase tracking-widest">Parsed assets view box</div>
                     </div>
-                    <div class="w-full h-full overflow-y-auto custom-scrollbar hidden space-y-1 p-2" id="fileList">
-                        </div>
+                    <div class="w-full h-full overflow-y-auto custom-scrollbar hidden space-y-1 p-2" id="fileList"></div>
                 </div>
             </div>
         </div>
 
+        <!-- Panel 3: Live Preview Component Map Deck -->
         <div class="uniform-panel">
             <div class="panel-body">
-                <div class="border-b border-[#1f1f1f] pb-3 mb-3">
+                <div class="border-b border-[#1f1f1f] pb-2 mb-2">
                     <h2 class="text-xs font-black text-white uppercase tracking-wider gff">File Preview</h2>
-                    <p class="text-[11px] text-zinc-500">View images, listen to audio files, or see details instantly.</p>
+                    <p class="text-[11px] text-zinc-500">View images, hear sound tracks, or view assets.</p>
                 </div>
 
                 <div class="scrollable-content-box bg-[#0a0a0c]">
                     <div id="previewFallback" class="w-full h-full flex flex-col justify-center items-center text-center p-4 absolute inset-0 text-zinc-600">
-                        <i class="fa-solid fa-eye text-lg text-zinc-800 mb-1.5"></i>
-                        <p class="text-[9px] font-bold uppercase tracking-wider gff text-zinc-600">Select an item from list to preview</p>
+                        <i class="fa-solid fa-eye text-zinc-800 mb-1"></i>
+                        <p class="text-[8px] font-bold uppercase tracking-wider gff text-zinc-600">Select an asset element</p>
                     </div>
 
                     <div id="previewContentBox" class="hidden w-full h-full flex flex-col justify-between p-2 absolute inset-0">
-                        <div class="flex-1 w-full flex items-center justify-center overflow-hidden rounded-xl bg-[#121215] border border-[#1f1f23] relative" id="mediaBox">
-                            </div>
-                        <div class="w-full flex items-center justify-between gap-3 bg-[#111115] p-2 mt-2 rounded-xl border border-[#1f1f25]">
+                        <div class="flex-1 w-full flex items-center justify-center overflow-hidden rounded-xl bg-[#121215] border border-[#1f1f23] relative" id="mediaBox"></div>
+                        <div class="w-full flex items-center justify-between gap-3 bg-[#111115] p-1.5 mt-2 rounded-xl border border-[#1f1f25]">
                             <p id="mediaTitle" class="text-[11px] text-zinc-400 font-bold truncate flex-1 text-left px-1"></p>
-                            <a id="singleSaveBtn" href="#" class="h-8 w-8 bg-[#1a1a22] hover:bg-[#ffde00] hover:text-black text-zinc-400 rounded-lg border border-[#2d2d35] transition-colors flex items-center justify-center flex-shrink-0 shadow-md">
+                            <a id="singleSaveBtn" href="#" class="h-7 w-7 bg-[#1a1a22] hover:bg-[#ffde00] hover:text-black text-zinc-400 rounded-lg border border-[#2d2d35] flex items-center justify-center shadow-md">
                                 <i class="fa-solid fa-arrow-down text-xs"></i>
                             </a>
                         </div>
@@ -367,16 +174,19 @@
                 </div>
             </div>
         </div>
-
     </div>
 </main>
 
-<footer class="w-full text-center py-4 text-[10px] font-bold text-zinc-700 border-t border-[#141419] bg-[#050507] tracking-widest uppercase mt-8">
-    Extractor Suite &bull; Clean Dashboard Layout
+<footer class="w-full text-center py-4 text-[10px] font-bold text-zinc-700 border-t border-[#141419] bg-[#050507] tracking-widest uppercase mt-6">
+    Extractor Suite &bull; High Fidelity Extraction Suite
 </footer>
 
 <script>
     let activeCache = [];
+    let runtimeAudioContext = null;
+    let audioAnalyzerNode = null;
+    let audioAnimationId = null;
+
     const fileInput = document.getElementById("fileInput");
     const fileLabel = document.getElementById("fileLabel");
     const fileStatusText = document.getElementById("fileStatusText");
@@ -386,10 +196,11 @@
     const statusDescText = document.getElementById("statusDescText");
     const statusIcon = document.getElementById("statusIcon");
     const dropZone = document.getElementById("dropZone");
+    const groupMapToggle = document.getElementById("groupMapToggle");
     
     const listWindowPanel = document.getElementById("listWindowPanel");
-    const filterContainer = document.getElementById("filterContainer");
-    const assetTypeFilter = document.getElementById("assetTypeFilter");
+    const filterMenuWrapper = document.getElementById("filterMenuWrapper");
+    const customFilterElementBox = document.getElementById("customFilterElementBox");
     const listEmptyState = document.getElementById("listEmptyState");
     const fileList = document.getElementById("fileList");
     const cacheCounterText = document.getElementById("cacheCounterText");
@@ -401,120 +212,105 @@
     const mediaTitle = document.getElementById("mediaTitle");
     const singleSaveBtn = document.getElementById("singleSaveBtn");
 
-    // Unified Icon Mapping Factory Setup 
     function getAssetIconMarkup(label) {
-        const lowerLabel = label.toLowerCase();
-        if (lowerLabel.includes("image") || lowerLabel.includes("texture")) {
-            return `<div class="w-6 h-6 bg-yellow-950/40 rounded-lg flex items-center justify-center border border-yellow-900/50 flex-shrink-0"><i class="fa-solid fa-image text-[#ffde00] text-[10px]"></i></div>`;
-        } else if (lowerLabel.includes("audio") || lowerLabel.includes("track")) {
-            return `<div class="w-6 h-6 bg-cyan-950/40 rounded-lg flex items-center justify-center border border-cyan-900/50 flex-shrink-0"><i class="fa-solid fa-volume-high text-cyan-400 text-[10px]"></i></div>`;
-        } else if (lowerLabel.includes("video") || lowerLabel.includes("clip")) {
-            return `<div class="w-6 h-6 bg-red-950/40 rounded-lg flex items-center justify-center border border-red-900/50 flex-shrink-0"><i class="fa-solid fa-clapperboard text-red-500 text-[10px]"></i></div>`;
-        } else if (lowerLabel.includes("schema") || lowerLabel.includes("mesh") || lowerLabel.includes("config")) {
-            return `<div class="w-6 h-6 bg-purple-950/40 rounded-lg flex items-center justify-center border border-purple-900/50 flex-shrink-0"><i class="fa-solid fa-cubes text-purple-400 text-[10px]"></i></div>`;
-        } else if (lowerLabel.includes("font") || lowerLabel.includes("true")) {
-            return `<div class="w-6 h-6 bg-emerald-950/40 rounded-lg flex items-center justify-center border border-emerald-900/50 flex-shrink-0"><i class="fa-solid fa-font text-emerald-400 text-[10px]"></i></div>`;
-        }
-        return `<div class="w-6 h-6 bg-zinc-900 rounded-lg flex items-center justify-center border border-zinc-800 flex-shrink-0"><i class="fa-solid fa-file-lines text-zinc-400 text-[10px]"></i></div>`;
+        const l = label.toLowerCase();
+        if (l.includes("image") || l.includes("texture")) return `<i class="fa-solid fa-image text-[#ffde00] text-[10px]"></i>`;
+        if (l.includes("audio") || l.includes("track")) return `<i class="fa-solid fa-volume-high text-cyan-400 text-[10px]"></i>`;
+        if (l.includes("video")) return `<i class="fa-solid fa-clapperboard text-red-400 text-[10px]"></i>`;
+        if (l.includes("model") || l.includes("mesh")) return `<i class="fa-solid fa-cube text-emerald-400 text-[10px]"></i>`;
+        return `<i class="fa-solid fa-file text-zinc-400 text-[10px]"></i>`;
     }
 
     function handleFileSelection(file) {
         if (!file) return;
         fileLabel.innerText = file.name;
         fileLabel.style.color = "var(--ff-yellow)";
-        uploadIcon.className = "fa-solid fa-circle-check text-lg text-[#ffde00]";
-        fileStatusText.innerText = "FILE RECOGNIZED";
+        uploadIcon.className = "fa-solid fa-circle-check text-[#ffde00]";
+        fileStatusText.innerText = "FILE COMPATIBLE";
         fileStatusText.style.color = "var(--ff-yellow)";
     }
 
     fileInput.addEventListener("change", function() { handleFileSelection(this.files[0]); });
 
-    // Drag-and-Drop Operations Layout Listeners
-    ['dragenter', 'dragover'].forEach(eventName => {
-        dropZone.addEventListener(eventName, (e) => {
-            e.preventDefault(); e.stopPropagation();
-            dropZone.classList.add('dragover');
-        }, false);
-    });
-
-    ['dragleave', 'drop'].forEach(eventName => {
-        dropZone.addEventListener(eventName, (e) => {
-            e.preventDefault(); e.stopPropagation();
-            dropZone.classList.remove('dragover');
-        }, false);
-    });
-
+    ['dragenter', 'dragover'].forEach(n => dropZone.addEventListener(n, (e) => { e.preventDefault(); dropZone.classList.add('dragover'); }, false));
+    ['dragleave', 'drop'].forEach(n => dropZone.addEventListener(n, (e) => { e.preventDefault(); dropZone.classList.remove('dragover'); }, false));
     dropZone.addEventListener('drop', (e) => {
-        const dt = e.dataTransfer;
-        const files = dt.files;
-        if(files.length) {
-            fileInput.files = files;
-            handleFileSelection(files[0]);
-        }
+        const files = e.dataTransfer.files;
+        if(files.length) { fileInput.files = files; handleFileSelection(files[0]); }
     }, false);
 
-    // Build List Elements and Apply Active Type Selection Filtering Logic
     function renderFileListItems(filterType = "ALL") {
         fileList.innerHTML = "";
         let displayedCount = 0;
 
         activeCache.forEach(item => {
             if (filterType !== "ALL" && item.label !== filterType) return;
-            
             displayedCount++;
+            
             const row = document.createElement("div");
-            row.className = "file-row-node w-full p-2 text-left text-xs bg-[#111115] border border-[#1c1c22] rounded-xl flex items-center justify-between cursor-pointer hover:border-zinc-500 transition-all truncate group";
+            row.className = "file-row-node w-full p-1.5 bg-[#111115] border border-[#1b1b22] rounded-lg flex items-center justify-between cursor-pointer hover:border-zinc-500 transition-all truncate group";
             row.onclick = () => selectFileNode(item.index, row);
             
             row.innerHTML = `
-                <div class="flex items-center gap-2.5 truncate">
-                    ${getAssetIconMarkup(item.label)}
+                <div class="flex items-center gap-2 truncate">
+                    <div class="w-5 h-5 bg-zinc-900/60 border border-zinc-800 rounded flex items-center justify-center flex-shrink-0">${getAssetIconMarkup(item.label)}</div>
                     <div class="flex flex-col truncate">
-                        <span class="truncate font-semibold text-zinc-300 text-[11px] group-hover:text-white">${item.name}</span>
-                        <span class="text-[8px] font-bold text-zinc-500 mt-0.5 uppercase tracking-wide">${item.label}</span>
+                        <span class="truncate font-medium text-zinc-300 text-[11px] group-hover:text-white">${item.name}</span>
+                        <span class="text-[7px] text-zinc-500 font-bold uppercase tracking-wide">${item.label.split(' ')[0]}</span>
                     </div>
                 </div>
-                <i class="fa-solid fa-angle-right text-zinc-700 text-[10px] flex-shrink-0 pr-0.5 group-hover:text-white group-hover:translate-x-0.5 transition-transform"></i>`;
+                <i class="fa-solid fa-angle-right text-zinc-800 text-[9px] group-hover:text-white transition-transform"></i>`;
             fileList.appendChild(row);
         });
 
-        // Smart height modifier for small outputs on mobile sizes
-        if(displayedCount <= 4) {
-            listWindowPanel.style.height = "auto";
-        } else {
-            listWindowPanel.style.height = "";
-        }
-
-        cacheCounterText.innerText = filterType === "ALL" 
-            ? `Total items loaded: ${activeCache.length}` 
-            : `Showing ${displayedCount} of ${activeCache.length} elements`;
+        listWindowPanel.style.height = (displayedCount <= 4) ? "auto" : "";
+        cacheCounterText.innerText = filterType === "ALL" ? `Count: ${activeCache.length}` : `Showing ${displayedCount} of ${activeCache.length}`;
     }
 
-    // Build the selection filter tracking drop-down menu parameters dynamically
-    function rebuildFilterDropdown() {
+    function rebuildCustomFilterMenu() {
         const uniqueLabels = [...new Set(activeCache.map(item => item.label))].sort();
-        assetTypeFilter.innerHTML = '<option value="ALL">All Assets</option>';
+        customFilterElementBox.innerHTML = "";
         
         if (uniqueLabels.length > 1) {
-            filterContainer.classList.remove("hidden");
+            filterMenuWrapper.classList.remove("hidden");
+            
+            // Build Universal Option Node entry
+            const allNode = document.createElement("div");
+            allNode.className = "custom-menu-item active";
+            allNode.innerHTML = `<span>All Assets</span><span class="text-[8px] bg-zinc-900 px-1 py-0.2 rounded">${activeCache.length}</span>`;
+            allNode.onclick = () => {
+                document.querySelectorAll('.custom-menu-item').forEach(n => n.classList.remove('active'));
+                allNode.classList.add('active');
+                renderFileListItems("ALL");
+            };
+            customFilterElementBox.appendChild(allNode);
+
             uniqueLabels.forEach(label => {
-                const opt = document.createElement("option");
-                opt.value = label;
-                opt.innerText = label;
-                assetTypeFilter.appendChild(opt);
+                const count = activeCache.filter(i => i.label === label).length;
+                const node = document.createElement("div");
+                node.className = "custom-menu-item";
+                node.innerHTML = `<span>${label}</span><span class="text-[8px] bg-zinc-900 px-1 py-0.2 rounded">${count}</span>`;
+                node.onclick = () => {
+                    document.querySelectorAll('.custom-menu-item').forEach(n => n.classList.remove('active'));
+                    node.classList.add('active');
+                    renderFileListItems(label);
+                };
+                customFilterElementBox.appendChild(node);
             });
         } else {
-            filterContainer.classList.add("hidden");
+            filterMenuWrapper.classList.add("hidden");
         }
     }
 
-    assetTypeFilter.addEventListener("change", function() {
-        renderFileListItems(this.value);
-    });
+    function closeActiveAudioContext() {
+        if (audioAnimationId) { cancelAnimationFrame(audioAnimationId); audioAnimationId = null; }
+        if (runtimeAudioContext) { runtimeAudioContext.close(); runtimeAudioContext = null; audioAnalyzerNode = null; }
+    }
 
     function selectFileNode(index, element) {
-        document.querySelectorAll('.file-row-node').forEach(node => node.classList.remove('border-[#ffde00]', 'bg-[#18181f]'));
+        document.querySelectorAll('.file-row-node').forEach(n => n.classList.remove('border-[#ffde00]', 'bg-[#18181f]'));
         element.classList.add('border-[#ffde00]', 'bg-[#18181f]');
+        closeActiveAudioContext();
 
         const item = activeCache[index];
         if (!item) return;
@@ -526,141 +322,82 @@
 
         const fileUrl = `/api/extract?download_type=single&file_index=${item.index}`;
         singleSaveBtn.href = fileUrl;
-        singleSaveBtn.download = item.name;
 
         const ext = item.name.split('.').pop().toLowerCase();
 
-        if (["png", "jpg", "jpeg", "webp"].includes(ext)) {
+        if (["png", "jpg", "webp"].includes(ext)) {
             mediaBox.innerHTML = `<div class="w-full h-full flex items-center justify-center p-2"><img src="${fileUrl}" class="pixelated-render"></div>`;
         } 
         else if (["mp3", "wav", "ogg"].includes(ext)) {
             mediaBox.innerHTML = `
-                <div class="premium-audio-player w-full" id="audioPlayerContainer">
-                    <div class="audio-wave-visualizer">
-                        ${Array(18).fill().map(() => `<div class="wave-bar"></div>`).join('')}
-                    </div>
-                    <div class="flex items-center gap-4 bg-[#0a0a0c] p-3 rounded-xl border border-[#1f1f23]">
-                        <button id="customAudioPlayBtn" class="w-9 h-9 rounded-full bg-cyan-400 hover:bg-cyan-300 text-black flex items-center justify-center text-xs shadow-md transition-transform active:scale-95 flex-shrink-0"><i class="fa-solid fa-play ml-0.5"></i></button>
+                <div class="p-4 w-full space-y-4" id="playerContainer">
+                    <div class="audio-wave-visualizer">${Array(24).fill().map(() => `<div class="wave-bar"></div>`).join('')}</div>
+                    <div class="flex items-center gap-3 bg-[#07070a] p-2.5 rounded-xl border border-[#141419]">
+                        <button id="pBtn" class="w-8 h-8 rounded-full bg-cyan-400 hover:bg-cyan-300 text-black flex items-center justify-center text-xs transition-transform active:scale-95"><i class="fa-solid fa-play ml-0.5"></i></button>
                         <div class="flex flex-col min-w-0 flex-1">
-                            <span class="text-[9px] font-bold tracking-widest text-zinc-500 gff uppercase">AUDIO OUTPUT</span>
-                            <span id="audioTimeDisplay" class="text-xs font-mono text-cyan-400 mt-0.5">00:00 / 00:00</span>
+                            <span class="text-[8px] font-bold text-zinc-500 gff">AUDIO ANALYZER</span>
+                            <span id="vTime" class="text-xs font-mono text-cyan-400 mt-0.5">00:00 / 00:00</span>
                         </div>
                     </div>
-                    <div class="player-slider mx-1" id="audioProgressDeck">
-                        <div class="player-slider-fill bg-cyan-400" id="audioFillNode"></div>
-                    </div>
-                    <audio id="hiddenAudioNode" src="${fileUrl}" preload="metadata" class="hidden"></audio>
+                    <audio id="vAudio" src="${fileUrl}" crossorigin="anonymous" class="hidden"></audio>
                 </div>`;
 
-            const audioObj = document.getElementById("hiddenAudioNode");
-            const playBtn = document.getElementById("customAudioPlayBtn");
-            const fillNode = document.getElementById("audioFillNode");
-            const timeDisplay = document.getElementById("audioTimeDisplay");
-            const progressDeck = document.getElementById("audioProgressDeck");
-            const playerWrap = document.getElementById("audioPlayerContainer");
+            const audio = document.getElementById("vAudio");
+            const pBtn = document.getElementById("pBtn");
+            const vTime = document.getElementById("vTime");
             const bars = document.querySelectorAll(".wave-bar");
 
-            const formatTime = (secs) => {
-                if (isNaN(secs)) return "00:00";
-                let m = Math.floor(secs / 60), s = Math.floor(secs % 60);
-                return `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
-            };
+            const formatTime = (s) => isNaN(s) ? "00:00" : `${Math.floor(s/60).toString().padStart(2,'0')}:${Math.floor(s%60).toString().padStart(2,'0')}`;
+            audio.addEventListener("loadedmetadata", () => vTime.innerText = `00:00 / ${formatTime(audio.duration)}`);
 
-            audioObj.addEventListener("loadedmetadata", () => {
-                timeDisplay.innerText = `00:00 / ${formatTime(audioObj.duration)}`;
-                // Set fixed resting heights when loaded but stationary
-                bars.forEach(bar => bar.style.height = "6px");
-            });
+            pBtn.onclick = () => {
+                if (!runtimeAudioContext) {
+                    runtimeAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    audioAnalyzerNode = runtimeAudioContext.createAnalyser();
+                    audioAnalyzerNode.fftSize = 64;
+                    const source = runtimeAudioContext.createMediaElementSource(audio);
+                    source.connect(audioAnalyzerNode);
+                    audioAnalyzerNode.connect(runtimeAudioContext.destination);
+                }
 
-            playBtn.onclick = () => {
-                if (audioObj.paused) {
-                    audioObj.play();
-                    playerWrap.classList.add("playing");
-                    playBtn.innerHTML = `<i class="fa-solid fa-pause"></i>`;
+                if (audio.paused) {
+                    audio.play();
+                    pBtn.innerHTML = `<i class="fa-solid fa-pause"></i>`;
+                    renderLiveFrequencyWaves();
                 } else {
-                    audioObj.pause();
-                    playerWrap.classList.remove("playing");
-                    playBtn.innerHTML = `<i class="fa-solid fa-play ml-0.5"></i>`;
-                    bars.forEach(bar => bar.style.height = "6px");
+                    audio.pause();
+                    pBtn.innerHTML = `<i class="fa-solid fa-play ml-0.5"></i>`;
                 }
             };
 
-            audioObj.addEventListener("timeupdate", () => {
-                let pct = (audioObj.currentTime / audioObj.duration) * 100;
-                fillNode.style.width = `${pct}%`;
-                timeDisplay.innerText = `${formatTime(audioObj.currentTime)} / ${formatTime(audioObj.duration)}`;
-            });
-
-            progressDeck.onclick = (e) => {
-                let rect = progressDeck.getBoundingClientRect();
-                let pct = (e.clientX - rect.left) / rect.width;
-                audioObj.currentTime = pct * audioObj.duration;
-            };
-
-            audioObj.addEventListener("ended", () => {
-                playerWrap.classList.remove("playing");
-                playBtn.innerHTML = `<i class="fa-solid fa-play ml-0.5"></i>`;
-                fillNode.style.width = "0%";
-                bars.forEach(bar => bar.style.height = "4px");
-            });
-        } 
-        else if (["mp4"].includes(ext)) {
-            mediaBox.innerHTML = `
-                <div class="premium-video-player w-full h-full">
-                    <video id="customVideoNode" src="${fileUrl}" class="w-full h-full object-contain"></video>
-                    <div class="video-control-bar">
-                        <button id="customVideoPlayBtn" class="w-8 h-8 rounded-lg bg-red-500 text-white flex items-center justify-center text-xs shadow-md transition-transform active:scale-95 flex-shrink-0"><i class="fa-solid fa-play ml-0.5"></i></button>
-                        <div class="player-slider flex-1" id="videoProgressDeck">
-                            <div class="player-slider-fill bg-red-500" id="videoFillNode"></div>
-                        </div>
-                    </div>
-                </div>`;
-
-            const videoObj = document.getElementById("customVideoNode");
-            const vPlayBtn = document.getElementById("customVideoPlayBtn");
-            const vFillNode = document.getElementById("videoFillNode");
-            const vProgressDeck = document.getElementById("videoProgressDeck");
-
-            vPlayBtn.onclick = () => {
-                if (videoObj.paused) {
-                    videoObj.play();
-                    vPlayBtn.innerHTML = `<i class="fa-solid fa-pause"></i>`;
-                } else {
-                    videoObj.pause();
-                    vPlayBtn.innerHTML = `<i class="fa-solid fa-play ml-0.5"></i>`;
+            function renderLiveFrequencyWaves() {
+                if (audio.paused || !audioAnalyzerNode) {
+                    bars.forEach(b => b.style.height = "4px");
+                    return;
                 }
-            };
+                const bufferLength = audioAnalyzerNode.frequencyBinCount;
+                const dataArray = new Uint8Array(bufferLength);
+                audioAnalyzerNode.getByteFrequencyData(dataArray);
 
-            videoObj.addEventListener("timeupdate", () => {
-                let pct = (videoObj.currentTime / videoObj.duration) * 100;
-                vFillNode.style.width = `${pct}%`;
-            });
-
-            vProgressDeck.onclick = (e) => {
-                let rect = vProgressDeck.getBoundingClientRect();
-                let pct = (e.clientX - rect.left) / rect.width;
-                videoObj.currentTime = pct * videoObj.duration;
-            };
-
-            videoObj.onclick = () => vPlayBtn.click();
-        } 
-        else if (["json", "txt", "xml", "yaml", "ini", "atlas"].includes(ext)) {
-            mediaBox.innerHTML = `<div class="absolute inset-0 text-[11px] font-mono text-zinc-500 text-left overflow-y-auto bg-[#07070a] p-3 custom-scrollbar whitespace-pre-wrap select-text" id="textContentView">Loading configuration maps...</div>`;
-            fetch(fileUrl)
-                .then(r => r.text())
-                .then(text => {
-                    const view = document.getElementById("textContentView");
-                    if(view) view.innerText = text.slice(0, 8000) + (text.length > 8000 ? "\n\n[Truncated for visual performance]" : "");
-                }).catch(() => {
-                    const view = document.getElementById("textContentView");
-                    if(view) view.innerText = "Error parsing layout descriptor.";
+                bars.forEach((bar, idx) => {
+                    const dataVal = dataArray[idx % bufferLength] || 0;
+                    const computedHeight = Math.max(4, (dataVal / 255) * 32);
+                    bar.style.height = `${computedHeight}px`;
+                    bar.style.background = dataVal > 10 ? `var(--ff-cyan)` : '#222230';
                 });
+                vTime.innerText = `${formatTime(audio.currentTime)} / ${formatTime(audio.duration)}`;
+                audioAnimationId = requestAnimationFrame(renderLiveFrequencyWaves);
+            }
+            audio.addEventListener("ended", () => { pBtn.innerHTML = `<i class="fa-solid fa-play ml-0.5"></i>`; bars.forEach(b => b.style.height = "4px"); });
+        } 
+        else if (["json", "txt", "obj", "atlas"].includes(ext)) {
+            mediaBox.innerHTML = `<div class="absolute inset-0 text-[10px] font-mono text-zinc-500 text-left overflow-y-auto bg-[#050507] p-3 custom-scrollbar whitespace-pre" id="txtBox">Loading resource descriptors...</div>`;
+            fetch(fileUrl).then(r => r.text()).then(t => {
+                const b = document.getElementById("txtBox");
+                if(b) b.innerText = t.slice(0, 12000) + (t.length > 12000 ? "\n\n[Truncated Layout Map Array]" : "");
+            });
         } else {
-            mediaBox.innerHTML = `
-                <div class="text-center text-zinc-600 space-y-1">
-                    <i class="fa-solid fa-cube text-xl text-zinc-800"></i>
-                    <span class="text-[9px] font-bold uppercase tracking-widest block text-zinc-500 gff">Raw System Object File</span>
-                </div>`;
+            mediaBox.innerHTML = `<div class="text-center text-zinc-700 space-y-1"><i class="fa-solid fa-cube text-lg"></i><span class="text-[8px] font-bold tracking-widest block text-zinc-500 gff">RAW BINARY ARRAY</span></div>`;
         }
     }
 
@@ -669,64 +406,60 @@
         const file = fileInput.files[0];
         if (!file) return;
 
-        listEmptyState.innerHTML = `
-            <div class="text-center space-y-1">
-                <i class="fa-solid fa-circle-notch text-lg text-[#ffde00] animate-spin"></i>
-                <p class="text-[9px] uppercase tracking-widest font-bold text-zinc-500">Extracting operational content...</p>
-            </div>`;
-        
+        closeActiveAudioContext();
+        listEmptyState.innerHTML = `<div class="text-center space-y-1"><i class="fa-solid fa-circle-notch text-[#ffde00] animate-spin"></i><p class="text-[8px] uppercase tracking-widest font-bold text-zinc-500">Processing file maps...</p></div>`;
         listEmptyState.style.display = "flex";
         fileList.classList.add("hidden");
         downloadAllBtn.classList.add("hidden");
-        filterContainer.classList.add("hidden");
-        listWindowPanel.style.height = ""; // Reset box constraints
+        filterMenuWrapper.classList.add("hidden");
+        listWindowPanel.style.height = "";
         
         statusBadge.innerText = "RUNNING";
         statusBadge.style.color = "var(--ff-yellow)";
         statusText.innerText = "Processing File";
-        statusDescText.innerText = "Decompressing data pipelines and targets...";
-        statusIcon.innerHTML = `<i class="fa-solid fa-gear text-sm text-yellow-500 animate-spin"></i>`;
+        statusDescText.innerText = "Decompressing internal assets...";
+        statusIcon.innerHTML = `<i class="fa-solid fa-gear text-yellow-500 animate-spin"></i>`;
 
         const formData = new FormData();
         formData.append("asset_bundle", file);
 
         try {
             const response = await fetch("/api/extract", { method: "POST", body: formData });
-            if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || "Extraction pipeline failure.");
+            if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || "Extraction failed.");
 
             const data = await response.json();
             activeCache = data.files || [];
 
-            rebuildFilterDropdown();
+            rebuildCustomFilterMenu();
             renderFileListItems("ALL");
 
             listEmptyState.style.display = "none";
             fileList.classList.remove("hidden");
             downloadAllBtn.classList.remove("hidden");
-            downloadAllBtn.onclick = () => { window.location.href = "/api/extract?download_type=zip"; };
+            
+            // Set dynamic download routing with structural map toggle active checks
+            downloadAllBtn.onclick = () => { 
+                const groupState = groupMapToggle.checked ? "true" : "false";
+                window.location.href = `/api/extract?download_type=zip&group_related=${groupState}`; 
+            };
             
             statusBadge.innerText = "SUCCESS";
             statusBadge.style.color = "var(--ff-emerald)";
             statusText.innerText = "Finished";
-            statusDescText.innerText = `Successfully loaded ${activeCache.length} system elements.`;
-            statusIcon.innerHTML = `<i class="fa-solid fa-circle-check text-sm text-[#00ffa3]"></i>`;
+            statusDescText.innerText = `Extracted ${activeCache.length} elements safely.`;
+            statusIcon.innerHTML = `<i class="fa-solid fa-circle-check text-[#00ffa3]"></i>`;
 
             previewFallback.style.display = "flex";
             previewContentBox.classList.add("hidden");
-
         } catch (err) {
             statusBadge.innerText = "ERROR";
             statusBadge.style.color = "var(--ff-red)";
             statusText.innerText = "Failed";
             statusDescText.innerText = err.message;
-            statusIcon.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-sm text-[#ff3e3e]"></i>`;
-            
-            listEmptyState.innerHTML = `
-                <i class="fa-solid fa-triangle-exclamation text-base text-red-500 mb-1"></i>
-                <p class="text-[11px] text-red-500 font-bold px-2">${err.message}</p>`;
+            statusIcon.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-[#ff3e3e]"></i>`;
+            listEmptyState.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-red-500 mb-1"></i><p class="text-[10px] text-red-500 font-bold px-2">${err.message}</p>`;
         }
     });
 </script>
-
 </body>
 </html>
