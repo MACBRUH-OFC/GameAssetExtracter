@@ -1,415 +1,406 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Asset Extractor</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
-        
-        /* Official Clean Typography Integration */
-        @font-face {
-            font-family: 'GFFLatin';
-            src: url('https://dl.dir.freefiremobile.com/common/web_event/common/fonts/website/GFFLatinW05-Regular.woff') format('woff');
-            font-weight: 400;
-            font-style: normal;
-        }
-        @font-face {
-            font-family: 'GFFLatin';
-            src: url('https://dl.dir.freefiremobile.com/common/web_event/common/fonts/website/GFFLatinW05-Medium.woff') format('woff');
-            font-weight: 500;
-            font-style: normal;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Assets Extractor | ELITE</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+@font-face { font-family: 'GFF-Bold'; src: url('https://dl.dir.freefiremobile.com/common/web_event/common/fonts/website/GFFLatinW05-Bold.woff') format('woff'); }
+:root { --ff-yellow: #ffde00; --ff-emerald: #00ffa3; --ff-red: #ff3e3e; --ff-cyan: #38bdf8; }
+body { background: #000; color: #fff; min-height: 100vh; background-image: url('https://dl.dir.freefiremobile.com/common/web_event/official2/dist/client/img/bg_pc.617c669.jpg'); background-size: cover; background-attachment: fixed; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+body::before { content: ""; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.94); z-index: -1; }
+.gff { font-family: 'GFF-Bold', sans-serif; }
 
-        body {
-            background-color: #0f111a;
-            font-family: 'GFFLatin', sans-serif;
-            letter-spacing: 0.01em;
-        }
-        
-        .mono-font {
-            font-family: 'JetBrains Mono', monospace;
-        }
-        
-        /* Fine Micro Scrollbar Layer */
-        .custom-scroll::-webkit-scrollbar { width: 4px; height: 4px; }
-        .custom-scroll::-webkit-scrollbar-track { background: #161925; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #2e344d; border-radius: 4px; }
-        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #4b557d; }
+/* Main layout constraints: Left Square, Right Rounded */
+.main-grid-container { display: grid; grid-template-columns: repeat(1, 1fr); gap: 24px; max-width: 1400px; margin: 0 auto; padding: 0 20px; }
+@media (min-width: 1024px) { .main-grid-container { grid-template-columns: repeat(3, 1fr); } }
 
-        /* Muted Checkerboard for Texture Canvas Transparency */
-        .texture-grid {
-            background-size: 10px 10px;
-            background-image: linear-gradient(to right, #1d2133 1px, transparent 1px), linear-gradient(to bottom, #1d2133 1px, transparent 1px);
-            background-color: #141722;
-        }
+.uniform-panel { 
+    background: #0a0a0a; border: 1px solid #1f1f1f; position: relative; 
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8); height: 420px; display: flex; 
+    flex-direction: column; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+/* Left square / Right rounded logic for the outer container */
+@media (min-width: 1024px) {
+    .panel-1 { border-radius: 0; }
+    .panel-2 { border-radius: 0; }
+    .panel-3 { border-radius: 0 24px 24px 0; }
+}
+@media (max-width: 1023px) {
+    .uniform-panel { border-radius: 16px; margin-bottom: 16px; height: auto; min-height: 200px; }
+    #listWindowPanel { height: 160px; overflow: hidden; }
+    #listWindowPanel.expanded { height: 420px; }
+}
 
-        /* Clean Streamlined Logs Layout Row Without Timestamps */
-        .log-row {
-            padding: 3px 4px;
-            border-bottom: 1px solid #1a1e2e;
-            line-height: 1.4;
-            color: #94a3b8;
-        }
-    </style>
+.uniform-panel::before { content: ""; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--ff-yellow); z-index: 10; }
+
+.panel-body { padding: 24px; flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.scrollable-content-box { flex: 1; background: #060608; border: 1px solid #1a1a1f; border-radius: 16px; overflow: hidden; position: relative; }
+
+/* Custom Buttons & Elements */
+.btn-mechanical { cursor: pointer; font-family: 'GFF-Bold'; text-transform: uppercase; font-style: italic; display: flex; align-items: center; justify-content: center; border-radius: 16px; gap: 12px; background: var(--ff-yellow); color: #000; box-shadow: 0 5px 0 #c2a900; transition: all 0.1s; }
+.btn-mechanical:active { transform: translateY(2px); box-shadow: 0 2px 0 #c2a900; }
+
+.upload-deck { background: #121212; border: 2px dashed #2a2a2a; border-radius: 20px; display: flex; align-items: center; height: 110px; cursor: pointer; transition: all 0.2s; }
+.upload-deck.dragover { border-color: var(--ff-yellow); background: #161612; }
+
+/* Custom Dropdown Styling */
+.custom-dropdown { position: relative; width: 100%; }
+.dropdown-trigger { background: #121216; border: 1px solid #272732; padding: 8px 12px; border-radius: 10px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 11px; font-weight: 700; color: #d4d4d8; }
+.dropdown-menu { position: absolute; top: calc(100% + 8px); left: 0; right: 0; background: #0f0f13; border: 1px solid #272732; border-radius: 12px; z-index: 50; max-height: 200px; overflow-y: auto; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+.dropdown-menu.active { display: block; }
+.dropdown-item { padding: 8px 12px; font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: background 0.2s; }
+.dropdown-item:hover { background: #1a1a22; }
+.dropdown-item.selected { color: var(--ff-yellow); }
+
+/* Audio Visualizer */
+#waveCanvas { width: 100%; height: 60px; }
+.pixelated-render { image-rendering: pixelated; max-height: 100%; max-width: 100%; object-fit: contain; }
+.custom-scrollbar::-webkit-scrollbar { width: 4px; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: #222227; border-radius: 10px; }
+</style>
 </head>
-<body class="text-slate-300 min-h-screen flex flex-col justify-between antialiased select-none">
+<body>
 
-    <header class="w-full border-b border-slate-800/60 bg-[#141724] px-4 md:px-6 py-3 flex items-center justify-between sticky top-0 z-50">
-        <div class="flex items-center space-x-2.5 min-w-0">
-            <div class="p-1.5 bg-slate-800 text-slate-200 rounded-lg shrink-0">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-5.25v9"></path>
-                </svg>
+<div class="flex flex-col items-center py-8">
+    <img src="https://dl.dir.freefiremobile.com/common/web_event/official2/dist/client/img/full_logo.969f536.png" class="h-8 mb-4" alt="Free Fire Logo">
+    <div class="text-center gff">
+        <span class="text-[44px] md:text-[60px] font-black italic block leading-[0.8]">ASSETS</span>
+        <span class="text-[44px] md:text-[60px] font-black italic block text-[#ffde00] leading-[0.9]">EXTRACTOR</span>
+    </div>
+    <div class="flex items-center gap-3 mt-2 opacity-80">
+        <svg class="w-4 h-4 text-[#ffde00]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
+        <span class="text-[10px] md:text-[12px] font-bold tracking-[0.2em] uppercase text-zinc-400">AssetBundle • KTX • Unity Assets Extractor</span>
+        <svg class="w-4 h-4 text-[#ffde00]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
+    </div>
+</div>
+
+<div class="main-grid-container">
+    <!-- Column 1: Upload -->
+    <div class="uniform-panel panel-1">
+        <div class="panel-body justify-between">
+            <div>
+                <h2 class="text-xs font-black text-white uppercase tracking-wider mb-1 gff">Input Stream</h2>
+                <p class="text-[11px] text-zinc-500">Initialize asset mapping sequence.</p>
             </div>
-            <span class="font-medium text-white tracking-wide text-sm uppercase truncate">Asset Extractor</span>
-        </div>
-        <div class="flex items-center space-x-1.5 bg-slate-800/60 border border-slate-700/50 px-2.5 py-1 rounded-md text-[10px] font-mono text-slate-400 shrink-0">
-            <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
-            <span>READY</span>
-        </div>
-    </header>
-
-    <main class="flex-1 w-full max-w-7xl mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
-        
-        <div class="lg:col-span-4 flex flex-col gap-5 w-full h-full justify-between">
-            
-            <div class="bg-[#141724] border border-slate-800/60 rounded-xl p-4 flex flex-col space-y-3.5 flex-1">
-                <div>
-                    <h2 class="text-xs font-medium uppercase text-slate-400 font-mono">Control Desk</h2>
-                    <p class="text-[11px] text-slate-500 mt-0.5 leading-relaxed">Provide a bundle file below to clear indices and extract true file configuration identities mapping across structural byte blocks.</p>
-                </div>
-
-                <div id="dropzone" class="border border-dashed border-slate-700 hover:border-slate-500 bg-[#181c2c] hover:bg-[#1b2033] rounded-lg p-4 text-center cursor-pointer transition-colors duration-150 group">
-                    <input type="file" id="fileInput" class="hidden">
-                    <div class="flex flex-col items-center space-y-2">
-                        <div class="text-slate-500 group-hover:text-slate-300 transition-colors">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z"></path></svg>
-                        </div>
-                        <div class="text-[11px] text-slate-400">Select file path reference or <span class="text-slate-200 underline font-medium">browse</span></div>
-                        <div class="text-[9px] text-slate-600 font-mono">MAX CAPACITY: 5.00 MB</div>
+            <form id="extractorForm" class="flex-1 flex flex-col justify-center space-y-4 my-2">
+                <div class="upload-deck" id="dropZone" onclick="document.getElementById('fileInput').click()">
+                    <div class="w-16 h-full flex items-center justify-center border-r border-zinc-800">
+                        <i id="uploadIcon" class="fa-solid fa-box-open text-xl text-zinc-600"></i>
+                    </div>
+                    <div class="flex-1 px-4 truncate">
+                        <span id="fileStatusText" class="text-[9px] font-black text-zinc-500 block gff uppercase tracking-tighter">Standby</span>
+                        <p id="fileLabel" class="gff text-[13px] text-zinc-300 truncate">Drop package here</p>
                     </div>
                 </div>
-
-                <div id="filePanel" class="hidden bg-[#181c2c] border border-slate-800 rounded-lg p-2.5 space-y-1 font-mono text-[10px]">
-                    <div class="flex justify-between items-center"><span class="text-slate-500">FILE:</span><span id="fileName" class="text-slate-300 font-medium truncate max-w-[140px] sm:max-w-[200px]">None</span></div>
-                    <div class="flex justify-between items-center"><span class="text-slate-500">VOLUME:</span><span id="fileSize" class="text-slate-300">0.00 MB</span></div>
-                </div>
-
-                <button id="extractBtn" disabled class="w-full bg-slate-200 hover:bg-white disabled:bg-slate-800/40 text-black disabled:text-slate-600 font-medium py-2 px-4 rounded-lg text-xs uppercase transition-colors disabled:cursor-not-allowed">
-                    Extract Assets
+                <input type="file" id="fileInput" class="hidden">
+                <button type="submit" class="btn-mechanical w-full h-14 text-sm font-bold italic">
+                    <i class="fa-solid fa-bolt"></i> Extract Now
                 </button>
-                
-                <div id="progressContainer" class="hidden bg-[#181c2c] border border-slate-800 rounded-lg p-2.5 space-y-1">
-                    <div class="flex justify-between items-center font-mono text-[9px]">
-                        <span id="statusText" class="text-slate-500 truncate max-w-[150px]">WAITING_ON_STREAM...</span>
-                        <span id="progressPercent" class="text-slate-300">0%</span>
-                    </div>
-                    <div class="w-full bg-slate-800 rounded-full h-0.5 overflow-hidden">
-                        <div id="progressBar" class="bg-slate-400 h-full rounded-full transition-all duration-150" style="width: 0%"></div>
-                    </div>
+            </form>
+            <div class="bg-[#121212] border border-zinc-800/50 rounded-xl p-3 flex items-center gap-3">
+                <div id="statusIcon" class="text-zinc-600"><i class="fa-solid fa-terminal text-xs"></i></div>
+                <div class="flex-1 min-w-0">
+                    <span id="statusText" class="block text-[8px] font-black text-zinc-500 uppercase gff">System Log</span>
+                    <p id="statusDescText" class="text-[10px] text-zinc-400 truncate">Awaiting file upload...</p>
                 </div>
-            </div>
-
-            <div class="bg-[#141724] border border-slate-800/60 rounded-xl p-3 flex flex-col space-y-1.5 h-[190px] min-h-[190px]">
-                <div class="flex justify-between items-center border-b border-slate-800 pb-1.5">
-                    <span class="text-[9px] font-medium uppercase tracking-wide text-slate-400 font-mono">Activity Log</span>
-                    <button onclick="document.getElementById('sysActivityLogs').innerHTML=''" class="text-[9px] font-mono text-slate-600 hover:text-slate-400 uppercase transition-colors">Clear</button>
-                </div>
-                <div id="sysActivityLogs" class="flex-1 mono-font text-[10px] overflow-y-auto custom-scroll pr-0.5 select-text space-y-0.5">
-                    <div class="log-row border-none !text-slate-600">Core initialized. Standby for direct resource stream parsing maps.</div>
-                </div>
+                <div id="statusBadge" class="text-[9px] gff px-2 py-0.5 bg-black rounded border border-zinc-800 text-zinc-500">IDLE</div>
             </div>
         </div>
+    </div>
 
-        <div class="lg:col-span-4 bg-[#141724] border border-slate-800/60 rounded-xl p-4 flex flex-col space-y-3.5 min-h-[400px] lg:h-auto">
-            <div class="flex items-center justify-between border-b border-slate-800 pb-2.5 gap-2">
+    <!-- Column 2: List -->
+    <div id="listWindowPanel" class="uniform-panel panel-2">
+        <div class="panel-body">
+            <div class="flex items-center justify-between mb-4 border-b border-zinc-900 pb-3">
                 <div class="min-w-0">
-                    <h2 class="text-xs font-medium uppercase text-slate-400 font-mono block">Extracted Files</h2>
-                    <span id="manifestSummaryCount" class="text-[10px] text-slate-500 block truncate font-mono">No active mapping context records.</span>
+                    <h2 class="text-xs font-black text-white uppercase tracking-wider gff">Extracted</h2>
+                    <p id="cacheCounterText" class="text-[10px] text-zinc-500 truncate">0 Items Found</p>
                 </div>
-                <button id="downloadAllBtn" class="hidden items-center gap-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 px-2.5 py-1 rounded-lg text-[10px] font-medium transition-colors shrink-0">
-                    Download ZIP
-                </button>
-            </div>
-
-            <div id="manifestViewerDeck" class="flex-1 overflow-y-auto border border-slate-800 bg-[#181c2c] rounded-lg custom-scroll flex flex-col items-center justify-center p-6 text-center text-slate-600 space-y-1.5 max-h-[400px] lg:max-h-[none]">
-                <svg class="w-4 h-4 text-slate-700" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 13.5h3.86a2.25 2.25 0 012.008 1.24l.885 1.77a2.25 2.25 0 002.007 1.24h1.98a2.25 2.25 0 002.007-1.24l.885-1.77a2.25 2.25 0 012.007-1.24h3.86m-18 0h18m-18 0v-7.5A2.25 2.25 0 015.25 3h13.5A2.25 2.25 0 0121 5.25v7.5m-18 0v6a2.25 2.25 0 002.25 2.25h13.5A2.25 2.25 0 0021 18.75v-6M16.5 7.5h.008v.008h-.008V7.5zm0 3h.008v.008h-.008v-.008zm-3-3h.008v.008h-.008V7.5zm0 3h.008v.008h-.008v-.008z"></path></svg>
-                <span class="text-[10px] uppercase font-mono tracking-wide">Registry Inactive</span>
-            </div>
-        </div>
-
-        <div class="lg:col-span-4 bg-[#141724] border border-slate-800/60 rounded-xl p-4 flex flex-col space-y-3 min-h-[400px] lg:h-auto">
-            <div class="border-b border-slate-800 pb-2 min-w-0">
-                <h2 class="text-xs font-medium uppercase text-slate-400 font-mono block">Asset Canvas</h2>
-                <span id="previewAssetMeta" class="text-[10px] text-slate-500 font-mono truncate block max-w-full">Select a target row entry link...</span>
-            </div>
-
-            <div id="previewOutputViewport" class="flex-1 bg-[#181c2c] border border-slate-800 rounded-lg flex flex-col items-center justify-center p-3 overflow-hidden relative min-h-[280px]">
-                <div id="previewPlaceholder" class="text-center space-y-1 text-slate-600">
-                    <svg class="w-4 h-4 mx-auto text-slate-700" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                    <div class="text-[9px] uppercase font-mono tracking-wider">Canvas Standby</div>
-                </div>
-            </div>
-        </div>
-
-    </main>
-
-    <footer class="w-full border-t border-slate-800/60 bg-[#0c0e17] px-6 py-2.5 text-center font-mono text-[9px] text-slate-600 uppercase tracking-widest">
-        Asset Extractor Workspace Core Matrix
-    </footer>
-
-    <script>
-        const dropzone = document.getElementById('dropzone');
-        const fileInput = document.getElementById('fileInput');
-        const filePanel = document.getElementById('filePanel');
-        const fileName = document.getElementById('fileName');
-        const fileSize = document.getElementById('fileSize');
-        const extractBtn = document.getElementById('extractBtn');
-        const progressContainer = document.getElementById('progressContainer');
-        const progressBar = document.getElementById('progressBar');
-        const progressPercent = document.getElementById('progressPercent');
-        const statusText = document.getElementById('statusText');
-        const downloadAllBtn = document.getElementById('downloadAllBtn');
-        const manifestSummaryCount = document.getElementById('manifestSummaryCount');
-        const manifestViewerDeck = document.getElementById('manifestViewerDeck');
-        const sysActivityLogs = document.getElementById('sysActivityLogs');
-        const previewAssetMeta = document.getElementById('previewAssetMeta');
-        const previewOutputViewport = document.getElementById('previewOutputViewport');
-
-        let selectedFile = null;
-        const ABSOLUTE_SAFEGUARD_LIMIT = 5.0 * 1024 * 1024;
-
-        // Simplified Stream Log Appender Without Time Stamps or Brackets
-        function appendLog(msg, isError = false) {
-            const row = document.createElement('div');
-            row.className = "log-row hover:bg-slate-800/20 transition-colors";
-            if (isError) row.style.color = "#f87171";
-            row.textContent = msg;
-            sysActivityLogs.appendChild(row);
-            sysActivityLogs.scrollTop = sysActivityLogs.scrollHeight;
-        }
-
-        ['dragenter', 'dragover'].forEach(name => {
-            dropzone.addEventListener(name, (e) => { e.preventDefault(); dropzone.classList.add('border-slate-500', 'bg-[#1b2033]'); });
-        });
-        ['dragleave', 'drop'].forEach(name => {
-            dropzone.addEventListener(name, (e) => { e.preventDefault(); dropzone.classList.remove('border-slate-500', 'bg-[#1b2033]'); });
-        });
-
-        dropzone.addEventListener('drop', (e) => { if(e.dataTransfer.files.length) processFileInputStaging(e.dataTransfer.files[0]); });
-        dropzone.addEventListener('click', () => fileInput.click());
-        fileInput.addEventListener('change', (e) => { if(e.target.files.length) processFileInputStaging(e.target.files[0]); });
-
-        function processFileInputStaging(file) {
-            if (file.size > ABSOLUTE_SAFEGUARD_LIMIT) {
-                appendLog("Rejected: " + file.name + " exceeds file constraint threshold allocation limits.", true);
-                alert("File Denied: Size exceeds the safe 5.00 MB framework limit.");
-                selectedFile = null;
-                extractBtn.disabled = true;
-                filePanel.classList.add('hidden');
-                return;
-            }
-
-            selectedFile = file;
-            fileName.textContent = file.name;
-            fileSize.textContent = (file.size / (1024 * 1024)).toFixed(2) + " MB";
-            filePanel.classList.remove('hidden');
-            extractBtn.disabled = false;
-            appendLog("Loaded reference element: " + file.name);
-        }
-
-        extractBtn.addEventListener('click', async () => {
-            if(!selectedFile) return;
-            extractBtn.disabled = true;
-            progressContainer.classList.remove('hidden');
-            
-            statusText.textContent = "INGESTING_PAYLOAD...";
-            progressBar.style.width = '35%';
-            progressPercent.textContent = '35%';
-            appendLog("Transmitting bundle bytes chunk array blocks to extraction core...");
-
-            try {
-                const formData = new FormData();
-                formData.append('asset_bundle', selectedFile);
-
-                const response = await fetch('/api/extract', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                progressBar.style.width = '75%';
-                progressPercent.textContent = '75%';
-                statusText.textContent = "DECOUPLING_HEADERS...";
-                appendLog("Payload arrived safely. Resolving structural object headers...");
-
-                const typeHeader = response.headers.get("content-type");
-                if (!typeHeader || !typeHeader.includes("application/json")) {
-                    throw new Error("Pipeline structure mismatch. Output target structure broken.");
-                }
-
-                const result = await response.json();
-                if (!response.ok) throw new Error(result.error || "Unhandled sequence operation abort.");
-
-                appendLog("Extraction complete. Successfully located " + result.files.length + " individual elements.");
-                renderManifestCatalogDeck(result.files);
-                
-                statusText.textContent = "COMPLETED_CLEANLY";
-                progressBar.style.width = '100%';
-                progressPercent.textContent = '100%';
-
-            } catch (err) {
-                appendLog(err.message, true);
-                manifestSummaryCount.innerHTML = `<span class="text-rose-400 font-mono">ERROR</span>`;
-                manifestViewerDeck.innerHTML = `<div class="text-[11px] text-rose-400 font-mono p-3 bg-rose-950/20 border border-rose-900/40 rounded-lg w-full text-center">${err.message}</div>`;
-                statusText.textContent = "EXCEPTION_ABORT";
-                progressBar.className = "bg-rose-500 h-full rounded-full";
-            } finally {
-                extractBtn.disabled = false;
-            }
-        });
-
-        function renderManifestCatalogDeck(files) {
-            manifestSummaryCount.textContent = "MAPPED ENTRIES: " + files.length;
-            manifestViewerDeck.className = "flex-1 w-full overflow-y-auto border border-slate-800 bg-[#0e101a] rounded-lg custom-scroll p-1 space-y-1 max-h-[380px] min-h-[200px]";
-            manifestViewerDeck.innerHTML = "";
-
-            files.forEach(f => {
-                const row = document.createElement('div');
-                row.className = "flex items-center justify-between p-2 hover:bg-[#151826] border border-transparent hover:border-slate-800/80 rounded-lg transition-all group cursor-pointer";
-                row.setAttribute('data-index', f.index);
-
-                let labelStyle = "text-slate-400 bg-slate-800 border border-slate-700";
-                if(f.path.startsWith("Textures/")) labelStyle = "text-blue-400 bg-blue-950/40 border border-blue-900/40";
-                else if(f.path.startsWith("Audio/")) labelStyle = "text-emerald-400 bg-emerald-950/40 border border-emerald-900/40";
-                else if(f.path.startsWith("Video/")) labelStyle = "text-amber-400 bg-amber-950/40 border border-amber-900/40";
-                else if(f.path.startsWith("Text/")) labelStyle = "text-cyan-400 bg-cyan-950/40 border border-cyan-900/40";
-
-                row.innerHTML = `
-                    <div class="flex items-center space-x-2.5 truncate mr-2 flex-1 min-w-0" onclick="triggerAssetInspectionViewport('${f.name}', ${f.index}, '${f.path}')">
-                        <span class="text-[9px] mono-font px-1.5 py-0.5 rounded uppercase font-medium shrink-0 tracking-wide ${labelStyle}">${f.path.split('/')[0]}</span>
-                        <div class="text-[11px] text-slate-300 mono-font truncate tracking-tight">${f.name}</div>
+                <div class="flex items-center gap-2 hidden" id="listActions">
+                    <!-- Multi-Select Filter -->
+                    <div class="custom-dropdown w-28" id="filterDropdown">
+                        <div class="dropdown-trigger" id="filterTrigger">
+                            <span>Filter</span> <i class="fa-solid fa-chevron-down text-[8px]"></i>
+                        </div>
+                        <div class="dropdown-menu custom-scrollbar" id="filterMenu"></div>
                     </div>
-                    <button class="single-dl-btn text-slate-500 hover:text-slate-300 transition-colors p-1 shrink-0" data-index="${f.index}" data-name="${f.name}">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"></path></svg>
-                    </button>
-                `;
-                manifestViewerDeck.appendChild(row);
-            });
-
-            downloadAllBtn.classList.remove('hidden');
-            downloadAllBtn.onclick = triggerUnifiedZipDownload;
-
-            document.querySelectorAll('.single-dl-btn').forEach(b => {
-                b.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    downloadSingleDirectAsset(b.getAttribute('data-name'), b.getAttribute('data-index'));
-                });
-            });
-        }
-
-        async function triggerAssetInspectionViewport(name, index, categoryPath) {
-            previewAssetMeta.textContent = "TARGET POINTER: " + name;
-            previewOutputViewport.innerHTML = `
-                <div class="flex flex-col items-center space-y-1.5 text-slate-500 font-mono text-[10px]">
-                    <span class="w-3 h-3 border border-slate-400 border-t-transparent rounded-full animate-spin"></span>
-                    <span>READING_BYTES...</span>
+                    <!-- Zip Options -->
+                    <div class="custom-dropdown w-10" id="zipDropdown">
+                        <div class="dropdown-trigger justify-center" style="padding: 8px 0;">
+                            <i class="fa-solid fa-file-zipper text-yellow-500"></i>
+                        </div>
+                        <div class="dropdown-menu right-0" id="zipMenu" style="width: 180px;">
+                            <div class="dropdown-item" onclick="downloadZip('normal')"><i class="fa-solid fa-box"></i> Download All</div>
+                            <div class="dropdown-item" onclick="downloadZip('filtered')"><i class="fa-solid fa-filter"></i> Filtered Only</div>
+                            <div class="dropdown-item" onclick="downloadZip('grouped')"><i class="fa-solid fa-folder-tree"></i> Grouped Folders</div>
+                        </div>
+                    </div>
                 </div>
-            `;
+            </div>
+            <div class="scrollable-content-box">
+                <div id="listEmptyState" class="absolute inset-0 flex flex-col items-center justify-center text-zinc-700">
+                    <i class="fa-solid fa-layer-group text-2xl mb-2"></i>
+                    <span class="text-[9px] font-bold gff uppercase tracking-widest">No assets parsed</span>
+                </div>
+                <div id="fileList" class="hidden absolute inset-0 overflow-y-auto p-2 space-y-1 custom-scrollbar"></div>
+            </div>
+        </div>
+    </div>
 
-            try {
-                const res = await fetch("/api/extract?download_type=single&file_index=" + index, { method: 'POST' });
-                if(!res.ok) throw new Error("Object cluster configuration index context lost.");
-                
-                const blob = await res.blob();
-                previewOutputViewport.innerHTML = "";
-
-                if(categoryPath.startsWith("Textures/")) {
-                    const imgUrl = URL.createObjectURL(blob);
-                    previewOutputViewport.innerHTML = `
-                        <div class="w-full h-full flex flex-col justify-between items-center space-y-2.5">
-                            <div class="w-full rounded-lg border border-slate-800 texture-grid p-2 overflow-auto flex items-center justify-center custom-scroll max-h-[220px]">
-                                <img src="${imgUrl}" class="max-w-full max-h-[180px] object-contain">
-                            </div>
-                            <div class="w-full flex justify-between items-center font-mono text-[9px] text-slate-500 px-0.5">
-                                <span>FORMAT: PNG</span>
-                                <a href="${imgUrl}" download="${name}" class="text-slate-300 underline font-medium hover:text-white">SAVE_ASSET</a>
-                            </div>
+    <!-- Column 3: Preview -->
+    <div class="uniform-panel panel-3">
+        <div class="panel-body">
+            <div class="mb-4 border-b border-zinc-900 pb-3">
+                <h2 class="text-xs font-black text-white uppercase tracking-wider gff">Live Preview</h2>
+                <p class="text-[10px] text-zinc-500">Visualizing data stream.</p>
+            </div>
+            <div class="scrollable-content-box bg-black flex flex-col">
+                <div id="previewFallback" class="flex-1 flex flex-col items-center justify-center text-zinc-800">
+                    <i class="fa-solid fa-eye text-2xl mb-2"></i>
+                    <span class="text-[9px] font-bold gff uppercase">Select Asset</span>
+                </div>
+                <div id="previewContent" class="hidden flex-1 flex flex-col p-2">
+                    <div id="mediaBox" class="flex-1 bg-[#0d0d0f] rounded-xl border border-zinc-800 overflow-hidden flex items-center justify-center relative"></div>
+                    <div class="mt-2 bg-[#121216] p-2 rounded-xl border border-zinc-800 flex items-center gap-3">
+                        <div class="flex-1 min-w-0 px-1">
+                            <p id="mediaTitle" class="text-[11px] font-bold text-zinc-300 truncate">Asset Name</p>
+                            <p id="mediaTypeLabel" class="text-[8px] font-black text-zinc-600 uppercase gff">Type</p>
                         </div>
-                    `;
-                }
-                else if(categoryPath.startsWith("Audio/")) {
-                    const audUrl = URL.createObjectURL(blob);
-                    previewOutputViewport.innerHTML = `
-                        <div class="w-full space-y-2.5 p-0.5 text-center">
-                            <div class="p-4 bg-[#0e101a] border border-slate-800 rounded-xl flex items-center justify-center">
-                                <svg class="w-5 h-5 text-slate-400 animate-pulse" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z"></path></svg>
-                            </div>
-                            <audio controls class="w-full rounded shadow-md accent-slate-400"><source src="${audUrl}"></audio>
-                        </div>
-                    `;
-                }
-                else if(categoryPath.startsWith("Video/")) {
-                    const vidUrl = URL.createObjectURL(blob);
-                    previewOutputViewport.innerHTML = `
-                        <video controls class="w-full rounded-lg border border-slate-800 bg-black max-h-[220px]"><source src="${vidUrl}"></video>
-                    `;
-                }
-                else if(categoryPath.startsWith("Text/")) {
-                    const textStr = await blob.text();
-                    const safeText = textStr.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-                    previewOutputViewport.innerHTML = `
-                        <div class="w-full h-full flex flex-col text-left">
-                            <pre class="flex-1 w-full bg-[#0e101a] border border-slate-800 p-2.5 rounded-lg font-mono text-[10px] text-slate-300 overflow-y-auto custom-scroll whitespace-pre-wrap max-h-[220px]">${safeText}</pre>
-                        </div>
-                    `;
-                } else {
-                    previewOutputViewport.innerHTML = `<div class="font-mono text-[10px] text-slate-500 uppercase">Preview not supported for asset class</div>`;
-                }
+                        <a id="singleSaveBtn" href="#" class="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-yellow-500 transition-all">
+                            <i class="fa-solid fa-download text-xs"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
-                previewAssetMeta.textContent = "INSPECTING: " + name;
+<script>
+let activeCache = [];
+let selectedFilters = new Set();
+const fileInput = document.getElementById("fileInput");
+const fileLabel = document.getElementById("fileLabel");
+const fileList = document.getElementById("fileList");
+const listWindowPanel = document.getElementById("listWindowPanel");
 
-            } catch(e) {
-                previewOutputViewport.innerHTML = `<div class="text-[10px] font-mono text-rose-400 p-1">${e.message}</div>`;
-            }
+// UI Interactions
+function setupDropdown(id) {
+    const el = document.getElementById(id);
+    const trigger = el.querySelector('.dropdown-trigger');
+    const menu = el.querySelector('.dropdown-menu');
+    trigger.onclick = (e) => {
+        e.stopPropagation();
+        document.querySelectorAll('.dropdown-menu').forEach(m => m !== menu && m.classList.remove('active'));
+        menu.classList.toggle('active');
+    };
+}
+setupDropdown('filterDropdown');
+setupDropdown('zipDropdown');
+document.onclick = () => document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('active'));
+
+// File Handling
+fileInput.onchange = () => {
+    const file = fileInput.files[0];
+    if(!file) return;
+    fileLabel.innerText = file.name;
+    fileLabel.classList.add('text-[#ffde00]');
+    document.getElementById('uploadIcon').className = "fa-solid fa-circle-check text-[#ffde00] text-xl";
+    document.getElementById('fileStatusText').innerText = "READY FOR UPLOAD";
+};
+
+document.getElementById('extractorForm').onsubmit = async (e) => {
+    e.preventDefault();
+    const file = fileInput.files[0];
+    if(!file) return;
+
+    // Reset UI
+    document.getElementById('statusBadge').innerText = "WORKING";
+    document.getElementById('statusBadge').style.color = "var(--ff-yellow)";
+    document.getElementById('listEmptyState').innerHTML = `<i class="fa-solid fa-circle-notch fa-spin text-yellow-500 text-xl"></i>`;
+    
+    const formData = new FormData();
+    formData.append("asset_bundle", file);
+
+    try {
+        const res = await fetch("/api/extract", { method: "POST", body: formData });
+        const data = await res.json();
+        if(data.error) throw new Error(data.error);
+
+        activeCache = data.files;
+        renderList();
+        updateFilterMenu();
+        
+        document.getElementById('listActions').classList.remove('hidden');
+        document.getElementById('listEmptyState').classList.add('hidden');
+        fileList.classList.remove('hidden');
+        
+        // Dynamic Resize
+        if(activeCache.length < 5) {
+            listWindowPanel.classList.remove('expanded');
+        } else {
+            listWindowPanel.classList.add('expanded');
         }
 
-        async function downloadSingleDirectAsset(name, index) {
-            try {
-                const response = await fetch("/api/extract?download_type=single&file_index=" + index, { method: 'POST' });
-                if (!response.ok) throw new Error("Linkage connection reference discarded.");
-                const blob = await response.blob();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = name;
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
-                a.remove();
-            } catch (err) {
-                alert("Download Error: " + err.message);
-            }
-        }
+        document.getElementById('statusBadge').innerText = "SUCCESS";
+        document.getElementById('statusBadge').style.color = "var(--ff-emerald)";
+        document.getElementById('statusDescText').innerText = `Decoded ${activeCache.length} assets.`;
+    } catch (err) {
+        document.getElementById('statusBadge').innerText = "FAILED";
+        document.getElementById('statusBadge').style.color = "var(--ff-red)";
+        document.getElementById('statusDescText').innerText = err.message;
+    }
+};
 
-        async function triggerUnifiedZipDownload() {
-            try {
-                const response = await fetch('/api/extract?download_type=zip', { method: 'POST' });
-                if (!response.ok) throw new Error("ZIP file package stream generation failed.");
-                const blob = await response.blob();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = "extracted_assets.zip";
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
-                a.remove();
-            } catch (err) {
-                alert("ZIP Compiling Failure: " + err.message);
-            }
+function updateFilterMenu() {
+    const labels = [...new Set(activeCache.map(i => i.label))].sort();
+    const menu = document.getElementById('filterMenu');
+    menu.innerHTML = `<div class="dropdown-item font-bold border-b border-zinc-800" onclick="toggleFilter('ALL')">Clear Filters</div>`;
+    labels.forEach(label => {
+        const item = document.createElement('div');
+        item.className = `dropdown-item ${selectedFilters.has(label) ? 'selected' : ''}`;
+        item.innerHTML = `<i class="fa-solid ${selectedFilters.has(label) ? 'fa-square-check' : 'fa-square'}"></i> ${label}`;
+        item.onclick = (e) => { e.stopPropagation(); toggleFilter(label); };
+        menu.appendChild(item);
+    });
+}
+
+function toggleFilter(label) {
+    if(label === 'ALL') selectedFilters.clear();
+    else if(selectedFilters.has(label)) selectedFilters.delete(label);
+    else selectedFilters.add(label);
+    updateFilterMenu();
+    renderList();
+}
+
+function getIcon(label) {
+    const l = label.toLowerCase();
+    if(l.includes('image') || l.includes('texture')) return 'fa-image text-yellow-500';
+    if(l.includes('audio')) return 'fa-volume-high text-cyan-400';
+    if(l.includes('mesh')) return 'fa-cube text-purple-400';
+    if(l.includes('video')) return 'fa-play-circle text-red-500';
+    return 'fa-file-code text-zinc-500';
+}
+
+function renderList() {
+    fileList.innerHTML = "";
+    const filtered = activeCache.filter(i => selectedFilters.size === 0 || selectedFilters.has(i.label));
+    document.getElementById('cacheCounterText').innerText = `${filtered.length} Items Displayed`;
+    
+    filtered.forEach(item => {
+        const row = document.createElement('div');
+        row.className = "flex items-center justify-between p-2 rounded-xl bg-[#0f0f13] border border-zinc-900 hover:border-zinc-700 cursor-pointer group";
+        row.onclick = () => selectFile(item);
+        row.innerHTML = `
+            <div class="flex items-center gap-3 min-w-0">
+                <div class="w-8 h-8 rounded-lg bg-black flex items-center justify-center border border-zinc-800">
+                    <i class="fa-solid ${getIcon(item.label)} text-[10px]"></i>
+                </div>
+                <div class="min-w-0">
+                    <p class="text-[11px] font-bold text-zinc-300 truncate group-hover:text-white">${item.name}</p>
+                    <p class="text-[8px] font-black text-zinc-600 uppercase gff">${item.label}</p>
+                </div>
+            </div>
+        `;
+        fileList.appendChild(row);
+    });
+}
+
+async function selectFile(item) {
+    document.getElementById('previewFallback').classList.add('hidden');
+    document.getElementById('previewContent').classList.remove('hidden');
+    const mediaBox = document.getElementById('mediaBox');
+    const title = document.getElementById('mediaTitle');
+    const typeLabel = document.getElementById('mediaTypeLabel');
+    const saveBtn = document.getElementById('singleSaveBtn');
+    
+    title.innerText = item.name;
+    typeLabel.innerText = item.label;
+    const url = `/api/extract?download_type=single&file_index=${item.index}`;
+    saveBtn.href = url;
+    mediaBox.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin text-zinc-800"></i>`;
+
+    const ext = item.name.split('.').pop().toLowerCase();
+    
+    if(['png','jpg','webp'].includes(ext)) {
+        mediaBox.innerHTML = `<img src="${url}" class="pixelated-render p-4">`;
+    } else if(['mp3','wav','ogg'].includes(ext)) {
+        mediaBox.innerHTML = `
+            <div class="flex flex-col items-center w-full p-4">
+                <canvas id="waveCanvas"></canvas>
+                <div class="flex items-center gap-4 mt-4 w-full">
+                    <button id="playBtn" class="w-10 h-10 rounded-full bg-cyan-500 text-black flex items-center justify-center"><i class="fa-solid fa-play"></i></button>
+                    <div class="flex-1 h-1 bg-zinc-800 rounded-full overflow-hidden"><div id="audioProg" class="h-full bg-cyan-500 w-0"></div></div>
+                </div>
+                <audio id="activeAudio" src="${url}" class="hidden"></audio>
+            </div>`;
+        initAudioPlayer();
+    } else if(ext === 'mp4') {
+        mediaBox.innerHTML = `<video src="${url}" controls class="max-h-full"></video>`;
+    } else {
+        try {
+            const r = await fetch(url);
+            const txt = await r.text();
+            mediaBox.innerHTML = `<pre class="text-[10px] text-zinc-500 p-4 w-full h-full overflow-auto text-left whitespace-pre-wrap">${txt.slice(0, 5000)}</pre>`;
+        } catch {
+            mediaBox.innerHTML = `<i class="fa-solid fa-file-circle-exclamation text-zinc-800 text-3xl"></i>`;
         }
-    </script>
+    }
+}
+
+function initAudioPlayer() {
+    const audio = document.getElementById('activeAudio');
+    const canvas = document.getElementById('waveCanvas');
+    const ctx = canvas.getContext('2d');
+    const playBtn = document.getElementById('playBtn');
+    const prog = document.getElementById('audioProg');
+
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const source = audioCtx.createMediaElementSource(audio);
+    const analyser = audioCtx.createAnalyser();
+    source.connect(analyser);
+    analyser.connect(audioCtx.destination);
+    analyser.fftSize = 64;
+    const bufferLength = analyser.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+
+    function draw() {
+        requestAnimationFrame(draw);
+        analyser.getByteFrequencyData(dataArray);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const barWidth = (canvas.width / bufferLength) * 2.5;
+        let x = 0;
+        for(let i = 0; i < bufferLength; i++) {
+            const barHeight = (dataArray[i] / 255) * canvas.height;
+            ctx.fillStyle = audio.paused ? '#1a1a1a' : `rgb(56, 189, 248)`;
+            ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+            x += barWidth + 2;
+        }
+        prog.style.width = `${(audio.currentTime / audio.duration) * 100}%`;
+    }
+    draw();
+
+    playBtn.onclick = () => {
+        if(audioCtx.state === 'suspended') audioCtx.resume();
+        if(audio.paused) { audio.play(); playBtn.innerHTML = '<i class="fa-solid fa-pause"></i>'; }
+        else { audio.pause(); playBtn.innerHTML = '<i class="fa-solid fa-play"></i>'; }
+    };
+}
+
+function downloadZip(mode) {
+    let url = `/api/extract?download_type=zip&mode=${mode}`;
+    if(mode === 'filtered') {
+        const filteredIdx = activeCache
+            .filter(i => selectedFilters.size === 0 || selectedFilters.has(i.label))
+            .map(i => i.index);
+        url += `&indices=${filteredIdx.join(',')}`;
+    }
+    window.location.href = url;
+}
+</script>
 </body>
 </html>
