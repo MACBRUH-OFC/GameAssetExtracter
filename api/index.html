@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Universal Asset Extractor | Full Extraction Pipeline</title>
+    <title>Asset Extractor</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
         
+        /* Official Clean Typography Integration */
         @font-face {
             font-family: 'GFFLatin';
             src: url('https://dl.dir.freefiremobile.com/common/web_event/common/fonts/website/GFFLatinW05-Regular.woff') format('woff');
@@ -22,8 +23,8 @@
         }
 
         body {
-            background: radial-gradient(circle at 10% 20%, #0b0e16, #080a10);
-            font-family: 'GFFLatin', 'Inter', sans-serif;
+            background-color: #0f111a;
+            font-family: 'GFFLatin', sans-serif;
             letter-spacing: 0.01em;
         }
         
@@ -31,123 +32,140 @@
             font-family: 'JetBrains Mono', monospace;
         }
         
+        /* Fine Micro Scrollbar Layer */
         .custom-scroll::-webkit-scrollbar { width: 4px; height: 4px; }
-        .custom-scroll::-webkit-scrollbar-track { background: #161925; border-radius: 10px; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #2e3855; border-radius: 10px; }
-        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #4b5a8c; }
+        .custom-scroll::-webkit-scrollbar-track { background: #161925; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #2e344d; border-radius: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #4b557d; }
 
+        /* Muted Checkerboard for Texture Canvas Transparency */
         .texture-grid {
-            background-size: 12px 12px;
-            background-image: linear-gradient(to right, #1a1f2e 1px, transparent 1px), linear-gradient(to bottom, #1a1f2e 1px, transparent 1px);
-            background-color: #0f121c;
+            background-size: 10px 10px;
+            background-image: linear-gradient(to right, #1d2133 1px, transparent 1px), linear-gradient(to bottom, #1d2133 1px, transparent 1px);
+            background-color: #141722;
         }
 
+        /* Clean Streamlined Logs Layout Row Without Timestamps */
         .log-row {
-            padding: 4px 6px;
-            border-bottom: 1px solid #1a1e2c;
-            font-size: 10px;
-            line-height: 1.35;
-            color: #9aa4bf;
-            font-family: 'JetBrains Mono', monospace;
-            transition: all 0.1s ease;
+            padding: 3px 4px;
+            border-bottom: 1px solid #1a1e2e;
+            line-height: 1.4;
+            color: #94a3b8;
         }
-        .log-row:hover { background: #1a1f30; color: #e2e8ff; }
-
-        .asset-card {
-            transition: all 0.15s cubic-bezier(0.2, 0.9, 0.4, 1.1);
-        }
-        .asset-card:hover {
-            transform: translateY(-1px);
-            background: #1c2138;
-            border-color: #2e3a5c;
-        }
-
-        button:active { transform: scale(0.98); }
     </style>
 </head>
-<body class="text-gray-300 min-h-screen flex flex-col antialiased">
+<body class="text-slate-300 min-h-screen flex flex-col justify-between antialiased select-none">
 
-    <header class="w-full border-b border-gray-800/80 bg-[#0c0f18]/90 backdrop-blur-md sticky top-0 z-50 px-5 py-3 flex items-center justify-between">
-        <div class="flex items-center gap-3">
-            <div class="bg-gradient-to-br from-blue-500 to-indigo-600 p-1.5 rounded-lg shadow-md">
-                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5v9l9 5.25m0-5.25v9"></path></svg>
+    <header class="w-full border-b border-slate-800/60 bg-[#141724] px-4 md:px-6 py-3 flex items-center justify-between sticky top-0 z-50">
+        <div class="flex items-center space-x-2.5 min-w-0">
+            <div class="p-1.5 bg-slate-800 text-slate-200 rounded-lg shrink-0">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-5.25v9"></path>
+                </svg>
             </div>
-            <span class="font-semibold text-white tracking-tight text-base">UNIVERSAL<span class="text-indigo-400"> ASSET EXTRACTOR</span></span>
-            <span class="text-[9px] font-mono bg-indigo-950/40 border border-indigo-800/50 px-2 py-0.5 rounded-full text-indigo-300">FULL SPECTRUM</span>
+            <span class="font-medium text-white tracking-wide text-sm uppercase truncate">Asset Extractor</span>
         </div>
-        <div class="flex items-center gap-2 bg-black/30 backdrop-blur border border-gray-800 rounded-md px-3 py-1">
-            <div class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
-            <span class="text-[9px] font-mono text-gray-400">EXTRACTOR_READY</span>
+        <div class="flex items-center space-x-1.5 bg-slate-800/60 border border-slate-700/50 px-2.5 py-1 rounded-md text-[10px] font-mono text-slate-400 shrink-0">
+            <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+            <span>READY</span>
         </div>
     </header>
 
-    <main class="flex-1 w-full max-w-7xl mx-auto p-5 grid grid-cols-1 lg:grid-cols-12 gap-5">
+    <main class="flex-1 w-full max-w-7xl mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
         
-        <!-- Left Panel: Controls -->
-        <div class="lg:col-span-4 flex flex-col gap-5">
-            <div class="bg-[#0e1120]/90 border border-gray-800/60 rounded-2xl p-5 shadow-xl backdrop-blur-sm">
-                <h2 class="text-xs font-bold uppercase text-indigo-400 tracking-wider font-mono">⚡ Extraction Core</h2>
-                <p class="text-[11px] text-gray-500 mt-1 mb-4">Accepts Unity bundles, asset files, packages — extracts Textures, Audio, Video, Meshes, Fonts, TextAssets, Shaders (raw).</p>
+        <div class="lg:col-span-4 flex flex-col gap-5 w-full h-full justify-between">
+            
+            <div class="bg-[#141724] border border-slate-800/60 rounded-xl p-4 flex flex-col space-y-3.5 flex-1">
+                <div>
+                    <h2 class="text-xs font-medium uppercase text-slate-400 font-mono">Control Desk</h2>
+                    <p class="text-[11px] text-slate-500 mt-0.5 leading-relaxed">Provide a bundle file below to clear indices and extract true file configuration identities mapping across structural byte blocks.</p>
+                </div>
 
-                <div id="dropzone" class="border-2 border-dashed border-gray-700 hover:border-indigo-500 bg-[#0a0d18] rounded-xl p-5 text-center cursor-pointer transition-all duration-200 group">
-                    <input type="file" id="fileInput" class="hidden" accept=".unity3d,.assetbundle,.assets,.dat,.bin,.pack,.bundle">
-                    <div class="flex flex-col items-center gap-2">
-                        <div class="text-gray-500 group-hover:text-indigo-400 transition"><svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z"></path></svg></div>
-                        <div class="text-xs text-gray-400">Drag & drop or <span class="text-indigo-300 underline font-medium">browse bundle</span></div>
-                        <div class="text-[9px] text-gray-600 font-mono">Max 30 MB (adjustable)</div>
+                <div id="dropzone" class="border border-dashed border-slate-700 hover:border-slate-500 bg-[#181c2c] hover:bg-[#1b2033] rounded-lg p-4 text-center cursor-pointer transition-colors duration-150 group">
+                    <input type="file" id="fileInput" class="hidden">
+                    <div class="flex flex-col items-center space-y-2">
+                        <div class="text-slate-500 group-hover:text-slate-300 transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z"></path></svg>
+                        </div>
+                        <div class="text-[11px] text-slate-400">Select file path reference or <span class="text-slate-200 underline font-medium">browse</span></div>
+                        <div class="text-[9px] text-slate-600 font-mono">MAX CAPACITY: 5.00 MB</div>
                     </div>
                 </div>
 
-                <div id="filePanel" class="hidden mt-4 bg-[#0c0f1a] border border-gray-800 rounded-xl p-3 space-y-1.5 font-mono text-[10px]">
-                    <div class="flex justify-between"><span class="text-gray-500">📦 FILE:</span><span id="fileName" class="text-gray-200 font-medium truncate max-w-[180px]">none</span></div>
-                    <div class="flex justify-between"><span class="text-gray-500">💾 SIZE:</span><span id="fileSize" class="text-gray-300">0 MB</span></div>
-                    <div class="flex justify-between"><span class="text-gray-500">🔐 HASH:</span><span id="fileHash" class="text-gray-400 text-[9px]">pending</span></div>
+                <div id="filePanel" class="hidden bg-[#181c2c] border border-slate-800 rounded-lg p-2.5 space-y-1 font-mono text-[10px]">
+                    <div class="flex justify-between items-center"><span class="text-slate-500">FILE:</span><span id="fileName" class="text-slate-300 font-medium truncate max-w-[140px] sm:max-w-[200px]">None</span></div>
+                    <div class="flex justify-between items-center"><span class="text-slate-500">VOLUME:</span><span id="fileSize" class="text-slate-300">0.00 MB</span></div>
                 </div>
 
-                <button id="extractBtn" disabled class="w-full mt-4 bg-gradient-to-r from-indigo-600 to-purple-700 hover:from-indigo-500 hover:to-purple-600 disabled:from-gray-800 disabled:to-gray-800 disabled:text-gray-600 text-white font-semibold py-2.5 rounded-xl text-xs uppercase tracking-wide transition-all shadow-md disabled:shadow-none">
-                    🔍 START FULL EXTRACTION
+                <button id="extractBtn" disabled class="w-full bg-slate-200 hover:bg-white disabled:bg-slate-800/40 text-black disabled:text-slate-600 font-medium py-2 px-4 rounded-lg text-xs uppercase transition-colors disabled:cursor-not-allowed">
+                    Extract Assets
                 </button>
                 
-                <div id="progressContainer" class="hidden mt-4 bg-[#0c0f1a] border border-gray-800 rounded-xl p-3">
-                    <div class="flex justify-between text-[9px] font-mono"><span id="statusText" class="text-indigo-300">INITIALIZING...</span><span id="progressPercent">0%</span></div>
-                    <div class="w-full bg-gray-800 rounded-full h-1.5 mt-2"><div id="progressBar" class="bg-indigo-500 h-full rounded-full transition-all duration-300" style="width:0%"></div></div>
+                <div id="progressContainer" class="hidden bg-[#181c2c] border border-slate-800 rounded-lg p-2.5 space-y-1">
+                    <div class="flex justify-between items-center font-mono text-[9px]">
+                        <span id="statusText" class="text-slate-500 truncate max-w-[150px]">WAITING_ON_STREAM...</span>
+                        <span id="progressPercent" class="text-slate-300">0%</span>
+                    </div>
+                    <div class="w-full bg-slate-800 rounded-full h-0.5 overflow-hidden">
+                        <div id="progressBar" class="bg-slate-400 h-full rounded-full transition-all duration-150" style="width: 0%"></div>
+                    </div>
                 </div>
             </div>
 
-            <div class="bg-[#0e1120]/90 border border-gray-800/60 rounded-2xl p-4 h-[210px] flex flex-col">
-                <div class="flex justify-between items-center pb-2 border-b border-gray-800"><span class="text-[9px] font-bold text-gray-400 uppercase tracking-wider">📋 ACTIVITY LOG</span><button id="clearLogs" class="text-[9px] text-gray-600 hover:text-gray-300">CLEAR</button></div>
-                <div id="sysActivityLogs" class="flex-1 overflow-y-auto custom-scroll mt-1 space-y-0.5 select-text"></div>
+            <div class="bg-[#141724] border border-slate-800/60 rounded-xl p-3 flex flex-col space-y-1.5 h-[190px] min-h-[190px]">
+                <div class="flex justify-between items-center border-b border-slate-800 pb-1.5">
+                    <span class="text-[9px] font-medium uppercase tracking-wide text-slate-400 font-mono">Activity Log</span>
+                    <button onclick="document.getElementById('sysActivityLogs').innerHTML=''" class="text-[9px] font-mono text-slate-600 hover:text-slate-400 uppercase transition-colors">Clear</button>
+                </div>
+                <div id="sysActivityLogs" class="flex-1 mono-font text-[10px] overflow-y-auto custom-scroll pr-0.5 select-text space-y-0.5">
+                    <div class="log-row border-none !text-slate-600">Core initialized. Standby for direct resource stream parsing maps.</div>
+                </div>
             </div>
         </div>
 
-        <!-- Middle Panel: Extracted Assets List -->
-        <div class="lg:col-span-5 bg-[#0e1120]/90 border border-gray-800/60 rounded-2xl p-4 flex flex-col shadow-lg">
-            <div class="flex justify-between items-center pb-3 border-b border-gray-800">
-                <div><h2 class="text-xs font-bold text-gray-300 uppercase tracking-wide">🗂️ EXTRACTED ASSETS</h2><span id="manifestSummaryCount" class="text-[9px] text-gray-500 font-mono">0 items</span></div>
-                <button id="downloadAllBtn" class="hidden bg-emerald-800/50 hover:bg-emerald-700 border border-emerald-700/50 text-emerald-200 text-[10px] font-bold px-3 py-1.5 rounded-lg transition flex items-center gap-1.5">📦 DOWNLOAD ALL ZIP</button>
+        <div class="lg:col-span-4 bg-[#141724] border border-slate-800/60 rounded-xl p-4 flex flex-col space-y-3.5 min-h-[400px] lg:h-auto">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-2.5 gap-2">
+                <div class="min-w-0">
+                    <h2 class="text-xs font-medium uppercase text-slate-400 font-mono block">Extracted Files</h2>
+                    <span id="manifestSummaryCount" class="text-[10px] text-slate-500 block truncate font-mono">No active mapping context records.</span>
+                </div>
+                <button id="downloadAllBtn" class="hidden items-center gap-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 px-2.5 py-1 rounded-lg text-[10px] font-medium transition-colors shrink-0">
+                    Download ZIP
+                </button>
             </div>
-            <div id="manifestViewerDeck" class="flex-1 overflow-y-auto custom-scroll mt-3 max-h-[480px] space-y-1.5 pr-1"></div>
+
+            <div id="manifestViewerDeck" class="flex-1 overflow-y-auto border border-slate-800 bg-[#181c2c] rounded-lg custom-scroll flex flex-col items-center justify-center p-6 text-center text-slate-600 space-y-1.5 max-h-[400px] lg:max-h-[none]">
+                <svg class="w-4 h-4 text-slate-700" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 13.5h3.86a2.25 2.25 0 012.008 1.24l.885 1.77a2.25 2.25 0 002.007 1.24h1.98a2.25 2.25 0 002.007-1.24l.885-1.77a2.25 2.25 0 012.007-1.24h3.86m-18 0h18m-18 0v-7.5A2.25 2.25 0 015.25 3h13.5A2.25 2.25 0 0121 5.25v7.5m-18 0v6a2.25 2.25 0 002.25 2.25h13.5A2.25 2.25 0 0021 18.75v-6M16.5 7.5h.008v.008h-.008V7.5zm0 3h.008v.008h-.008v-.008zm-3-3h.008v.008h-.008V7.5zm0 3h.008v.008h-.008v-.008z"></path></svg>
+                <span class="text-[10px] uppercase font-mono tracking-wide">Registry Inactive</span>
+            </div>
         </div>
 
-        <!-- Right Panel: Live Preview -->
-        <div class="lg:col-span-3 bg-[#0e1120]/90 border border-gray-800/60 rounded-2xl p-4 flex flex-col">
-            <div class="border-b border-gray-800 pb-2"><h2 class="text-xs font-bold text-gray-300 uppercase">🎨 ASSET PREVIEW</h2><span id="previewAssetMeta" class="text-[9px] text-gray-500 font-mono truncate block">select any asset row</span></div>
-            <div id="previewOutputViewport" class="flex-1 mt-3 bg-[#080b12] border border-gray-800 rounded-xl flex items-center justify-center p-3 min-h-[280px] overflow-auto">
-                <div class="text-center text-gray-600"><svg class="w-8 h-8 mx-auto opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg><p class="text-[10px] mt-1">Preview canvas ready</p></div>
+        <div class="lg:col-span-4 bg-[#141724] border border-slate-800/60 rounded-xl p-4 flex flex-col space-y-3 min-h-[400px] lg:h-auto">
+            <div class="border-b border-slate-800 pb-2 min-w-0">
+                <h2 class="text-xs font-medium uppercase text-slate-400 font-mono block">Asset Canvas</h2>
+                <span id="previewAssetMeta" class="text-[10px] text-slate-500 font-mono truncate block max-w-full">Select a target row entry link...</span>
+            </div>
+
+            <div id="previewOutputViewport" class="flex-1 bg-[#181c2c] border border-slate-800 rounded-lg flex flex-col items-center justify-center p-3 overflow-hidden relative min-h-[280px]">
+                <div id="previewPlaceholder" class="text-center space-y-1 text-slate-600">
+                    <svg class="w-4 h-4 mx-auto text-slate-700" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    <div class="text-[9px] uppercase font-mono tracking-wider">Canvas Standby</div>
+                </div>
             </div>
         </div>
+
     </main>
 
-    <footer class="border-t border-gray-800/60 py-3 text-center text-[9px] text-gray-600 font-mono">⚙️ Full Asset Extractor • All types: Texture2D, Sprite, AudioClip, VideoClip, TextAsset, Font, Mesh, Shader, MonoBehaviour</footer>
+    <footer class="w-full border-t border-slate-800/60 bg-[#0c0e17] px-6 py-2.5 text-center font-mono text-[9px] text-slate-600 uppercase tracking-widest">
+        Asset Extractor Workspace Core Matrix
+    </footer>
 
     <script>
-        // DOM refs
         const dropzone = document.getElementById('dropzone');
         const fileInput = document.getElementById('fileInput');
         const filePanel = document.getElementById('filePanel');
         const fileName = document.getElementById('fileName');
         const fileSize = document.getElementById('fileSize');
-        const fileHash = document.getElementById('fileHash');
         const extractBtn = document.getElementById('extractBtn');
         const progressContainer = document.getElementById('progressContainer');
         const progressBar = document.getElementById('progressBar');
@@ -159,231 +177,238 @@
         const sysActivityLogs = document.getElementById('sysActivityLogs');
         const previewAssetMeta = document.getElementById('previewAssetMeta');
         const previewOutputViewport = document.getElementById('previewOutputViewport');
-        const clearLogsBtn = document.getElementById('clearLogs');
 
         let selectedFile = null;
-        const MAX_SIZE = 30 * 1024 * 1024; // 30MB for flexibility
+        const ABSOLUTE_SAFEGUARD_LIMIT = 5.0 * 1024 * 1024;
 
+        // Simplified Stream Log Appender Without Time Stamps or Brackets
         function appendLog(msg, isError = false) {
-            const div = document.createElement('div');
-            div.className = `log-row ${isError ? 'text-rose-400' : 'text-gray-300'}`;
-            div.textContent = msg;
-            sysActivityLogs.appendChild(div);
-            div.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            const row = document.createElement('div');
+            row.className = "log-row hover:bg-slate-800/20 transition-colors";
+            if (isError) row.style.color = "#f87171";
+            row.textContent = msg;
+            sysActivityLogs.appendChild(row);
+            sysActivityLogs.scrollTop = sysActivityLogs.scrollHeight;
         }
 
-        clearLogsBtn.onclick = () => { sysActivityLogs.innerHTML = '<div class="log-row text-gray-600">Log buffer cleared.</div>'; };
+        ['dragenter', 'dragover'].forEach(name => {
+            dropzone.addEventListener(name, (e) => { e.preventDefault(); dropzone.classList.add('border-slate-500', 'bg-[#1b2033]'); });
+        });
+        ['dragleave', 'drop'].forEach(name => {
+            dropzone.addEventListener(name, (e) => { e.preventDefault(); dropzone.classList.remove('border-slate-500', 'bg-[#1b2033]'); });
+        });
 
-        // drag & drop
-        ['dragenter', 'dragover'].forEach(ev => dropzone.addEventListener(ev, (e) => { e.preventDefault(); dropzone.classList.add('border-indigo-500', 'bg-indigo-950/20'); }));
-        ['dragleave', 'drop'].forEach(ev => dropzone.addEventListener(ev, (e) => { e.preventDefault(); dropzone.classList.remove('border-indigo-500', 'bg-indigo-950/20'); }));
-        dropzone.addEventListener('drop', (e) => { if(e.dataTransfer.files.length) processFile(e.dataTransfer.files[0]); });
+        dropzone.addEventListener('drop', (e) => { if(e.dataTransfer.files.length) processFileInputStaging(e.dataTransfer.files[0]); });
         dropzone.addEventListener('click', () => fileInput.click());
-        fileInput.addEventListener('change', (e) => { if(e.target.files.length) processFile(e.target.files[0]); });
+        fileInput.addEventListener('change', (e) => { if(e.target.files.length) processFileInputStaging(e.target.files[0]); });
 
-        async function computeSimpleHash(buffer) {
-            const hashBuf = await crypto.subtle.digest('SHA-1', buffer.slice(0, 4096));
-            return Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2,'0')).join('').slice(0, 12);
-        }
-
-        async function processFile(file) {
-            if (file.size > MAX_SIZE) {
-                appendLog(`❌ File too large: ${file.name} > 30MB limit`, true);
-                alert("File exceeds 30MB extraction limit");
+        function processFileInputStaging(file) {
+            if (file.size > ABSOLUTE_SAFEGUARD_LIMIT) {
+                appendLog("Rejected: " + file.name + " exceeds file constraint threshold allocation limits.", true);
+                alert("File Denied: Size exceeds the safe 5.00 MB framework limit.");
                 selectedFile = null;
                 extractBtn.disabled = true;
                 filePanel.classList.add('hidden');
                 return;
             }
+
             selectedFile = file;
             fileName.textContent = file.name;
             fileSize.textContent = (file.size / (1024 * 1024)).toFixed(2) + " MB";
-            const buffer = await file.slice(0, 4096).arrayBuffer();
-            const hash = await computeSimpleHash(buffer);
-            fileHash.textContent = hash;
             filePanel.classList.remove('hidden');
             extractBtn.disabled = false;
-            appendLog(`📁 Loaded asset bundle: ${file.name} (${(file.size/1024).toFixed(1)} KB)`);
+            appendLog("Loaded reference element: " + file.name);
         }
 
-        // Extraction handler
         extractBtn.addEventListener('click', async () => {
-            if (!selectedFile) return;
+            if(!selectedFile) return;
             extractBtn.disabled = true;
             progressContainer.classList.remove('hidden');
-            progressBar.style.width = '0%';
-            progressPercent.innerText = '0%';
-            statusText.innerText = 'UPLOADING...';
-            appendLog(`🚀 Sending bundle to extraction engine...`);
+            
+            statusText.textContent = "INGESTING_PAYLOAD...";
+            progressBar.style.width = '35%';
+            progressPercent.textContent = '35%';
+            appendLog("Transmitting bundle bytes chunk array blocks to extraction core...");
 
             try {
                 const formData = new FormData();
                 formData.append('asset_bundle', selectedFile);
 
-                statusText.innerText = 'PARSING UNITY STRUCTURE';
-                progressBar.style.width = '30%';
-                progressPercent.innerText = '30%';
+                const response = await fetch('/api/extract', {
+                    method: 'POST',
+                    body: formData
+                });
 
-                const response = await fetch('/api/extract', { method: 'POST', body: formData });
-                progressBar.style.width = '70%';
-                progressPercent.innerText = '70%';
-                statusText.innerText = 'ASSEMBLING ASSETS';
+                progressBar.style.width = '75%';
+                progressPercent.textContent = '75%';
+                statusText.textContent = "DECOUPLING_HEADERS...";
+                appendLog("Payload arrived safely. Resolving structural object headers...");
 
-                if (!response.ok) {
-                    const errData = await response.json();
-                    throw new Error(errData.error || 'Extraction pipeline failure');
+                const typeHeader = response.headers.get("content-type");
+                if (!typeHeader || !typeHeader.includes("application/json")) {
+                    throw new Error("Pipeline structure mismatch. Output target structure broken.");
                 }
 
                 const result = await response.json();
-                if (!result.files || !result.files.length) throw new Error('No assets recognized in bundle.');
+                if (!response.ok) throw new Error(result.error || "Unhandled sequence operation abort.");
 
-                appendLog(`✅ Extraction success: found ${result.files.length} valid assets (textures, audio, video, text, meshes, fonts, etc.)`);
-                renderAssetCatalog(result.files);
+                appendLog("Extraction complete. Successfully located " + result.files.length + " individual elements.");
+                renderManifestCatalogDeck(result.files);
+                
+                statusText.textContent = "COMPLETED_CLEANLY";
                 progressBar.style.width = '100%';
-                progressPercent.innerText = '100%';
-                statusText.innerText = 'READY';
-                setTimeout(() => { progressContainer.classList.add('hidden'); }, 1800);
+                progressPercent.textContent = '100%';
+
             } catch (err) {
-                appendLog(`⛔ ERROR: ${err.message}`, true);
-                statusText.innerText = 'FAILED';
-                progressBar.classList.add('bg-rose-500');
-                progressBar.style.backgroundColor = '#f43f5e';
-                setTimeout(() => progressContainer.classList.add('hidden'), 2500);
+                appendLog(err.message, true);
+                manifestSummaryCount.innerHTML = `<span class="text-rose-400 font-mono">ERROR</span>`;
+                manifestViewerDeck.innerHTML = `<div class="text-[11px] text-rose-400 font-mono p-3 bg-rose-950/20 border border-rose-900/40 rounded-lg w-full text-center">${err.message}</div>`;
+                statusText.textContent = "EXCEPTION_ABORT";
+                progressBar.className = "bg-rose-500 h-full rounded-full";
             } finally {
                 extractBtn.disabled = false;
             }
         });
 
-        function renderAssetCatalog(files) {
-            manifestSummaryCount.innerText = `${files.length} assets`;
-            manifestViewerDeck.innerHTML = '';
-            if (!files.length) {
-                manifestViewerDeck.innerHTML = '<div class="text-center text-gray-500 text-[10px] p-6">No assets extracted</div>';
-                downloadAllBtn.classList.add('hidden');
-                return;
-            }
-            downloadAllBtn.classList.remove('hidden');
-            downloadAllBtn.onclick = triggerZipDownload;
+        function renderManifestCatalogDeck(files) {
+            manifestSummaryCount.textContent = "MAPPED ENTRIES: " + files.length;
+            manifestViewerDeck.className = "flex-1 w-full overflow-y-auto border border-slate-800 bg-[#0e101a] rounded-lg custom-scroll p-1 space-y-1 max-h-[380px] min-h-[200px]";
+            manifestViewerDeck.innerHTML = "";
 
-            files.forEach((file, idx) => {
-                const category = file.path.split('/')[0] || 'Misc';
-                let badgeColor = 'bg-gray-800 text-gray-300';
-                if (category === 'Textures') badgeColor = 'bg-blue-950/70 text-blue-300 border-blue-800';
-                else if (category === 'Audio') badgeColor = 'bg-emerald-950/70 text-emerald-300 border-emerald-800';
-                else if (category === 'Video') badgeColor = 'bg-amber-950/70 text-amber-300 border-amber-800';
-                else if (category === 'Text') badgeColor = 'bg-cyan-950/70 text-cyan-300 border-cyan-800';
-                else if (category === 'Meshes') badgeColor = 'bg-purple-950/70 text-purple-300 border-purple-800';
-                else if (category === 'Fonts') badgeColor = 'bg-pink-950/70 text-pink-300 border-pink-800';
-                
-                const card = document.createElement('div');
-                card.className = 'asset-card bg-[#0c0f1a] border border-gray-800 rounded-lg p-2 flex items-center justify-between cursor-pointer hover:border-indigo-600/50';
-                card.setAttribute('data-index', idx);
-                card.innerHTML = `
-                    <div class="flex items-center gap-2.5 truncate flex-1 min-w-0">
-                        <span class="text-[9px] font-mono px-1.5 py-0.5 rounded border ${badgeColor} uppercase">${category}</span>
-                        <span class="text-[11px] font-mono truncate text-gray-200">${file.name}</span>
+            files.forEach(f => {
+                const row = document.createElement('div');
+                row.className = "flex items-center justify-between p-2 hover:bg-[#151826] border border-transparent hover:border-slate-800/80 rounded-lg transition-all group cursor-pointer";
+                row.setAttribute('data-index', f.index);
+
+                let labelStyle = "text-slate-400 bg-slate-800 border border-slate-700";
+                if(f.path.startsWith("Textures/")) labelStyle = "text-blue-400 bg-blue-950/40 border border-blue-900/40";
+                else if(f.path.startsWith("Audio/")) labelStyle = "text-emerald-400 bg-emerald-950/40 border border-emerald-900/40";
+                else if(f.path.startsWith("Video/")) labelStyle = "text-amber-400 bg-amber-950/40 border border-amber-900/40";
+                else if(f.path.startsWith("Text/")) labelStyle = "text-cyan-400 bg-cyan-950/40 border border-cyan-900/40";
+
+                row.innerHTML = `
+                    <div class="flex items-center space-x-2.5 truncate mr-2 flex-1 min-w-0" onclick="triggerAssetInspectionViewport('${f.name}', ${f.index}, '${f.path}')">
+                        <span class="text-[9px] mono-font px-1.5 py-0.5 rounded uppercase font-medium shrink-0 tracking-wide ${labelStyle}">${f.path.split('/')[0]}</span>
+                        <div class="text-[11px] text-slate-300 mono-font truncate tracking-tight">${f.name}</div>
                     </div>
-                    <button class="single-download-btn text-gray-500 hover:text-white p-1" data-name="${file.name}" data-index="${idx}">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"></path></svg>
+                    <button class="single-dl-btn text-slate-500 hover:text-slate-300 transition-colors p-1 shrink-0" data-index="${f.index}" data-name="${f.name}">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"></path></svg>
                     </button>
                 `;
-                card.querySelector('.single-download-btn').addEventListener('click', (e) => {
+                manifestViewerDeck.appendChild(row);
+            });
+
+            downloadAllBtn.classList.remove('hidden');
+            downloadAllBtn.onclick = triggerUnifiedZipDownload;
+
+            document.querySelectorAll('.single-dl-btn').forEach(b => {
+                b.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    downloadSingleAsset(file.name, idx);
+                    downloadSingleDirectAsset(b.getAttribute('data-name'), b.getAttribute('data-index'));
                 });
-                card.addEventListener('click', () => previewAsset(file.name, idx, file.path));
-                manifestViewerDeck.appendChild(card);
             });
         }
 
-        async function previewAsset(name, idx, path) {
-            previewAssetMeta.innerText = `🔍 ${name}`;
-            previewOutputViewport.innerHTML = `<div class="flex flex-col items-center"><div class="w-5 h-5 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin mb-2"></div><span class="text-[9px]">loading preview...</span></div>`;
+        async function triggerAssetInspectionViewport(name, index, categoryPath) {
+            previewAssetMeta.textContent = "TARGET POINTER: " + name;
+            previewOutputViewport.innerHTML = `
+                <div class="flex flex-col items-center space-y-1.5 text-slate-500 font-mono text-[10px]">
+                    <span class="w-3 h-3 border border-slate-400 border-t-transparent rounded-full animate-spin"></span>
+                    <span>READING_BYTES...</span>
+                </div>
+            `;
+
             try {
-                const res = await fetch(`/api/extract?download_type=single&file_index=${idx}`, { method: 'POST' });
-                if (!res.ok) throw new Error('Asset not available');
-                const blob = await res.blob();
-                const url = URL.createObjectURL(blob);
-                previewOutputViewport.innerHTML = '';
+                const res = await fetch("/api/extract?download_type=single&file_index=" + index, { method: 'POST' });
+                if(!res.ok) throw new Error("Object cluster configuration index context lost.");
                 
-                if (path.startsWith('Textures/')) {
-                    const img = document.createElement('img');
-                    img.src = url;
-                    img.className = 'max-w-full max-h-[220px] object-contain rounded-lg border border-gray-700 shadow-lg';
-                    previewOutputViewport.appendChild(img);
-                    const dlLink = document.createElement('a');
-                    dlLink.href = url;
-                    dlLink.download = name;
-                    dlLink.innerText = '💾 Save Image';
-                    dlLink.className = 'text-[9px] bg-gray-800 p-1 mt-2 rounded text-center text-indigo-300 inline-block';
-                    previewOutputViewport.appendChild(dlLink);
-                } 
-                else if (path.startsWith('Audio/')) {
-                    const audio = document.createElement('audio');
-                    audio.controls = true;
-                    audio.src = url;
-                    audio.className = 'w-full mt-2';
-                    previewOutputViewport.appendChild(audio);
+                const blob = await res.blob();
+                previewOutputViewport.innerHTML = "";
+
+                if(categoryPath.startsWith("Textures/")) {
+                    const imgUrl = URL.createObjectURL(blob);
+                    previewOutputViewport.innerHTML = `
+                        <div class="w-full h-full flex flex-col justify-between items-center space-y-2.5">
+                            <div class="w-full rounded-lg border border-slate-800 texture-grid p-2 overflow-auto flex items-center justify-center custom-scroll max-h-[220px]">
+                                <img src="${imgUrl}" class="max-w-full max-h-[180px] object-contain">
+                            </div>
+                            <div class="w-full flex justify-between items-center font-mono text-[9px] text-slate-500 px-0.5">
+                                <span>FORMAT: PNG</span>
+                                <a href="${imgUrl}" download="${name}" class="text-slate-300 underline font-medium hover:text-white">SAVE_ASSET</a>
+                            </div>
+                        </div>
+                    `;
                 }
-                else if (path.startsWith('Video/')) {
-                    const video = document.createElement('video');
-                    video.controls = true;
-                    video.src = url;
-                    video.className = 'max-h-[200px] w-full rounded-lg';
-                    previewOutputViewport.appendChild(video);
+                else if(categoryPath.startsWith("Audio/")) {
+                    const audUrl = URL.createObjectURL(blob);
+                    previewOutputViewport.innerHTML = `
+                        <div class="w-full space-y-2.5 p-0.5 text-center">
+                            <div class="p-4 bg-[#0e101a] border border-slate-800 rounded-xl flex items-center justify-center">
+                                <svg class="w-5 h-5 text-slate-400 animate-pulse" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z"></path></svg>
+                            </div>
+                            <audio controls class="w-full rounded shadow-md accent-slate-400"><source src="${audUrl}"></audio>
+                        </div>
+                    `;
                 }
-                else if (path.startsWith('Text/')) {
-                    const text = await blob.text();
-                    const pre = document.createElement('pre');
-                    pre.className = 'text-[9px] font-mono text-gray-300 whitespace-pre-wrap bg-black/40 p-2 rounded overflow-auto max-h-[200px] w-full';
-                    pre.innerText = text.slice(0, 2000) + (text.length > 2000 ? '\n... (truncated)' : '');
-                    previewOutputViewport.appendChild(pre);
+                else if(categoryPath.startsWith("Video/")) {
+                    const vidUrl = URL.createObjectURL(blob);
+                    previewOutputViewport.innerHTML = `
+                        <video controls class="w-full rounded-lg border border-slate-800 bg-black max-h-[220px]"><source src="${vidUrl}"></video>
+                    `;
                 }
-                else if (path.startsWith('Meshes/') || path.startsWith('Fonts/')) {
-                    previewOutputViewport.innerHTML = `<div class="text-center text-gray-400 text-[10px] p-3"><span class="block">🗃️ ${path.split('/')[0]} asset</span><a href="${url}" download="${name}" class="text-indigo-400 underline text-[10px]">⬇️ Download raw</a></div>`;
+                else if(categoryPath.startsWith("Text/")) {
+                    const textStr = await blob.text();
+                    const safeText = textStr.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                    previewOutputViewport.innerHTML = `
+                        <div class="w-full h-full flex flex-col text-left">
+                            <pre class="flex-1 w-full bg-[#0e101a] border border-slate-800 p-2.5 rounded-lg font-mono text-[10px] text-slate-300 overflow-y-auto custom-scroll whitespace-pre-wrap max-h-[220px]">${safeText}</pre>
+                        </div>
+                    `;
+                } else {
+                    previewOutputViewport.innerHTML = `<div class="font-mono text-[10px] text-slate-500 uppercase">Preview not supported for asset class</div>`;
                 }
-                else {
-                    previewOutputViewport.innerHTML = `<div class="text-gray-400 text-[10px] text-center">🔧 Raw asset (${blob.type || 'binary'}) <br> <a href="${url}" download="${name}" class="text-indigo-400 underline">Save file</a></div>`;
-                }
-                setTimeout(() => URL.revokeObjectURL(url), 60000);
+
+                previewAssetMeta.textContent = "INSPECTING: " + name;
+
             } catch(e) {
-                previewOutputViewport.innerHTML = `<div class="text-rose-400 text-[10px]">Preview failed: ${e.message}</div>`;
+                previewOutputViewport.innerHTML = `<div class="text-[10px] font-mono text-rose-400 p-1">${e.message}</div>`;
             }
         }
 
-        async function downloadSingleAsset(name, idx) {
+        async function downloadSingleDirectAsset(name, index) {
             try {
-                const res = await fetch(`/api/extract?download_type=single&file_index=${idx}`, { method: 'POST' });
-                if (!res.ok) throw new Error('Download error');
-                const blob = await res.blob();
-                const url = URL.createObjectURL(blob);
+                const response = await fetch("/api/extract?download_type=single&file_index=" + index, { method: 'POST' });
+                if (!response.ok) throw new Error("Linkage connection reference discarded.");
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
                 a.download = name;
                 document.body.appendChild(a);
                 a.click();
+                window.URL.revokeObjectURL(url);
                 a.remove();
-                URL.revokeObjectURL(url);
-                appendLog(`📥 Downloaded: ${name}`);
-            } catch(err) { alert("Download failed: " + err.message); }
+            } catch (err) {
+                alert("Download Error: " + err.message);
+            }
         }
 
-        async function triggerZipDownload() {
+        async function triggerUnifiedZipDownload() {
             try {
-                appendLog(`📦 Generating full ZIP archive...`);
-                const res = await fetch('/api/extract?download_type=zip', { method: 'POST' });
-                if (!res.ok) throw new Error('Zip generation failed');
-                const blob = await res.blob();
-                const url = URL.createObjectURL(blob);
+                const response = await fetch('/api/extract?download_type=zip', { method: 'POST' });
+                if (!response.ok) throw new Error("ZIP file package stream generation failed.");
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `extracted_assets_${Date.now()}.zip`;
+                a.download = "extracted_assets.zip";
                 document.body.appendChild(a);
                 a.click();
+                window.URL.revokeObjectURL(url);
                 a.remove();
-                URL.revokeObjectURL(url);
-                appendLog(`✅ ZIP bundle saved`);
-            } catch(e) { alert("Zip error: " + e.message); }
+            } catch (err) {
+                alert("ZIP Compiling Failure: " + err.message);
+            }
         }
     </script>
 </body>
