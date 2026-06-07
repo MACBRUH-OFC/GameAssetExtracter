@@ -64,7 +64,6 @@ def process_object_unrestricted(obj, raw_env_data):
         # IMAGES
         # ------------------------
         elif t in ["Texture2D", "Sprite"]:
-
     try:
         img = data.image
 
@@ -78,8 +77,7 @@ def process_object_unrestricted(obj, raw_env_data):
         )
 
     except Exception as e:
-        print("IMAGE ERROR", e)
-            if hasattr(data, "image"):
+        print("IMAGE ERROR:", e)
                 buf = io.BytesIO()
                 data.image.save(buf, format="PNG")
                 return (
@@ -140,7 +138,6 @@ def process_object_unrestricted(obj, raw_env_data):
         # MONOBEHAVIOUR
         # ------------------------
         elif t == "MonoBehaviour":
-
     try:
         tree = data.read_typetree()
 
@@ -154,16 +151,16 @@ def process_object_unrestricted(obj, raw_env_data):
             f"MonoBehaviour/{safe_name}.json"
         )
 
-    except Exception:
+    except Exception as e:
+        print("MONO ERROR:", e)
 
-        try:
-            raw = obj.get_raw_data()
+        raw = obj.get_raw_data()
 
-            return (
-                f"{safe_name}.bytes",
-                raw,
-                f"MonoBehaviour/{safe_name}.bytes"
-            )
+        return (
+            f"{safe_name}.bytes",
+            raw,
+            f"MonoBehaviour/{safe_name}.bytes"
+        )
         except:
             pass
 
@@ -296,18 +293,18 @@ def process_object_unrestricted(obj, raw_env_data):
                 )
 
     except Exception as e:
+    print(f"ERROR [{obj.type.name}] {e}")
+
     try:
         raw = obj.get_raw_data()
 
-        name = f"{obj.type.name}_{obj.path_id}"
-
         return (
-            f"{name}.bin",
+            f"{obj.type.name}_{obj.path_id}.bin",
             raw,
-            f"Failed/{name}.bin"
+            f"Failed/{obj.type.name}_{obj.path_id}.bin"
         )
     except:
-        print(f"ERROR {obj.type.name}: {e}")
+        pass
 
 return None
 
@@ -366,8 +363,9 @@ def handle_direct_extraction_stream():
         tracking_index_counter = 0
 
         for obj in objects_array:
-        print("TYPE:", obj.type.name)
-            res = process_object_unrestricted(obj, final_data)
+    print("TYPE:", obj.type.name)
+
+    res = process_object_unrestricted(obj, final_data)
             if res:
                 filename, file_bytes, zip_folder_path = res
                 h = hashlib.md5(file_bytes).hexdigest()
