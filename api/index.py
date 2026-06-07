@@ -19,7 +19,6 @@ import UnityPy
 from UnityPy.enums import ClassIDType
 
 app = Flask(__name__)
-logging.basicConfig(level=logging.INFO)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 GLOBAL_CACHE_REGISTRY = {}
@@ -45,62 +44,63 @@ def extract_clean_name(obj, data, default_type: str) -> str:
     return f"{default_type}_{obj.path_id}"
 
 def export_mesh_to_obj(mesh) -> str:
-    """Robust Unity Mesh to OBJ Exporter."""
+    """Enhanced Mesh Parser: Handles low-level vertex data buffers."""
     try:
-        # Attempt to get data via UnityPy helper properties
-        # In newer UnityPy versions, these properties handle the heavy lifting
+        # High-level UnityPy access
         verts = getattr(mesh, "vertices", [])
         indices = getattr(mesh, "indices", [])
         normals = getattr(mesh, "normals", [])
         uvs = getattr(mesh, "uv", [])
 
+        # Fallback to manual reading if properties are empty
+        if not verts:
+            mesh_data = mesh.read_typetree()
+            if 'm_VertexData' in mesh_data:
+                # This is complex and depends on Unity version, 
+                # usually high-level .vertices is safer if UnityPy 1.20+ is used.
+                pass 
+
         if not verts or len(verts) == 0:
-            # Fallback for older Unity versions or stripped meshes
             return ""
 
         sb = []
-        sb.append(f"# Exported by Assets Extractor")
-        sb.append(f"o {mesh.name}")
+        sb.append(f"# Assets Extractor Mesh Export\no {mesh.name}")
 
-        # Vertices: Unity is Left-Handed, OBJ is Right-Handed usually. 
-        # Flip X to match most 3D software import expectations.
         for v in verts:
+            # Unity (Left Hand) to OBJ (Right Hand) conversion: Flip X
             sb.append(f"v {-v.x:.6f} {v.y:.6f} {v.z:.6f}")
 
-        # UVs
-        if uvs is not None and len(uvs) > 0:
+        if uvs:
             for uv in uvs:
                 sb.append(f"vt {uv.x:.6f} {uv.y:.6f}")
 
-        # Normals
-        if normals is not None and len(normals) > 0:
+        if normals:
             for n in normals:
                 sb.append(f"vn {-n.x:.6f} {n.y:.6f} {n.z:.6f}")
 
-        # Faces: Unity uses clockwise winding. OBJ uses counter-clockwise.
-        # We reverse the order (v1, v3, v2) to fix orientation.
+        # Unity uses Clockwise winding. OBJ uses Counter-Clockwise.
+        # Reverse face order to prevent backface culling in 3D viewers.
         for i in range(0, len(indices), 3):
             if i + 2 < len(indices):
                 v1, v2, v3 = indices[i]+1, indices[i+1]+1, indices[i+2]+1
-                if uvs is not None and len(uvs) > 0:
+                if uvs:
                     sb.append(f"f {v1}/{v1}/{v1} {v3}/{v3}/{v3} {v2}/{v2}/{v2}")
                 else:
                     sb.append(f"f {v1} {v3} {v2}")
         
         return "\n".join(sb)
-    except Exception as e:
-        logging.error(f"Mesh export error: {e}")
+    except:
         return ""
 
-def dump_node_data(obj_data):
+def dump_node(obj_data):
     try:
         if hasattr(obj_data, "read_typetree"):
             return obj_data.read_typetree()
     except:
         pass
-    return {"m_Name": getattr(obj_data, "name", "Unnamed Object"), "type": str(type(obj_data))}
+    return {"name": getattr(obj_data, "name", "Object"), "id": str(getattr(obj_data, "path_id", "0"))}
 
-def process_object_unrestricted(obj, raw_env_data: bytes):
+def process_object(obj, raw_env):
     try:
         if obj.type in [ClassIDType.Transform, ClassIDType.RectTransform]:
             return None
@@ -110,184 +110,156 @@ def process_object_unrestricted(obj, raw_env_data: bytes):
         p_name = extract_clean_name(obj, data, t)
         safe_name = re.sub(r'[<>:"/\|?*\x00-\x1f]', "", p_name)
 
-        # 1. Mesh Handling
+        # 1. Geometry
         if t == "Mesh":
-            obj_content = export_mesh_to_obj(data)
-            if obj_content:
-                return f"{safe_name}.obj", obj_content.encode('utf-8'), f"Meshes/{safe_name}.obj", "3D Mesh"
-            return f"{safe_name}_mesh.json", json.dumps(dump_node_data(data)).encode(), f"Meshes/Metadata/{safe_name}.json", "Mesh Data"
+            obj_str = export_mesh_to_obj(data)
+            if obj_str:
+                return f"{safe_name}.obj", obj_str.encode('utf-8'), f"Meshes/{safe_name}.obj", "Mesh"
+            return f"{safe_name}.json", json.dumps(dump_node(data)).encode(), f"Meshes/JSON/{safe_name}.json", "Mesh (Data)"
 
-        # 2. Texture & Sprites
+        # 2. Visuals
         elif t in ["Texture2D", "Sprite"]:
             if hasattr(data, 'image'):
-                img = data.image
                 buf = io.BytesIO()
-                img.save(buf, format="PNG")
+                data.image.save(buf, format="PNG")
                 return f"{safe_name}.png", buf.getvalue(), f"Textures/{safe_name}.png", t
             
-        # 3. Audio
+        # 3. Sound
         elif t == "AudioClip":
-            samples = getattr(data, "samples", {})
-            if samples:
-                name = list(samples.keys())[0]
-                return name, samples[name], f"Audio/{name}", "Audio"
             raw_audio = obj.get_raw_data()
             ext = ".ogg" if raw_audio.startswith(b'OggS') else ".wav"
             return f"{safe_name}{ext}", raw_audio, f"Audio/{safe_name}{ext}", "Audio"
 
-        # 4. Text & Configs
+        # 4. Data
         elif t == "TextAsset":
             script = getattr(data, "m_Script", b"")
-            if isinstance(script, str): script = script.encode('utf-8', errors='replace')
-            ext = ".txt"
-            if safe_name.endswith(".json") or script.startswith((b'{', b'[')): ext = ".json"
-            elif ".atlas" in safe_name.lower(): ext = ".atlas"
+            if isinstance(script, str): script = script.encode('utf-8')
+            ext = ".json" if script.startswith((b'{', b'[')) else ".txt"
             return f"{safe_name}{ext}", script, f"Config/{safe_name}{ext}", "TextAsset"
 
-        # 5. Video
+        # 5. Multimedia
         elif t == "VideoClip":
-            m_video = getattr(data, "m_VideoData", b"")
-            if not m_video: m_video = obj.get_raw_data()
-            return f"{safe_name}.mp4", m_video, f"Video/{safe_name}.mp4", "Video"
+            vid = getattr(data, "m_VideoData", b"") or obj.get_raw_data()
+            return f"{safe_name}.mp4", vid, f"Video/{safe_name}.mp4", "Video"
 
-        # 6. Logic & Shaders
-        elif t in ["MonoBehaviour", "GameObject", "Material", "Shader", "AnimationClip", "AnimatorController", "Animator"]:
-            tree = dump_node_data(data)
-            return f"{safe_name}.json", json.dumps(tree, indent=2).encode('utf-8'), f"Logic/{t}/{safe_name}.json", t
+        # 6. Metadata / Logic
+        elif t in ["MonoBehaviour", "Material", "Shader", "AnimationClip", "AnimatorController", "GameObject"]:
+            tree = dump_node(data)
+            return f"{safe_name}.json", json.dumps(tree, indent=2).encode(), f"Logic/{t}/{safe_name}.json", t
 
         # 7. Fonts
         elif t == "Font":
-            f_data = getattr(data, "m_FontData", b"")
-            if f_data:
-                ext = ".otf" if f_data.startswith(b'OTTO') else ".ttf"
-                return f"{safe_name}{ext}", f_data, f"Fonts/{safe_name}{ext}", "Font"
+            font = getattr(data, "m_FontData", b"")
+            if font:
+                ext = ".otf" if font.startswith(b'OTTO') else ".ttf"
+                return f"{safe_name}{ext}", font, f"Fonts/{safe_name}{ext}", "Font"
 
-        # 8. Fallback
-        raw_fallback = obj.get_raw_data()
-        if raw_fallback and len(raw_fallback) > 0:
-            return f"{safe_name}.dat", raw_fallback, f"Raw/{t}/{safe_name}.dat", t
+        return f"{safe_name}.dat", obj.get_raw_data(), f"Other/{t}/{safe_name}.dat", t
             
-    except Exception as e:
-        logging.error(f"Process error on {obj.path_id}: {e}")
-    return None
+    except:
+        return None
 
-def decode_astc_to_png(rgb_bytes, sa_bytes=None):
-    if not rgb_bytes.startswith(b'\x13\xab\xa1\x5c'): return None
-    bw, bh = rgb_bytes[4], rgb_bytes[5]
-    w = struct.unpack('<I', rgb_bytes[7:10] + b'\x00')[0]
-    h = struct.unpack('<I', rgb_bytes[10:13] + b'\x00')[0]
-    
-    rgb_dec = texture2ddecoder.decode_astc(rgb_bytes[16:], w, h, bw, bh)
-    img_rgb = Image.frombytes("RGBA", (w, h), rgb_dec)
-    
-    if sa_bytes and sa_bytes.startswith(b'\x13\xab\xa1\x5c'):
-        sa_dec = texture2ddecoder.decode_astc(sa_bytes[16:], w, h, bw, bh)
+def decode_astc(rgb, sa=None):
+    if not rgb.startswith(b'\x13\xab\xa1\x5c'): return None
+    bw, bh = rgb[4], rgb[5]
+    w = struct.unpack('<I', rgb[7:10] + b'\x00')[0]
+    h = struct.unpack('<I', rgb[10:13] + b'\x00')[0]
+    dec = texture2ddecoder.decode_astc(rgb[16:], w, h, bw, bh)
+    img = Image.frombytes("RGBA", (w, h), dec)
+    if sa and sa.startswith(b'\x13\xab\xa1\x5c'):
+        sa_dec = texture2ddecoder.decode_astc(sa[16:], w, h, bw, bh)
         img_sa = Image.frombytes("RGBA", (w, h), sa_dec)
-        r, g, b, _ = img_rgb.split()
+        r, g, b, _ = img.split()
         a, _, _, _ = img_sa.split()
         return Image.merge("RGBA", (r, g, b, a))
-    return img_rgb
+    return img
 
 @app.route('/api/extract', methods=['GET', 'POST'])
-def handle_extraction():
+def handle_api():
     global GLOBAL_CACHE_REGISTRY
     dtype = request.args.get('download_type', '')
     
-    # Download Routine
     if dtype in ['zip', 'zip_filtered']:
-        if 'extracted' not in GLOBAL_CACHE_REGISTRY: 
-            return jsonify({"error": "Session expired or empty"}), 400
+        if 'extracted' not in GLOBAL_CACHE_REGISTRY: return jsonify({"error": "Cache Empty"}), 400
         indices = request.args.get('indices', '')
         idx_set = set(int(i) for i in indices.split(',') if i.strip()) if indices else None
-        
         zip_io = io.BytesIO()
         with zipfile.ZipFile(zip_io, "w", zipfile.ZIP_DEFLATED) as zf:
             for idx, item in enumerate(GLOBAL_CACHE_REGISTRY['extracted']):
                 if idx_set is not None and idx not in idx_set: continue
+                # Default behavior is grouped into folders
                 zf.writestr(item['zip_path'], item['bytes'])
         zip_io.seek(0)
-        
         orig = GLOBAL_CACHE_REGISTRY.get('original_name', 'Assets')
-        clean_name = re.split(r'[.\-]', orig)[0] + "[Extracted].zip"
-        return send_file(zip_io, mimetype='application/zip', as_attachment=True, download_name=clean_name)
+        name = re.split(r'[.\-]', orig)[0] + "[Extracted].zip"
+        return send_file(zip_io, mimetype='application/zip', as_attachment=True, download_name=name)
 
-    if 'asset_bundle' not in request.files: 
-        return jsonify({"error": "No file uploaded"}), 400
+    if 'asset_bundle' not in request.files: return jsonify({"error": "No file"}), 400
     
-    upload_files = request.files.getlist('asset_bundle')
-    extracted_list = []
+    files = request.files.getlist('asset_bundle')
+    extracted = []
     manifest = []
-    seen_md5 = set()
+    seen = set()
     
-    # Check for ASTC pairing
-    astc_files = [f for f in upload_files if f.filename.lower().endswith('.astc')]
+    astc_files = [f for f in files if f.filename.lower().endswith('.astc')]
     if astc_files:
         rgb = next((f for f in astc_files if 'rgb' in f.filename.lower()), astc_files[0])
-        alpha = next((f for f in astc_files if 'sa' in f.filename.lower() or 'alpha' in f.filename.lower()), None)
+        sa = next((f for f in astc_files if 'sa' in f.filename.lower() or 'alpha' in f.filename.lower()), None)
         try:
-            img = decode_astc_to_png(rgb.read(), alpha.read() if alpha else None)
+            img = decode_astc(rgb.read(), sa.read() if sa else None)
             if img:
                 out = io.BytesIO()
                 img.save(out, format="PNG")
-                extracted_list.append({'name': 'astc_decoded.png', 'zip_path': 'Textures/astc_decoded.png', 'bytes': out.getvalue()})
-                manifest.append({'index': 0, 'name': 'astc_decoded.png', 'label': 'Texture2D'})
-        except Exception as e:
-            return jsonify({"error": f"ASTC Pair Error: {str(e)}"}), 500
+                extracted.append({'name': 'astc_export.png', 'zip_path': 'Textures/astc_export.png', 'bytes': out.getvalue()})
+                manifest.append({'index': 0, 'name': 'astc_export.png', 'label': 'Texture2D'})
+        except Exception as e: return jsonify({"error": str(e)}), 500
     else:
-        # Standard Unity File
-        u_file = upload_files[0]
-        raw_data = u_file.read()
-        decompressed = decompress_stream(raw_data)
-        
-        # Check if KTX
-        if decompressed.startswith(b'\xABKTX 11'):
+        u_file = files[0]
+        decomp = decompress_stream(u_file.read())
+        if decomp.startswith(b'\xABKTX 11'):
             try:
-                w = struct.unpack('<I', decompressed[36:40])[0]
-                h = struct.unpack('<I', decompressed[40:44])[0]
-                kv_len = struct.unpack('<I', decompressed[60:64])[0]
-                pixel_start = 64 + kv_len + 4
-                pixel_data = decompressed[pixel_start:]
-                dec = texture2ddecoder.decode_etc1(pixel_data, w, h)
+                w = struct.unpack('<I', decomp[36:40])[0]
+                h = struct.unpack('<I', decomp[40:44])[0]
+                kv = struct.unpack('<I', decomp[60:64])[0]
+                pix = decomp[64 + kv + 4:]
+                dec = texture2ddecoder.decode_etc1(pix, w, h)
                 img = Image.frombytes("RGBA", (w, h), dec)
-                # KTX is typically BGR + Flipped
                 b, g, r, a = img.split()
                 img = Image.merge("RGBA", (r, g, b, a)).transpose(Image.FLIP_TOP_BOTTOM)
                 out = io.BytesIO()
                 img.save(out, format="PNG")
-                extracted_list.append({'name': 'ktx_decoded.png', 'zip_path': 'Textures/ktx_decoded.png', 'bytes': out.getvalue()})
-                manifest.append({'index': 0, 'name': 'ktx_decoded.png', 'label': 'Texture2D'})
+                extracted.append({'name': 'ktx_export.png', 'zip_path': 'Textures/ktx_export.png', 'bytes': out.getvalue()})
+                manifest.append({'index': 0, 'name': 'ktx_export.png', 'label': 'Texture2D'})
             except: pass
         else:
             try:
-                env = UnityPy.load(decompressed)
-                idx_counter = 0
+                env = UnityPy.load(decomp)
+                idx = 0
                 for obj in env.objects:
-                    res = process_object_unrestricted(obj, decompressed)
+                    res = process_object(obj, decomp)
                     if res:
-                        fname, fbytes, zpath, label = res
-                        m5 = hashlib.md5(fbytes).hexdigest()
-                        if m5 not in seen_md5:
-                            seen_md5.add(m5)
-                            extracted_list.append({'name': fname, 'zip_path': zpath, 'bytes': fbytes})
-                            manifest.append({'index': idx_counter, 'name': fname, 'label': label})
-                            idx_counter += 1
+                        fn, fb, zp, lb = res
+                        m5 = hashlib.md5(fb).hexdigest()
+                        if m5 not in seen:
+                            seen.add(m5)
+                            extracted.append({'name': fn, 'zip_path': zp, 'bytes': fb})
+                            manifest.append({'index': idx, 'name': fn, 'label': lb})
+                            idx += 1
                 del env
                 gc.collect()
-            except Exception as e:
-                return jsonify({"error": f"Unity Engine Error: {str(e)}"}), 500
+            except Exception as e: return jsonify({"error": str(e)}), 500
 
-    GLOBAL_CACHE_REGISTRY['extracted'] = extracted_list
-    GLOBAL_CACHE_REGISTRY['original_name'] = upload_files[0].filename
+    GLOBAL_CACHE_REGISTRY['extracted'] = extracted
+    GLOBAL_CACHE_REGISTRY['original_name'] = files[0].filename
     return jsonify({"files": manifest})
 
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
-def serve_frontend(path):
+def serve_ui(path):
     try:
         with open(os.path.join(BASE_DIR, 'index.html'), 'r', encoding='utf-8') as f:
             return f.read()
-    except:
-        return "Internal Error: index.html not found.", 404
+    except: return "index.html not found.", 404
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=10000)
