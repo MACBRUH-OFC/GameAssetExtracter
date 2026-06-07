@@ -145,7 +145,7 @@ body { background: #030305; color: #fff; min-height: 100vh; font-family: 'Inter'
                     </div>
                     <div class="flex-1 px-4 truncate text-left">
                         <span id="fileStatusText" class="text-[9px] font-black text-zinc-500 block gff uppercase tracking-tighter">Standby</span>
-                        <p id="fileLabel" class="gff text-[12px] text-zinc-400 truncate">Drag & Drop package here</p>
+                        <p id="fileLabel" class="gff text-[12px] text-zinc-400 truncate">Tap to upload / Drag & Drop file</p>
                     </div>
                     <input type="file" id="fileInput" class="hidden">
                 </div>
@@ -497,11 +497,8 @@ async function selectFile(item, element) {
                     <input type="range" id="videoTimeline" class="player-progress-slider" value="0" min="0" max="100">
                     <span id="videoTimeLabel" class="text-[9px] font-mono text-zinc-500 select-none pr-2 flex-shrink-0">00:00</span>
                     
-                    <!-- Verified Right Corner Action Block Matrix -->
+                    <!-- Verified Single Right Corner Action Matrix Control -->
                     <div class="flex items-center gap-2 flex-shrink-0">
-                        <button id="videoLoopBtn" class="w-7 h-7 rounded-md bg-zinc-900 border border-zinc-800 text-zinc-500 hover:text-[#00ffa3] transition-all text-[11px] flex items-center justify-center" title="Toggle Loop">
-                            <i class="fa-solid fa-rotate-right"></i>
-                        </button>
                         <button id="videoPlayBtn" class="text-zinc-400 hover:text-[#ffde00] transition-all text-xs bg-zinc-900 border border-zinc-800 w-7 h-7 rounded-md flex items-center justify-center shadow-inner">
                             <i class="fa-solid fa-play"></i>
                         </button>
@@ -523,11 +520,8 @@ async function selectFile(item, element) {
                     <input type="range" id="audioTimeline" class="player-progress-slider" value="0" min="0" max="100">
                     <span id="audioTimeLabel" class="text-[9px] font-mono text-zinc-500 select-none pr-2 flex-shrink-0">00:00</span>
                     
-                    <!-- Verified Right Corner Action Block Matrix -->
+                    <!-- Verified Single Right Corner Action Matrix Control -->
                     <div class="flex items-center gap-2 flex-shrink-0">
-                        <button id="audioLoopBtn" class="w-7 h-7 rounded-md bg-zinc-900 border border-zinc-800 text-zinc-500 hover:text-[#00ffa3] transition-all text-[11px] flex items-center justify-center" title="Toggle Loop">
-                            <i class="fa-solid fa-rotate-right"></i>
-                        </button>
                         <button id="audioPlayBtn" class="text-zinc-400 hover:text-[#ffde00] transition-all text-xs bg-zinc-900 border border-zinc-800 w-7 h-7 rounded-md flex items-center justify-center shadow-inner">
                             <i class="fa-solid fa-play"></i>
                         </button>
@@ -625,10 +619,14 @@ function initCustomVideoController() {
     const centerOverlay = document.getElementById('videoCenterOverlay');
     const timeline = document.getElementById('videoTimeline');
     const timeLabel = document.getElementById('videoTimeLabel');
-    const loopBtn = document.getElementById('videoLoopBtn');
 
     function executeToggleAction() {
-        if(video.paused) { 
+        if(video.ended) {
+            video.currentTime = 0;
+            video.play();
+            playBtn.innerHTML = `<i class="fa-solid fa-pause"></i>`;
+            centerOverlay.classList.add('playing-hide');
+        } else if(video.paused) { 
             video.play(); 
             playBtn.innerHTML = `<i class="fa-solid fa-pause"></i>`;
             centerOverlay.classList.add('playing-hide');
@@ -642,15 +640,6 @@ function initCustomVideoController() {
 
     playBtn.onclick = (e) => { e.stopPropagation(); executeToggleAction(); };
     centerOverlay.onclick = (e) => { e.stopPropagation(); executeToggleAction(); };
-    
-    loopBtn.onclick = (e) => {
-        e.stopPropagation();
-        video.loop = !video.loop;
-        loopBtn.classList.toggle('text-[#00ffa3]', video.loop);
-        loopBtn.classList.toggle('border-[#00ffa3]', video.loop);
-        loopBtn.classList.toggle('text-zinc-500', !video.loop);
-        loopBtn.classList.toggle('border-zinc-800', !video.loop);
-    };
 
     video.ontimeupdate = () => {
         if(!video.duration) return;
@@ -659,13 +648,25 @@ function initCustomVideoController() {
     };
     
     video.onended = () => {
-        if(!video.loop) {
+        playBtn.innerHTML = `<i class="fa-solid fa-rotate-right"></i>`;
+        centerOverlay.querySelector('.center-play-btn-circle').innerHTML = `<i class="fa-solid fa-rotate-right text-lg"></i>`;
+        centerOverlay.classList.remove('playing-hide');
+    };
+    timeline.oninput = () => {
+        video.currentTime = (timeline.value / 100) * video.duration;
+        if(video.ended) {
             playBtn.innerHTML = `<i class="fa-solid fa-rotate-right"></i>`;
             centerOverlay.querySelector('.center-play-btn-circle').innerHTML = `<i class="fa-solid fa-rotate-right text-lg"></i>`;
             centerOverlay.classList.remove('playing-hide');
+        } else if(!video.paused) {
+            playBtn.innerHTML = `<i class="fa-solid fa-pause"></i>`;
+            centerOverlay.classList.add('playing-hide');
+        } else {
+            playBtn.innerHTML = `<i class="fa-solid fa-play"></i>`;
+            centerOverlay.querySelector('.center-play-btn-circle').innerHTML = `<i class="fa-solid fa-play text-lg"></i>`;
+            centerOverlay.classList.remove('playing-hide');
         }
     };
-    timeline.oninput = () => video.currentTime = (timeline.value / 100) * video.duration;
 }
 
 function initCustomAudioController() {
@@ -674,7 +675,6 @@ function initCustomAudioController() {
     const centerOverlay = document.getElementById('audioCenterOverlay');
     const timeline = document.getElementById('audioTimeline');
     const timeLabel = document.getElementById('audioTimeLabel');
-    const loopBtn = document.getElementById('audioLoopBtn');
     const canvas = document.getElementById('audioVisualizerCanvas');
     const ctx = canvas.getContext('2d');
 
@@ -684,7 +684,12 @@ function initCustomAudioController() {
 
     function executeToggleAction() {
         if(!audioCtx) { initAudioContextEngine(audio, canvas, ctx); }
-        if(audio.paused) { 
+        if(audio.ended) {
+            audio.currentTime = 0;
+            audio.play();
+            playBtn.innerHTML = `<i class="fa-solid fa-pause"></i>`;
+            centerOverlay.classList.add('playing-hide');
+        } else if(audio.paused) { 
             audio.play(); 
             playBtn.innerHTML = `<i class="fa-solid fa-pause"></i>`;
             centerOverlay.classList.add('playing-hide');
@@ -698,15 +703,6 @@ function initCustomAudioController() {
 
     playBtn.onclick = (e) => { e.stopPropagation(); executeToggleAction(); };
     centerOverlay.onclick = (e) => { e.stopPropagation(); executeToggleAction(); };
-    
-    loopBtn.onclick = (e) => {
-        e.stopPropagation();
-        audio.loop = !audio.loop;
-        loopBtn.classList.toggle('text-[#00ffa3]', audio.loop);
-        loopBtn.classList.toggle('border-[#00ffa3]', audio.loop);
-        loopBtn.classList.toggle('text-zinc-500', !audio.loop);
-        loopBtn.classList.toggle('border-zinc-800', !audio.loop);
-    };
 
     audio.ontimeupdate = () => {
         if(!audio.duration) return;
@@ -715,13 +711,25 @@ function initCustomAudioController() {
     };
 
     audio.onended = () => {
-        if(!audio.loop) {
+        playBtn.innerHTML = `<i class="fa-solid fa-rotate-right"></i>`;
+        centerOverlay.querySelector('.center-play-btn-circle').innerHTML = `<i class="fa-solid fa-rotate-right text-lg"></i>`;
+        centerOverlay.classList.remove('playing-hide');
+    };
+    timeline.oninput = () => {
+        audio.currentTime = (timeline.value / 100) * audio.duration;
+        if(audio.ended) {
             playBtn.innerHTML = `<i class="fa-solid fa-rotate-right"></i>`;
             centerOverlay.querySelector('.center-play-btn-circle').innerHTML = `<i class="fa-solid fa-rotate-right text-lg"></i>`;
             centerOverlay.classList.remove('playing-hide');
+        } else if(!audio.paused) {
+            playBtn.innerHTML = `<i class="fa-solid fa-pause"></i>`;
+            centerOverlay.classList.add('playing-hide');
+        } else {
+            playBtn.innerHTML = `<i class="fa-solid fa-play"></i>`;
+            centerOverlay.querySelector('.center-play-btn-circle').innerHTML = `<i class="fa-solid fa-play text-lg"></i>`;
+            centerOverlay.classList.remove('playing-hide');
         }
     };
-    timeline.oninput = () => audio.currentTime = (timeline.value / 100) * audio.duration;
     
     ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
     ctx.strokeStyle = '#151522'; ctx.lineWidth = 2; ctx.beginPath();
@@ -742,6 +750,7 @@ function initAudioContextEngine(audioElement, canvas, ctx) {
     const w = canvas.clientWidth;
     const h = canvas.clientHeight;
 
+    // Dynamic wave generation loops
     function drawFullSymmetricWaves() {
         audioAnimationId = requestAnimationFrame(drawFullSymmetricWaves);
         audioAnalyser.getByteFrequencyData(dataArray);
@@ -769,6 +778,7 @@ function initAudioContextEngine(audioElement, canvas, ctx) {
     drawFullSymmetricWaves();
 }
 
+// Global Metric Conversion Parser Utility Function
 function formatTimeMetrics(secs) {
     const m = Math.floor(secs / 60).toString().padStart(2, '0');
     const s = Math.floor(secs % 60).toString().padStart(2, '0');
