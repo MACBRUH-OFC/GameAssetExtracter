@@ -19,6 +19,7 @@ import UnityPy
 
 app = Flask(__name__)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+HTML_PATH = os.path.join(BASE_DIR, 'index.html')
 
 # Strict 5MB file cap matching deployment platform limits
 MAX_FILE_SIZE = 5 * 1024 * 1024 
@@ -316,9 +317,7 @@ def handle_extraction():
 @app.route('/<path:path>')
 def serve_ui_layout(path):
     try:
-        # Resolves runtime folder mapping reliably in local development and live production containers
-        target_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'index.html')
-        with open(target_path, 'r', encoding='utf-8') as f: 
+        with open(HTML_PATH, 'r', encoding='utf-8') as f: 
             return f.read()
     except Exception as e: 
         return f"File Synchronization Error: {str(e)}", 500
