@@ -8,9 +8,12 @@ import re
 import gc
 import hashlib
 import struct
+import concurrent.futures
+import requests
 from flask import Flask, request, send_file, jsonify
 from PIL import Image
 import texture2ddecoder
+
 os.environ["UNITYPY_NO_GUI"] = "1"
 import UnityPy
 
@@ -18,6 +21,9 @@ app = Flask(__name__)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 HTML_PATH = os.path.join(BASE_DIR, 'index.html')
 GLOBAL_CACHE_REGISTRY = {}
+
+# Strict 5MB file cap matching deployment platform limits
+MAX_FILE_SIZE = 5 * 1024 * 1024 
 
 def decompress_stream(data: bytes) -> bytes:
     try:
@@ -182,8 +188,82 @@ def convert_ktx_to_png_fallback(file_bytes) -> bytes:
     img.save(output, format="PNG")
     return output.getvalue()
 
+def parse_raw_astc_header(data: bytes):
+    if len(data) < 16 or data[:4] != b'\x13\xab\xa1\\':
+        raise Exception("Malformed or unexpected ASTC file signature identifier")
+    block_width = data[4]
+    block_height = data[5]
+    width = data[7] | (data[8] << 8) | (data[9] << 16)
+    height = data[10] | (data[11] << 8) | (data[12] << 16)
+    return width, height, block_width, block_height
+
+def fetch_single_cdn_stream(url: str) -> bytes:
+    headers = {"User-Agent": "ff-astc-api/1.0"}
+    try:
+        resp = requests.get(url, headers=headers, timeout=15)
+        if resp.status_code == 404:
+            return b""
+        resp.raise_for_status()
+        return resp.content
+    except:
+        return b""
+
+@app.route('/api/fetch_astc', methods=['GET'])
+def handle_remote_astc_reconstruction():
+    asset_id = request.args.get('id', '').strip()
+    environment = request.args.get('env', 'live').strip().lower()
+
+    if not asset_id or not re.match(r'^\d+$', asset_id):
+        return jsonify({"error": "Bad request: identification target must contain digits only"}), 400
+
+    base_url = f"https://dl-tata.freefireind.in/{environment}/ABHotUpdates/IconCDN/android"
+    rgb_url = f"{base_url}/{asset_id}_rgb.astc"
+    sa_url = f"{base_url}/{asset_id}_sa.astc"
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+        future_rgb = executor.submit(fetch_single_cdn_stream, rgb_url)
+        future_sa = executor.submit(fetch_single_cdn_stream, sa_url)
+        rgb_bytes = future_rgb.result()
+        sa_bytes = future_sa.result()
+
+    if not rgb_bytes or not sa_bytes:
+        return jsonify({"error": f"Asset target ID {asset_id} not found on server storage partition"}), 404
+
+    try:
+        # Extract headers structural sizes
+        w, h, bw, bh = parse_raw_astc_header(rgb_bytes)
+        sa_w, sa_h, sa_bw, sa_bh = parse_raw_astc_header(sa_bytes)
+
+        # Decode compressed channels into pure RGBA byte-streams
+        decoded_rgb = texture2ddecoder.decode_astc(rgb_bytes[16:], w, h, bw, bh)
+        decoded_sa = texture2ddecoder.decode_astc(sa_bytes[16:], sa_w, sa_h, sa_bw, sa_bh)
+
+        # Instantiating pure images from decoders
+        img_rgb = Image.frombytes("RGBA", (w, h), decoded_rgb)
+        img_sa = Image.frombytes("RGBA", (sa_w, sa_h), decoded_sa)
+
+        # Isolate individual color components 
+        r, g, b, _ = img_rgb.split()
+        alpha_channel, _, _, _ = img_sa.split()
+        
+        # Merge explicitly and handle transpositions to keep previews completely clear
+        final_transparent_image = Image.merge("RGBA", (r, g, b, alpha_channel))
+
+        output_buffer = io.BytesIO()
+        final_transparent_image.save(output_buffer, format="PNG")
+        output_buffer.seek(0)
+
+        return send_file(
+            output_buffer,
+            mimetype='image/png',
+            as_attachment=True,
+            download_name=f"{asset_id}.png"
+        )
+    except Exception as error_log:
+        return jsonify({"error": f"Decoding runtime malfunction: {str(error_log)}"}), 500
+
 @app.route('/api/extract', methods=['GET', 'POST'])
-def handle_universal_extraction_pipeline():
+def handle_extraction():
     global GLOBAL_CACHE_REGISTRY
     download_type = request.args.get('download_type', '')
 
@@ -216,8 +296,17 @@ def handle_universal_extraction_pipeline():
         return send_file(io.BytesIO(item['bytes']), mimetype='application/octet-stream', as_attachment=True, download_name=item['name'])
 
     if 'asset_bundle' not in request.files: return jsonify({"error": "No file"}), 400
+    
     try:
         uploaded_file = request.files['asset_bundle']
+        
+        uploaded_file.seek(0, os.SEEK_END)
+        file_length = uploaded_file.tell()
+        uploaded_file.seek(0)
+
+        if file_length > MAX_FILE_SIZE:
+            return jsonify({"error": f"File too large. Maximum size is 5MB. Submitted: {(file_length/1024/1024):.2f}MB"}), 400
+
         GLOBAL_CACHE_REGISTRY['original_name'] = uploaded_file.filename
         raw_bytes = uploaded_file.read()
         decompressed_data = decompress_stream(raw_bytes)
