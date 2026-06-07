@@ -84,19 +84,20 @@ body { background: #030305; color: #fff; min-height: 100vh; font-family: 'Inter'
 
 /* Custom Premium Player Isolated Layout Mechanics Module */
 .custom-player-wrapper { display: flex; flex-direction: column; width: 100%; height: 100%; justify-content: space-between; padding: 2px; background: transparent; position: relative; }
-.custom-control-bar { height: 44px; background: #0c0c12; border: 1px solid #1b1b26; border-radius: 10px; display: flex; align-items: center; padding: 0 12px; gap: 12px; margin-top: 8px; flex-shrink: 0; }
+.custom-control-bar { height: 44px; background: #0c0c12; border: 1px solid #1b1b26; border-radius: 10px; display: flex; align-items: center; padding: 0 12px; gap: 14px; margin-top: 8px; flex-shrink: 0; }
 .player-progress-slider { flex: 1; -webkit-appearance: none; appearance: none; height: 4px; background: #1c1c28; border-radius: 2px; outline: none; cursor: pointer; }
 .player-progress-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 10px; height: 10px; border-radius: 50%; background: var(--ff-yellow); box-shadow: 0 0 6px var(--ff-yellow); }
 
-/* Centered Cinematic Play Interface Overlays */
-.center-deck-trigger-btn { position: absolute; width: 56px; height: 56px; border-radius: 50%; background: rgba(0, 0, 0, 0.75); border: 2px solid var(--ff-yellow); color: var(--ff-yellow); display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); z-index: 40; box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
-.center-deck-trigger-btn:hover { background: var(--ff-yellow); color: #000; transform: scale(1.1); box-shadow: 0 0 20px rgba(255, 222, 0, 0.4); }
-
-/* Anti-Zoom Anti-Crop Pixel Perfectly Scaled Alpha Matrix Frame Architecture */
-.pixelated-render-fixed { max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: scale-down; display: block; margin: auto; background-image: linear-gradient(45deg, #050508 25%, transparent 25%), linear-gradient(-45deg, #050508 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #050508 75%), linear-gradient(-45deg, transparent 75%, #050508 75%); background-size: 16px 16px; background-position: 0 0, 0 8px, 8px -8px, -8px 0; }
-
+/* Premium Non-Destructive Vector Render Architecture */
+.pixelated-render { max-width: 100%; max-height: 100%; object-fit: contain; width: auto; height: auto; padding: 8px; image-rendering: pixelated; background-image: linear-gradient(45deg, #050508 25%, transparent 25%), linear-gradient(-45deg, #050508 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #050508 75%), linear-gradient(-45deg, transparent 75%, #050508 75%); background-size: 16px 16px; background-position: 0 0, 0 8px, 8px -8px, -8px 0; }
 #audioVisualizerCanvas { width: 100%; height: 100%; background: #020204; display: block; }
 .babylon-canvas-viewport { width: 100%; height: 100%; display: block; outline: none; background: #060609; }
+
+/* Cinematic Overlaid Center-Deck Play Buttons */
+.center-play-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.25); border-radius: 10px; transition: all 0.25s ease; z-index: 20; cursor: pointer; }
+.center-play-overlay.playing-hide { opacity: 0; pointer-events: none; transform: scale(1.15); }
+.center-play-btn-circle { width: 48px; height: 48px; background: rgba(255, 222, 0, 0.9); border: 2px solid #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #000; box-shadow: 0 0 20px rgba(255, 222, 0, 0.4); font-size: 14px; transition: transform 0.2s; }
+.center-play-overlay:hover .center-play-btn-circle { transform: scale(1.08); background: #fff; }
 
 .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
 .custom-scrollbar::-webkit-scrollbar-thumb { background: #1c1c24; border-radius: 10px; }
@@ -137,7 +138,7 @@ body { background: #030305; color: #fff; min-height: 100vh; font-family: 'Inter'
                 </div>
             </div>
             
-            <form id="extractorForm" class="flex-1 flex flex-col justify-center space-y-3 min-w-0 m-0">
+            <form id="extractorForm" class="flex-1 flex flex-col justify-center min-w-0 m-0">
                 <div class="upload-deck" id="dropZone">
                     <div class="w-14 h-full flex items-center justify-center border-r border-zinc-900 flex-shrink-0">
                         <i id="uploadIcon" class="fa-solid fa-box-open text-lg text-zinc-600"></i>
@@ -148,6 +149,10 @@ body { background: #030305; color: #fff; min-height: 100vh; font-family: 'Inter'
                     </div>
                     <input type="file" id="fileInput" class="hidden">
                 </div>
+                
+                <!-- Refined Ergonomic Separation Buffer Padding -->
+                <div class="h-5 flex-shrink-0"></div>
+                
                 <button type="submit" id="extractBtn" class="btn-mechanical w-full h-12 text-sm font-bold italic flex-shrink-0">
                     <i class="fa-solid fa-bolt" id="btnIcon"></i> <span id="btnText">Extract Package</span>
                 </button>
@@ -473,39 +478,47 @@ async function selectFile(item, element) {
             </div>`;
         initBabylonMeshScene("babylonAssetCanvas", url, item.name);
     } else if(['png','jpg','jpeg','webp'].includes(ext) || item.label.toLowerCase().includes('texture')) {
-        // Pixel-perfect image wrapping: smaller files keep native sizes, larger ones scale down dynamically, zero cropping.
+        // Render 100% full, structural texture architecture (No cropping, completely unzoomed)
         mediaBox.innerHTML = `
             <div class="custom-player-wrapper h-full">
                 <div class="aspect-16-9-viewport full-viewport-mesh">
-                    <img src="${url}" class="pixelated-render-fixed">
+                    <img src="${url}" class="pixelated-render">
                 </div>
             </div>`;
     } else if(['mp4','mkv','webm'].includes(ext) || item.label.toLowerCase().includes('video')) {
         mediaBox.innerHTML = `
-            <div class="custom-player-wrapper">
+            <div class="custom-player-wrapper relative">
                 <div class="aspect-16-9-viewport relative">
+                    <div id="videoCenterOverlay" class="center-play-overlay">
+                        <div class="center-play-btn-circle"><i class="fa-solid fa-play ml-0.5"></i></div>
+                    </div>
                     <video id="customVideoPlayer" src="${url}" class="w-full h-full object-contain"></video>
-                    <button id="videoPlayBtn" class="center-deck-trigger-btn"><i class="fa-solid fa-play ml-1"></i></button>
                 </div>
                 <div class="custom-control-bar">
                     <input type="range" id="videoTimeline" class="player-progress-slider" value="0" min="0" max="100">
-                    <button id="videoReplayBtn" class="text-zinc-500 hover:text-white transition-all text-[11px] flex-shrink-0 ml-1" title="Replay Sequence"><i class="fa-solid fa-rotate-left"></i></button>
-                    <span id="videoTimeLabel" class="text-[9px] font-mono text-zinc-500 select-none flex-shrink-0 pl-1">00:00</span>
+                    <span id="videoTimeLabel" class="text-[9px] font-mono text-zinc-500 select-none flex-shrink-0">00:00</span>
+                    <button id="videoLoopBtn" class="text-zinc-600 hover:text-zinc-400 transition-all text-[11px] flex-shrink-0" title="Toggle Loop"><i class="fa-solid fa-rotate-right"></i></button>
+                    <!-- Play trigger fixed seamlessly over on the right hand side -->
+                    <button id="videoPlayBtn" class="text-zinc-400 hover:text-[#ffde00] transition-all text-xs flex-shrink-0 bg-zinc-900 border border-zinc-800 w-7 h-7 rounded-md flex items-center justify-center shadow-inner"><i class="fa-solid fa-play"></i></button>
                 </div>
             </div>`;
         initCustomVideoController();
     } else if(['mp3','wav','ogg'].includes(ext) || item.label.toLowerCase().includes('audio')) {
         mediaBox.innerHTML = `
-            <div class="custom-player-wrapper">
+            <div class="custom-player-wrapper relative">
                 <div class="aspect-16-9-viewport relative">
+                    <div id="audioCenterOverlay" class="center-play-overlay">
+                        <div class="center-play-btn-circle"><i class="fa-solid fa-play ml-0.5"></i></div>
+                    </div>
                     <canvas id="audioVisualizerCanvas"></canvas>
-                    <button id="audioPlayBtn" class="center-deck-trigger-btn"><i class="fa-solid fa-play ml-1"></i></button>
                     <audio id="customAudioPlayer" src="${url}" crossorigin="anonymous" class="hidden"></audio>
                 </div>
                 <div class="custom-control-bar">
                     <input type="range" id="audioTimeline" class="player-progress-slider" value="0" min="0" max="100">
-                    <button id="audioReplayBtn" class="text-zinc-500 hover:text-white transition-all text-[11px] flex-shrink-0 ml-1" title="Replay Sequence"><i class="fa-solid fa-rotate-left"></i></button>
-                    <span id="audioTimeLabel" class="text-[9px] font-mono text-zinc-500 select-none flex-shrink-0 pl-1">00:00</span>
+                    <span id="audioTimeLabel" class="text-[9px] font-mono text-zinc-500 select-none flex-shrink-0">00:00</span>
+                    <button id="audioLoopBtn" class="text-zinc-600 hover:text-zinc-400 transition-all text-[11px] flex-shrink-0" title="Toggle Loop"><i class="fa-solid fa-rotate-right"></i></button>
+                    <!-- Play trigger fixed seamlessly over on the right hand side -->
+                    <button id="audioPlayBtn" class="text-zinc-400 hover:text-[#ffde00] transition-all text-xs flex-shrink-0 bg-zinc-900 border border-zinc-800 w-7 h-7 rounded-md flex items-center justify-center shadow-inner"><i class="fa-solid fa-play"></i></button>
                 </div>
             </div>`;
         initCustomAudioController();
@@ -544,7 +557,7 @@ function initBabylonMeshScene(canvasId, modelUrl, filename) {
     camera.attachControl(canvas, true);
     camera.wheelPrecision = 45;
 
-    const atmosphericLight = new BABYLES.HemisphericLight("ambientAtmosphere", new BABYLON.Vector3(0, 1, 0), babylonScene);
+    const atmosphericLight = new BABYLON.HemisphericLight("ambientAtmosphere", new BABYLON.Vector3(0, 1, 0), babylonScene);
     atmosphericLight.intensity = 0.6;
 
     const keyDirectionalLight = new BABYLON.DirectionalLight("studioKeyLight", new BABYLON.Vector3(6, 12, 5), babylonScene);
@@ -596,23 +609,32 @@ function resizeBabylonViewportMatrix() { if (babylonEngine) babylonEngine.resize
 function initCustomVideoController() {
     const video = document.getElementById('customVideoPlayer');
     const playBtn = document.getElementById('videoPlayBtn');
-    const replayBtn = document.getElementById('videoReplayBtn');
+    const centerOverlay = document.getElementById('videoCenterOverlay');
     const timeline = document.getElementById('videoTimeline');
     const timeLabel = document.getElementById('videoTimeLabel');
+    const loopBtn = document.getElementById('videoLoopBtn');
 
-    playBtn.onclick = () => {
-        if(video.paused) { video.play(); playBtn.innerHTML = `<i class="fa-solid fa-pause ml-0.5"></i>`; playBtn.style.opacity = "0.2"; }
-        else { video.pause(); playBtn.innerHTML = `<i class="fa-solid fa-play ml-1"></i>`; playBtn.style.opacity = "1"; }
-    };
+    function executeToggleAction() {
+        if(video.paused) { 
+            video.play(); 
+            playBtn.innerHTML = `<i class="fa-solid fa-pause"></i>`;
+            centerOverlay.classList.add('playing-hide');
+        } else { 
+            video.pause(); 
+            playBtn.innerHTML = `<i class="fa-solid fa-play"></i>`;
+            centerOverlay.querySelector('.center-play-btn-circle').innerHTML = `<i class="fa-solid fa-play ml-0.5"></i>`;
+            centerOverlay.classList.remove('playing-hide');
+        }
+    }
+
+    playBtn.onclick = (e) => { e.stopPropagation(); executeToggleAction(); };
+    centerOverlay.onclick = (e) => { e.stopPropagation(); executeToggleAction(); };
     
-    // Auto-reveal center play icon on video finish bounds
-    video.onended = () => { playBtn.innerHTML = `<i class="fa-solid fa-play ml-1"></i>`; playBtn.style.opacity = "1"; };
-    
-    replayBtn.onclick = () => {
-        video.currentTime = 0;
-        video.play();
-        playBtn.innerHTML = `<i class="fa-solid fa-pause ml-0.5"></i>`;
-        playBtn.style.opacity = "0.2";
+    loopBtn.onclick = (e) => {
+        e.stopPropagation();
+        video.loop = !video.loop;
+        loopBtn.classList.toggle('text-[#00ffa3]', video.loop);
+        loopBtn.classList.toggle('text-zinc-600', !video.loop);
     };
 
     video.ontimeupdate = () => {
@@ -620,15 +642,24 @@ function initCustomVideoController() {
         timeline.value = (video.currentTime / video.duration) * 100;
         timeLabel.innerText = formatTimeMetrics(video.currentTime);
     };
+    
+    video.onended = () => {
+        if(!video.loop) {
+            playBtn.innerHTML = `<i class="fa-solid fa-rotate-right"></i>`;
+            centerOverlay.querySelector('.center-play-btn-circle').innerHTML = `<i class="fa-solid fa-rotate-right"></i>`;
+            centerOverlay.classList.remove('playing-hide');
+        }
+    };
     timeline.oninput = () => video.currentTime = (timeline.value / 100) * video.duration;
 }
 
 function initCustomAudioController() {
     const audio = document.getElementById('customAudioPlayer');
     const playBtn = document.getElementById('audioPlayBtn');
-    const replayBtn = document.getElementById('audioReplayBtn');
+    const centerOverlay = document.getElementById('audioCenterOverlay');
     const timeline = document.getElementById('audioTimeline');
     const timeLabel = document.getElementById('audioTimeLabel');
+    const loopBtn = document.getElementById('audioLoopBtn');
     const canvas = document.getElementById('audioVisualizerCanvas');
     const ctx = canvas.getContext('2d');
 
@@ -636,26 +667,42 @@ function initCustomAudioController() {
     canvas.height = canvas.clientHeight * window.devicePixelRatio;
     ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
 
-    playBtn.onclick = () => {
+    function executeToggleAction() {
         if(!audioCtx) { initAudioContextEngine(audio, canvas, ctx); }
-        if(audio.paused) { audio.play(); playBtn.innerHTML = `<i class="fa-solid fa-pause ml-0.5"></i>`; playBtn.style.opacity = "0.2"; }
-        else { audio.pause(); playBtn.innerHTML = `<i class="fa-solid fa-play ml-1"></i>`; playBtn.style.opacity = "1"; }
-    };
+        if(audio.paused) { 
+            audio.play(); 
+            playBtn.innerHTML = `<i class="fa-solid fa-pause"></i>`;
+            centerOverlay.classList.add('playing-hide');
+        } else { 
+            audio.pause(); 
+            playBtn.innerHTML = `<i class="fa-solid fa-play"></i>`;
+            centerOverlay.querySelector('.center-play-btn-circle').innerHTML = `<i class="fa-solid fa-play ml-0.5"></i>`;
+            centerOverlay.classList.remove('playing-hide');
+        }
+    }
+
+    playBtn.onclick = (e) => { e.stopPropagation(); executeToggleAction(); };
+    centerOverlay.onclick = (e) => { e.stopPropagation(); executeToggleAction(); };
     
-    audio.onended = () => { playBtn.innerHTML = `<i class="fa-solid fa-play ml-1"></i>`; playBtn.style.opacity = "1"; };
-    
-    replayBtn.onclick = () => {
-        if(!audioCtx) { initAudioContextEngine(audio, canvas, ctx); }
-        audio.currentTime = 0;
-        audio.play();
-        playBtn.innerHTML = `<i class="fa-solid fa-pause ml-0.5"></i>`;
-        playBtn.style.opacity = "0.2";
+    loopBtn.onclick = (e) => {
+        e.stopPropagation();
+        audio.loop = !audio.loop;
+        loopBtn.classList.toggle('text-[#00ffa3]', audio.loop);
+        loopBtn.classList.toggle('text-zinc-600', !audio.loop);
     };
 
     audio.ontimeupdate = () => {
         if(!audio.duration) return;
         timeline.value = (audio.currentTime / audio.duration) * 100;
         timeLabel.innerText = formatTimeMetrics(audio.currentTime);
+    };
+
+    audio.onended = () => {
+        if(!audio.loop) {
+            playBtn.innerHTML = `<i class="fa-solid fa-rotate-right"></i>`;
+            centerOverlay.querySelector('.center-play-btn-circle').innerHTML = `<i class="fa-solid fa-rotate-right"></i>`;
+            centerOverlay.classList.remove('playing-hide');
+        }
     };
     timeline.oninput = () => audio.currentTime = (timeline.value / 100) * audio.duration;
     
