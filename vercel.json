@@ -3,17 +3,32 @@
   "builds": [
     {
       "src": "api/index.py",
-      "use": "@vercel/python"
+      "use": "@vercel/python",
+      "config": {
+        "maxDuration": 10,
+        "runtime": "python3.9"
+      }
     }
   ],
   "routes": [
     {
-      "src": "/api/(.*)",
+      "src": "/api/extract",
+      "methods": ["POST", "OPTIONS"],
+      "dest": "api/index.py"
+    },
+    {
+      "src": "/api/health",
       "dest": "api/index.py"
     },
     {
       "src": "/(.*)",
       "dest": "api/index.py"
     }
-  ]
+  ],
+  "functions": {
+    "api/index.py": {
+      "memory": 1024,
+      "maxDuration": 10
+    }
+  }
 }
