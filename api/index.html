@@ -20,11 +20,11 @@ body { background: #030305; color: #fff; min-height: 100vh; font-family: 'Inter'
 .brand-strip { width: 100%; height: 60px; background: #000; border-b: 1px solid #111; display: flex; align-items: center; justify-content: center; position: relative; }
 .brand-line { width: 100%; height: 3px; background: var(--ff-yellow); box-shadow: 0 2px 10px rgba(255, 222, 0, 0.3); }
 
-/* Master Grid Layout Matrix Workspace */
+/* Master Grid Layout Workspace */
 .main-grid-container { display: grid; grid-template-columns: repeat(1, 1fr); gap: 24px; max-width: 1400px; margin: 0 auto; padding: 0 20px 40px 20px; }
 @media (min-width: 1024px) { .main-grid-container { grid-template-columns: repeat(3, 1fr); } }
 
-/* Rigid Uniform Layout Sizing Matrix Panel Rules */
+/* Rigid Uniform Layout Sizing Panel Rules */
 .uniform-panel { 
     background: #09090d; border: 1px solid #181822; position: relative; 
     box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8); height: 490px; display: flex; 
@@ -128,8 +128,8 @@ body { background: #030305; color: #fff; min-height: 100vh; font-family: 'Inter'
     <div class="uniform-panel panel-1">
         <div class="panel-body justify-between space-y-4">
             <div>
-                <h2 class="text-xs font-black text-white uppercase tracking-wider mb-1 gff">Input Stream</h2>
-                <p class="text-[11px] text-zinc-500 mb-3">Select parsing workspace paradigm manually.</p>
+                <h2 class="text-xs font-black text-white uppercase tracking-wider mb-1 gff">Input File</h2>
+                <p class="text-[11px] text-zinc-500 mb-3">Select the file type you want to unpack.</p>
                 
                 <div class="tab-row" id="extractionModeTabs">
                     <div class="tab-btn active" data-mode="bundle">AssetBundle</div>
@@ -143,39 +143,39 @@ body { background: #030305; color: #fff; min-height: 100vh; font-family: 'Inter'
                     <div class="w-14 h-full flex items-center justify-center border-r border-zinc-900 flex-shrink-0">
                         <i id="uploadIcon" class="fa-solid fa-box-open text-lg text-zinc-600"></i>
                     </div>
-                    <div class="flex-1 px-4 truncate text-left">
-                        <span id="fileStatusText" class="text-[9px] font-black text-zinc-500 block gff uppercase tracking-tighter">Standby</span>
-                        <p id="fileLabel" class="gff text-[12px] text-zinc-400 truncate">Tap to upload / Drag & Drop file</p>
+                    <div class="flex-1 px-4 truncate text-left relative h-full flex flex-col justify-center">
+                        <span id="fileStatusText" class="text-[9px] font-black text-zinc-500 block gff uppercase tracking-tighter">Ready</span>
+                        <p id="fileLabel" class="gff text-[12px] text-zinc-400 truncate pr-16">Tap to upload / Drag & Drop file</p>
+                        <span class="absolute right-4 text-[9px] font-bold text-zinc-600 bg-zinc-950 px-1.5 py-0.5 rounded border border-zinc-900 uppercase">Max 5MB</span>
                     </div>
-                    <input type="file" id="fileInput" class="hidden">
+                    <input type="file" id="fileInput" class="hidden" accept=".unity3d,.bundle,.ktx,.astc">
                 </div>
                 
-                <!-- Ergonomic Separation Buffer Padding -->
                 <div class="h-5 flex-shrink-0"></div>
                 
                 <button type="submit" id="extractBtn" class="btn-mechanical w-full h-12 text-sm font-bold italic flex-shrink-0">
-                    <i class="fa-solid fa-bolt" id="btnIcon"></i> <span id="btnText">Extract Package</span>
+                    <i class="fa-solid fa-bolt" id="btnIcon"></i> <span id="btnText">Extract File</span>
                 </button>
             </form>
             
             <div class="bg-[#0b0b10] border border-zinc-900 rounded-xl p-3 flex items-center gap-3 flex-shrink-0 min-w-0">
                 <div id="statusIcon" class="text-zinc-600 flex-shrink-0"><i class="fa-solid fa-terminal text-xs"></i></div>
                 <div class="flex-1 min-w-0 text-left">
-                    <span id="statusText" class="block text-[8px] font-black text-zinc-500 uppercase gff">System Log</span>
-                    <p id="statusDescText" class="text-[10px] text-zinc-400 truncate">Ready for instruction sequences.</p>
+                    <span id="statusText" class="block text-[8px] font-black text-zinc-500 uppercase gff">Status</span>
+                    <p id="statusDescText" class="text-[10px] text-zinc-400 truncate">Choose a file to begin extraction.</p>
                 </div>
                 <div id="statusBadge" class="text-[9px] gff px-2 py-0.5 bg-black rounded border border-zinc-900 text-zinc-500 flex-shrink-0">IDLE</div>
             </div>
         </div>
     </div>
 
-    <!-- Column 2: Extracted Asset Array Register List -->
+    <!-- Column 2: Extracted Asset List -->
     <div id="listWindowPanel" class="uniform-panel panel-2">
         <div class="panel-body">
             <div class="flex items-center justify-between mb-4 border-b border-zinc-900 pb-3 flex-shrink-0 min-w-0">
                 <div class="min-w-0 text-left mr-2">
-                    <h2 class="text-xs font-black text-white uppercase tracking-wider gff">Extracted</h2>
-                    <p id="cacheCounterText" class="text-[10px] text-zinc-500 truncate">0 Items Found</p>
+                    <h2 class="text-xs font-black text-white uppercase tracking-wider gff">Extracted Files</h2>
+                    <p id="cacheCounterText" class="text-[10px] text-zinc-500 truncate">0 files found</p>
                 </div>
                 <div class="flex items-center gap-2 hidden" id="listActions">
                     <div class="custom-dropdown" id="filterDropdown">
@@ -193,35 +193,35 @@ body { background: #030305; color: #fff; min-height: 100vh; font-family: 'Inter'
             <div class="scrollable-content-box flex-1 flex flex-col">
                 <div id="listEmptyState" class="flex-1 flex flex-col items-center justify-center text-zinc-700 p-8 text-center">
                     <i class="fa-solid fa-folder-tree text-2xl mb-3 text-zinc-800"></i>
-                    <span class="text-[9px] font-bold gff uppercase tracking-widest text-zinc-600 block">No Assets Loaded</span>
-                    <p class="text-[10px] text-zinc-500 max-w-[180px] mt-1 leading-normal">Execute package extraction stream to build index registry.</p>
+                    <span class="text-[9px] font-bold gff uppercase tracking-widest text-zinc-600 block">No Data Loaded</span>
+                    <p class="text-[10px] text-zinc-500 max-w-[180px] mt-1 leading-normal">Upload a valid file and extract it to view content.</p>
                 </div>
                 <div id="listLoadingState" class="hidden flex-1 flex flex-col items-center justify-center text-zinc-500 p-8 text-center">
                     <i class="fa-solid fa-circle-notch fa-spin text-yellow-500 text-xl mb-3"></i>
-                    <span class="text-[10px] font-bold gff uppercase tracking-wider text-zinc-400">Compiling Array...</span>
+                    <span class="text-[10px] font-bold gff uppercase tracking-wider text-zinc-400">Reading content...</span>
                 </div>
                 <div id="fileList" class="hidden flex-1 overflow-y-auto p-2 space-y-1 custom-scrollbar min-w-0"></div>
             </div>
         </div>
     </div>
 
-    <!-- Column 3: Fixed Live Preview Frame Space Workspace -->
+    <!-- Column 3: Fixed Live Preview Workspace -->
     <div id="previewTargetWorkspace" class="uniform-panel panel-3 fixed-preview-panel">
         <div class="panel-body">
             <div class="mb-4 border-b border-zinc-900 pb-3 flex-shrink-0">
                 <h2 class="text-xs font-black text-white uppercase tracking-wider gff">Live Preview</h2>
-                <p class="text-[10px] text-zinc-500">Visualizing data stream.</p>
+                <p class="text-[10px] text-zinc-500">Preview selected file content below.</p>
             </div>
             <div class="scrollable-content-box bg-black flex flex-col p-2">
                 <div id="previewFallback" class="flex-1 flex flex-col items-center justify-center text-zinc-800 p-4">
                     <i class="fa-solid fa-eye text-xl mb-2"></i>
-                    <span class="text-[9px] font-bold gff uppercase tracking-wide">Inspect Target</span>
+                    <span class="text-[9px] font-bold gff uppercase tracking-wide">Select a file</span>
                 </div>
                 <div id="previewContent" class="hidden flex-1 flex flex-col min-w-0 overflow-hidden justify-between h-full">
                     <div id="mediaBox" class="w-full flex flex-col min-h-0 flex-1 justify-center h-full relative"></div>
                     <div class="mt-3 bg-[#0d0d14] p-2 rounded-xl border border-zinc-900 flex items-center justify-between gap-3 flex-shrink-0 min-w-0">
                         <div class="min-w-0 flex-1 text-left px-1">
-                            <p id="mediaTitle" class="text-[11px] font-bold text-zinc-300 truncate">Asset File Matrix</p>
+                            <p id="mediaTitle" class="text-[11px] font-bold text-zinc-300 truncate">Asset Preview</p>
                             <p id="mediaTypeLabel" class="text-[8px] font-black text-zinc-600 uppercase gff tracking-wider">Type</p>
                         </div>
                         <a id="singleSaveBtn" href="#" class="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-yellow-500 transition-all flex-shrink-0">
@@ -240,6 +240,7 @@ let selectedFilters = new Set();
 let activeExtractionMode = "bundle";
 
 const FILTER_ORDER = ["2D Texture", "Mesh", "Audio", "Video", "Text", "JSON"];
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 Megabytes Strict Cap Limit
 
 let audioCtx, audioSource, audioAnalyser, audioAnimationId;
 let babylonEngine, babylonScene;
@@ -259,19 +260,47 @@ dropZone.addEventListener("dragleave", () => dropZone.classList.remove("dragover
 dropZone.addEventListener("drop", (e) => {
     e.preventDefault();
     dropZone.classList.remove("dragover-active");
-    if (e.dataTransfer.files.length) { fileInput.files = e.dataTransfer.files; handleFileRegistration(); }
+    if (e.dataTransfer.files.length) { 
+        validateAndRegisterFile(e.dataTransfer.files[0]);
+    }
 });
-fileInput.onchange = () => handleFileRegistration();
+fileInput.onchange = () => {
+    if (fileInput.files.length) {
+        validateAndRegisterFile(fileInput.files[0]);
+    }
+};
 
-function handleFileRegistration() {
-    const file = fileInput.files[0];
+function validateAndRegisterFile(file) {
     if(!file) return;
+    
+    if (file.size > MAX_FILE_SIZE) {
+        // Reset inputs immediately
+        fileInput.value = "";
+        fileLabel.innerText = "Tap to upload / Drag & Drop file";
+        fileLabel.className = "gff text-[12px] text-zinc-400 truncate pr-16";
+        document.getElementById('uploadIcon').className = "fa-solid fa-box-open text-zinc-600 text-lg";
+        document.getElementById('fileStatusText').innerText = "LIMIT EXCEEDED";
+        document.getElementById('fileStatusText').className = "text-[9px] font-black text-red-500 block gff uppercase tracking-tighter";
+        
+        // Update general logging pane
+        document.getElementById('statusBadge').innerText = "REJECTED";
+        document.getElementById('statusBadge').style.color = "var(--ff-red)";
+        document.getElementById('statusText').innerText = "SIZE ERROR";
+        document.getElementById('statusDescText').innerText = `File is too large (${(file.size / 1024 / 1024).toFixed(2)}MB). Maximum allowed size is 5MB.`;
+        return;
+    }
+
     fileLabel.innerText = file.name;
     fileLabel.classList.remove('text-zinc-400');
     fileLabel.classList.add('text-[#ffde00]');
     document.getElementById('uploadIcon').className = "fa-solid fa-file-import text-[#ffde00] text-lg";
-    document.getElementById('fileStatusText').innerText = "STREAM ATTACHED";
-    document.getElementById('fileStatusText').classList.add('text-[#ffde00]');
+    document.getElementById('fileStatusText').innerText = "FILE ATTACHED";
+    document.getElementById('fileStatusText').className = "text-[9px] font-black text-[#ffde00] block gff uppercase tracking-tighter";
+    
+    document.getElementById('statusBadge').innerText = "READY";
+    document.getElementById('statusBadge').style.color = "var(--ff-cyan)";
+    document.getElementById('statusText').innerText = "LOADED";
+    document.getElementById('statusDescText').innerText = `Ready to extract ${file.name}.`;
 }
 
 document.getElementById('extractionModeTabs').addEventListener('click', (e) => {
@@ -294,17 +323,26 @@ document.addEventListener('click', () => {
 
 document.getElementById('extractorForm').onsubmit = async (e) => {
     e.preventDefault();
+    
+    // Double check array verification check bounds
     const file = fileInput.files[0];
-    if(!file) return;
+    if(!file) {
+        document.getElementById('statusDescText').innerText = "Please select a file first.";
+        return;
+    }
+    if(file.size > MAX_FILE_SIZE) {
+        document.getElementById('statusDescText').innerText = "Cannot extract files larger than 5MB.";
+        return;
+    }
 
     extractBtn.disabled = true;
     btnIcon.className = "fa-solid fa-ellipsis-stroke fa-bounce text-black";
-    btnText.innerText = "Extracting Stream...";
+    btnText.innerText = "Extracting...";
 
     document.getElementById('statusBadge').innerText = "WORKING";
     document.getElementById('statusBadge').style.color = "var(--ff-yellow)";
     document.getElementById('statusText').innerText = "PROCESSING";
-    document.getElementById('statusDescText').innerText = `Parsing workspace array modules...`;
+    document.getElementById('statusDescText').innerText = `Unpacking contents...`;
     
     document.getElementById('listEmptyState').classList.add('hidden');
     document.getElementById('listLoadingState').classList.remove('hidden');
@@ -332,7 +370,7 @@ document.getElementById('extractorForm').onsubmit = async (e) => {
         
         document.getElementById('statusBadge').innerText = "SUCCESS";
         document.getElementById('statusBadge').style.color = "var(--ff-emerald)";
-        document.getElementById('statusDescText').innerText = `Successfully parsed ${activeCache.length} individual items.`;
+        document.getElementById('statusDescText').innerText = `Successfully found ${activeCache.length} items.`;
 
         document.getElementById('listWindowPanel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
@@ -348,7 +386,7 @@ document.getElementById('extractorForm').onsubmit = async (e) => {
     } finally {
         extractBtn.disabled = false;
         btnIcon.className = "fa-solid fa-bolt";
-        btnText.innerText = "Extract Package";
+        btnText.innerText = "Extract File";
     }
 };
 
@@ -401,7 +439,7 @@ function clearFilters(e) {
 function renderList(isInitialPayloadLoad = false) {
     fileList.innerHTML = "";
     const filtered = activeCache.filter(i => selectedFilters.size === 0 || selectedFilters.has(i.label));
-    document.getElementById('cacheCounterText').innerText = `${filtered.length} Display Objects Inside View`;
+    document.getElementById('cacheCounterText').innerText = `${filtered.length} files matching filter`;
     
     if (isInitialPayloadLoad) {
         if(filtered.length > 0 && filtered.length <= 3) listWindowPanel.classList.add('fit-content-low');
@@ -497,7 +535,7 @@ async function selectFile(item, element) {
                     <input type="range" id="videoTimeline" class="player-progress-slider" value="0" min="0" max="100">
                     <span id="videoTimeLabel" class="text-[9px] font-mono text-zinc-500 select-none pr-2 flex-shrink-0">00:00</span>
                     
-                    <!-- Verified Single Right Corner Action Matrix Control -->
+                    <!-- Verified Single Right Corner Control -->
                     <div class="flex items-center gap-2 flex-shrink-0">
                         <button id="videoPlayBtn" class="text-zinc-400 hover:text-[#ffde00] transition-all text-xs bg-zinc-900 border border-zinc-800 w-7 h-7 rounded-md flex items-center justify-center shadow-inner">
                             <i class="fa-solid fa-play"></i>
@@ -520,7 +558,7 @@ async function selectFile(item, element) {
                     <input type="range" id="audioTimeline" class="player-progress-slider" value="0" min="0" max="100">
                     <span id="audioTimeLabel" class="text-[9px] font-mono text-zinc-500 select-none pr-2 flex-shrink-0">00:00</span>
                     
-                    <!-- Verified Single Right Corner Action Matrix Control -->
+                    <!-- Verified Single Right Corner Control -->
                     <div class="flex items-center gap-2 flex-shrink-0">
                         <button id="audioPlayBtn" class="text-zinc-400 hover:text-[#ffde00] transition-all text-xs bg-zinc-900 border border-zinc-800 w-7 h-7 rounded-md flex items-center justify-center shadow-inner">
                             <i class="fa-solid fa-play"></i>
@@ -750,7 +788,6 @@ function initAudioContextEngine(audioElement, canvas, ctx) {
     const w = canvas.clientWidth;
     const h = canvas.clientHeight;
 
-    // Dynamic wave generation loops
     function drawFullSymmetricWaves() {
         audioAnimationId = requestAnimationFrame(drawFullSymmetricWaves);
         audioAnalyser.getByteFrequencyData(dataArray);
@@ -778,7 +815,6 @@ function initAudioContextEngine(audioElement, canvas, ctx) {
     drawFullSymmetricWaves();
 }
 
-// Global Metric Conversion Parser Utility Function
 function formatTimeMetrics(secs) {
     const m = Math.floor(secs / 60).toString().padStart(2, '0');
     const s = Math.floor(secs % 60).toString().padStart(2, '0');
@@ -786,7 +822,7 @@ function formatTimeMetrics(secs) {
 }
 
 function downloadGroupedZip() {
-    document.getElementById('statusDescText').innerText = "Compressing index directories inside system engine...";
+    document.getElementById('statusDescText').innerText = "Compressing files...";
     window.location.href = `/api/extract?download_type=zip&mode=grouped`;
 }
 </script>
