@@ -41,47 +41,247 @@ def extract_clean_name(obj, data, default_type: str) -> str:
             
     return f"{default_type}_{obj.path_id}"
 
-def process_object_unrestricted(obj, raw_env_data: bytes):
-    """Processes asset structure blocks matching targeted extraction rules."""
+def process_object_unrestricted(obj, raw_env_data):
     try:
         t = obj.type.name
         data = obj.read()
+
         pristine_name = extract_clean_name(obj, data, t)
         safe_name = re.sub(r'[<>:"/\\|?*\x00-\x1f]', "_", pristine_name)
 
+        # ------------------------
+        # TEXT ASSETS
+        # ------------------------
         if t == "TextAsset":
             raw = getattr(data, "m_Script", b"")
-            if isinstance(raw, str): raw = raw.encode('utf-8', errors='replace')
+            if isinstance(raw, str):
+                raw = raw.encode("utf-8", errors="replace")
+
             ext = ".json" if raw.startswith((b"{", b"[")) else ".txt"
-            return f"{safe_name}{ext}", raw, f"Text/{safe_name}{ext}"
+            return f"{safe_name}{ext}", raw, f"TextAssets/{safe_name}{ext}"
 
-        elif t in ["Texture2D", "Sprite"] and hasattr(data, 'image'):
-            buf = io.BytesIO()
-            data.image.save(buf, format="PNG", optimize=False)
-            img_bytes = buf.getvalue()
-            buf.close()
-            return f"{safe_name}.png", img_bytes, f"Textures/{safe_name}.png"
+        # ------------------------
+        # IMAGES
+        # ------------------------
+        elif t in [
+            "Texture2D",
+            "Sprite",
+            "Cubemap",
+            "RenderTexture"
+        ]:
+            if hasattr(data, "image"):
+                buf = io.BytesIO()
+                data.image.save(buf, format="PNG")
+                return (
+                    f"{safe_name}.png",
+                    buf.getvalue(),
+                    f"Images/{safe_name}.png"
+                )
 
+        # ------------------------
+        # AUDIO
+        # ------------------------
         elif t == "AudioClip":
             samples = getattr(data, "samples", None)
-            if samples and list(samples.keys()):
-                audio_filename = list(samples.keys())[0]
-                return audio_filename, samples[audio_filename], f"Audio/{audio_filename}"
-            raw = obj.get_raw_data()
-            ext = ".ogg" if raw.startswith(b'OggS') else ".wav"
-            return f"{safe_name}{ext}", raw, f"Audio/{safe_name}{ext}"
 
+            if samples:
+                first = list(samples.keys())[0]
+                return (
+                    first,
+                    samples[first],
+                    f"Audio/{first}"
+                )
+
+            raw = obj.get_raw_data()
+            return (
+                f"{safe_name}.bin",
+                raw,
+                f"Audio/{safe_name}.bin"
+            )
+
+        # ------------------------
+        # VIDEO
+        # ------------------------
         elif t == "VideoClip":
             raw = obj.get_raw_data()
-            if len(raw) < 1024:
-                match = raw_env_data.find(b'ftyp')
-                if match != -1:
-                    start_pos = max(0, match - 4)
-                    raw = raw_env_data[start_pos:start_pos + 12_000_000]
-            return f"{safe_name}.mp4", raw, f"Video/{safe_name}.mp4"
-            
+
+            return (
+                f"{safe_name}.mp4",
+                raw,
+                f"Video/{safe_name}.mp4"
+            )
+
+        # ------------------------
+        # SHADERS
+        # ------------------------
+        elif t == "Shader":
+            try:
+                txt = str(data.export())
+            except:
+                txt = str(data.read_typetree())
+
+            return (
+                f"{safe_name}.shader",
+                txt.encode("utf-8"),
+                f"Shaders/{safe_name}.shader"
+            )
+
+        # ------------------------
+        # MONOBEHAVIOUR
+        # ------------------------
+        elif t == "MonoBehaviour":
+            try:
+                tree = data.read_typetree()
+
+                return (
+                    f"{safe_name}.json",
+                    json.dumps(
+                        tree,
+                        indent=2,
+                        ensure_ascii=False
+                    ).encode("utf-8"),
+                    f"MonoBehaviour/{safe_name}.json"
+                )
+            except:
+                raw = obj.get_raw_data()
+
+                return (
+                    f"{safe_name}.bin",
+                    raw,
+                    f"MonoBehaviour/{safe_name}.bin"
+                )
+
+        # ------------------------
+        # MATERIAL
+        # ------------------------
+        elif t == "Material":
+            tree = data.read_typetree()
+
+            return (
+                f"{safe_name}.json",
+                json.dumps(tree, indent=2).encode(),
+                f"Materials/{safe_name}.json"
+            )
+
+        # ------------------------
+        # GAMEOBJECT
+        # ------------------------
+        elif t == "GameObject":
+            tree = data.read_typetree()
+
+            return (
+                f"{safe_name}.json",
+                json.dumps(tree, indent=2).encode(),
+                f"GameObjects/{safe_name}.json"
+            )
+
+        # ------------------------
+        # ANIMATION
+        # ------------------------
+        elif t in [
+            "AnimationClip",
+            "AnimatorController",
+            "AnimatorOverrideController"
+        ]:
+            tree = data.read_typetree()
+
+            return (
+                f"{safe_name}.json",
+                json.dumps(tree, indent=2).encode(),
+                f"Animations/{safe_name}.json"
+            )
+
+        # ------------------------
+        # SPRITE ATLAS
+        # ------------------------
+        elif t == "SpriteAtlas":
+            tree = data.read_typetree()
+
+            return (
+                f"{safe_name}.json",
+                json.dumps(tree, indent=2).encode(),
+                f"SpriteAtlas/{safe_name}.json"
+            )
+
+        # ------------------------
+        # FONTS
+        # ------------------------
+        elif t in [
+            "Font",
+            "TMP_FontAsset"
+        ]:
+            raw = obj.get_raw_data()
+
+            return (
+                f"{safe_name}.font",
+                raw,
+                f"Fonts/{safe_name}.font"
+            )
+
+        # ------------------------
+        # MESH
+        # ------------------------
+        elif t == "Mesh":
+            raw = obj.get_raw_data()
+
+            return (
+                f"{safe_name}.mesh",
+                raw,
+                f"Meshes/{safe_name}.mesh"
+            )
+
+        # ------------------------
+        # ASSETBUNDLE
+        # ------------------------
+        elif t == "AssetBundle":
+            tree = data.read_typetree()
+
+            return (
+                f"{safe_name}.json",
+                json.dumps(tree, indent=2).encode(),
+                f"AssetBundle/{safe_name}.json"
+            )
+
+        # ------------------------
+        # AVATAR
+        # ------------------------
+        elif t == "Avatar":
+            tree = data.read_typetree()
+
+            return (
+                f"{safe_name}.json",
+                json.dumps(tree, indent=2).encode(),
+                f"Avatar/{safe_name}.json"
+            )
+
+        # ------------------------
+        # TERRAIN
+        # ------------------------
+        elif t == "TerrainData":
+            tree = data.read_typetree()
+
+            return (
+                f"{safe_name}.json",
+                json.dumps(tree, indent=2).encode(),
+                f"Terrain/{safe_name}.json"
+            )
+
+        # ------------------------
+        # RAW FALLBACK
+        # ------------------------
+        else:
+            raw = obj.get_raw_data()
+
+            if raw:
+                return (
+                    f"{safe_name}.bin",
+                    raw,
+                    f"Raw/{safe_name}.bin"
+                )
+
     except Exception:
         pass
+
     return None
 
 @app.route('/', defaults={'path': ''})
