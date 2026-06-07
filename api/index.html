@@ -267,6 +267,7 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 Megabytes Strict Cap Limit
 
 let audioCtx, audioSource, audioAnalyser, audioAnimationId;
 let babylonEngine, babylonScene;
+let playbackNode = null;
 
 const fileInput = document.getElementById("fileInput");
 const fileLabel = document.getElementById("fileLabel");
@@ -345,7 +346,6 @@ document.getElementById('extractionModeTabs').addEventListener('click', (e) => {
     target.classList.add('active');
     activeExtractionMode = target.dataset.mode;
 
-    // Mutate layouts dynamically based on asset stream pipeline configuration 
     if (activeExtractionMode === "astc") {
         dropZone.style.display = "none";
         astcInputGroup.style.display = "flex";
@@ -364,7 +364,7 @@ document.getElementById('extractionModeTabs').addEventListener('click', (e) => {
         } else {
             document.getElementById('statusDescText').innerText = "Choose a file to begin extraction.";
             document.getElementById('statusBadge').innerText = "IDLE";
-            document.getElementById('statusBadge').style.color = "text-zinc-500";
+            document.getElementById('statusBadge').style.color = "#8e8e93";
         }
     }
 });
@@ -414,7 +414,6 @@ document.getElementById('extractorForm').onsubmit = async (e) => {
             const imageBlob = await response.blob();
             const localVirtualUrl = URL.createObjectURL(imageBlob);
 
-            // Construct single file entry schema matching standard layout pipelines
             activeCache = [{
                 index: 0,
                 name: `${idValue}.png`,
@@ -451,7 +450,6 @@ document.getElementById('extractorForm').onsubmit = async (e) => {
         return;
     }
 
-    // Standard AssetBundle/KTX Local Pipeline Logic Block Execution
     const file = fileInput.files[0];
     if(!file) {
         document.getElementById('statusDescText').innerText = "Please select a file first.";
@@ -629,7 +627,6 @@ async function selectFile(item, element) {
     document.getElementById('mediaTitle').innerText = item.name;
     document.getElementById('mediaTypeLabel').innerText = item.label;
     
-    // Check if handling simulated virtual URL blobs (from local stream injection) or backend storage locations
     const url = item.localUrl ? item.localUrl : `/api/extract?download_type=single&file_index=${item.index}`;
     document.getElementById('singleSaveBtn').href = url;
     document.getElementById('singleSaveBtn').setAttribute('download', item.name);
@@ -756,7 +753,6 @@ function initBabylonMeshScene(canvasId, modelUrl) {
                     max.x = Math.max(max.x, v.x); max.y = Math.max(max.y, v.y); max.z = Math.max(max.z, v.z);
                 });
                 
-                // Set default metallic styling parameters manually
                 if (mesh.material) {
                     mesh.material.backFaceCulling = false;
                     if (mesh.material.pbr) {
@@ -801,7 +797,6 @@ function setupAudioEngineContext(arrayBuffer) {
     let startTime = 0;
     let elapsedPauseTime = 0;
     let isPlaying = false;
-    let playbackNode = null;
 
     canvas.width = canvas.offsetWidth;
     canvas.height = canvas.offsetHeight;
@@ -965,7 +960,6 @@ function formatTimeLayout(secs) {
 async function downloadGroupedZip() {
     if(activeCache.length === 0) return;
     
-    // Check if handling simulated virtual URL blobs (from local stream injection)
     if(activeCache[0].localUrl) {
         const linkElement = document.createElement("a");
         linkElement.href = activeCache[0].localUrl;
