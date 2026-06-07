@@ -19,7 +19,6 @@ import UnityPy
 
 app = Flask(__name__)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-HTML_PATH = os.path.join(BASE_DIR, 'index.html')
 
 # Strict 5MB file cap matching deployment platform limits
 MAX_FILE_SIZE = 5 * 1024 * 1024 
@@ -258,8 +257,6 @@ def handle_remote_astc_reconstruction():
 
 @app.route('/api/extract', methods=['POST'])
 def handle_extraction():
-    # This route is now completely stateless. 
-    # It takes the input bundle, parses it in memory, and passes everything right back to the browser.
     if 'asset_bundle' not in request.files: return jsonify({"error": "No file payload found"}), 400
     
     try:
@@ -275,12 +272,10 @@ def handle_extraction():
         decompressed_data = decompress_stream(raw_bytes)
         json_manifest = []
         
-        # Unpack KTX formats directly
         if decompressed_data.startswith(b'\xABKTX 11\xBB\r\n\x1A\n'):
             try:
                 png_bytes = convert_ktx_to_png_fallback(decompressed_data)
                 name = os.path.splitext(uploaded_file.filename)[0] + ".png"
-                # Send back the actual file content encoded as hex/base64 so the server doesn't need to save a cache!
                 json_manifest.append({
                     'index': 0, 
                     'name': name, 
@@ -291,7 +286,6 @@ def handle_extraction():
                 return jsonify({"files": json_manifest})
             except: pass
 
-        # Unpack AssetBundles in memory
         env = UnityPy.load(decompressed_data)
         counter = 0
         seen_md5 = set()
@@ -322,8 +316,12 @@ def handle_extraction():
 @app.route('/<path:path>')
 def serve_ui_layout(path):
     try:
-        with open(HTML_PATH, 'r', encoding='utf-8') as f: return f.read()
-    except Exception as e: return f"Error: {str(e)}", 500
+        # Resolves runtime folder mapping reliably in local development and live production containers
+        target_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'index.html')
+        with open(target_path, 'r', encoding='utf-8') as f: 
+            return f.read()
+    except Exception as e: 
+        return f"File Synchronization Error: {str(e)}", 500
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=10000, debug=True)
