@@ -58,7 +58,7 @@ body { background: #030305; color: #fff; min-height: 100vh; font-family: 'Inter'
 /* Extract Buttons Configurations */
 .btn-mechanical { cursor: pointer; font-family: 'GFF-Bold'; text-transform: uppercase; font-style: italic; display: flex; align-items: center; justify-content: center; border-radius: 14px; gap: 12px; background: var(--ff-yellow); color: #000; box-shadow: 0 5px 0 #bfa600; transition: all 0.1s; user-select: none; }
 .btn-mechanical:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 2px 0 #bfa600; }
-.btn-mechanical:disabled { background: #222226 !important; color: #55555c !important; box-shadow: 0 5px 0 #141416 !important; cursor: not-allowed !allowed; transform: none !important; opacity: 0.8; }
+.btn-mechanical:disabled { background: #222226 !important; color: #55555c !important; box-shadow: 0 5px 0 #141416 !important; cursor: not-allowed; transform: none !important; opacity: 0.8; }
 
 /* Desktop Interactive Drag Deck Area Frame */
 .upload-deck { background: #07070a; border: 2px dashed #1e1e2b; border-radius: 14px; display: flex; align-items: center; height: 96px; cursor: pointer; transition: all 0.2s ease-in-out; min-width: 0; position: relative; }
@@ -484,13 +484,13 @@ async function selectFile(item, element) {
             <div class="custom-player-wrapper relative">
                 <div class="aspect-16-9-viewport relative">
                     <div id="videoCenterOverlay" class="center-play-overlay">
-                        <div class="center-play-btn-circle"><i class="fa-solid fa-play ml-0.5"></i></div>
+                        <div class="center-play-btn-circle"><i class="fa-solid fa-rotate-right text-lg"></i></div>
                     </div>
                     <video id="customVideoPlayer" src="${url}" class="w-full h-full object-contain"></video>
                 </div>
                 <div class="custom-control-bar">
                     <input type="range" id="videoTimeline" class="player-progress-slider" value="0" min="0" max="100">
-                    <span id="videoTimeLabel" class="text-[9px] font-mono text-zinc-500 select-none flex-shrink-0">00:00</span>
+                    <span id="videoTimeLabel" class="text-[9px] font-mono text-zinc-500 select-none pr-2 flex-shrink-0">00:00</span>
                     
                     <div class="flex items-center gap-2 flex-shrink-0">
                         <button id="videoLoopBtn" class="w-7 h-7 rounded-md bg-zinc-900 border border-zinc-800 text-zinc-500 hover:text-[#00ffa3] transition-all text-[11px] flex items-center justify-center" title="Toggle Loop">
@@ -508,14 +508,14 @@ async function selectFile(item, element) {
             <div class="custom-player-wrapper relative">
                 <div class="aspect-16-9-viewport relative">
                     <div id="audioCenterOverlay" class="center-play-overlay">
-                        <div class="center-play-btn-circle"><i class="fa-solid fa-play ml-0.5"></i></div>
+                        <div class="center-play-btn-circle"><i class="fa-solid fa-rotate-right text-lg"></i></div>
                     </div>
                     <canvas id="audioVisualizerCanvas"></canvas>
                     <audio id="customAudioPlayer" src="${url}" crossorigin="anonymous" class="hidden"></audio>
                 </div>
                 <div class="custom-control-bar">
                     <input type="range" id="audioTimeline" class="player-progress-slider" value="0" min="0" max="100">
-                    <span id="audioTimeLabel" class="text-[9px] font-mono text-zinc-500 select-none flex-shrink-0">00:00</span>
+                    <span id="audioTimeLabel" class="text-[9px] font-mono text-zinc-500 select-none pr-2 flex-shrink-0">00:00</span>
                     
                     <div class="flex items-center gap-2 flex-shrink-0">
                         <button id="audioLoopBtn" class="w-7 h-7 rounded-md bg-zinc-900 border border-zinc-800 text-zinc-500 hover:text-[#00ffa3] transition-all text-[11px] flex items-center justify-center" title="Toggle Loop">
@@ -628,7 +628,7 @@ function initCustomVideoController() {
         } else { 
             video.pause(); 
             playBtn.innerHTML = `<i class="fa-solid fa-play"></i>`;
-            centerOverlay.querySelector('.center-play-btn-circle').innerHTML = `<i class="fa-solid fa-play ml-0.5"></i>`;
+            centerOverlay.querySelector('.center-play-btn-circle').innerHTML = `<i class="fa-solid fa-rotate-right text-lg"></i>`;
             centerOverlay.classList.remove('playing-hide');
         }
     }
@@ -654,7 +654,7 @@ function initCustomVideoController() {
     video.onended = () => {
         if(!video.loop) {
             playBtn.innerHTML = `<i class="fa-solid fa-rotate-right"></i>`;
-            centerOverlay.querySelector('.center-play-btn-circle').innerHTML = `<i class="fa-solid fa-rotate-right"></i>`;
+            centerOverlay.querySelector('.center-play-btn-circle').innerHTML = `<i class="fa-solid fa-rotate-right text-lg"></i>`;
             centerOverlay.classList.remove('playing-hide');
         }
     };
@@ -684,7 +684,7 @@ function initCustomAudioController() {
         } else { 
             audio.pause(); 
             playBtn.innerHTML = `<i class="fa-solid fa-play"></i>`;
-            centerOverlay.querySelector('.center-play-btn-circle').innerHTML = `<i class="fa-solid fa-play ml-0.5"></i>`;
+            centerOverlay.querySelector('.center-play-btn-circle').innerHTML = `<i class="fa-solid fa-rotate-right text-lg"></i>`;
             centerOverlay.classList.remove('playing-hide');
         }
     }
@@ -710,7 +710,7 @@ function initCustomAudioController() {
     audio.onended = () => {
         if(!audio.loop) {
             playBtn.innerHTML = `<i class="fa-solid fa-rotate-right"></i>`;
-            centerOverlay.querySelector('.center-play-btn-circle').innerHTML = `<i class="fa-solid fa-rotate-right"></i>`;
+            centerOverlay.querySelector('.center-play-btn-circle').innerHTML = `<i class="fa-solid fa-rotate-right text-lg"></i>`;
             centerOverlay.classList.remove('playing-hide');
         }
     };
