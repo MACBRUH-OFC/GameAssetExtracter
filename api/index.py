@@ -11,6 +11,7 @@ import struct
 from flask import Flask, request, send_file, jsonify
 from PIL import Image
 import texture2ddecoder
+import numpy as np
 
 os.environ["UNITYPY_NO_GUI"] = "1"
 import UnityPy
@@ -21,290 +22,181 @@ GLOBAL_CACHE_REGISTRY = {}
 
 def decompress_stream(data: bytes) -> bytes:
     try:
-        if data.startswith(b'\x1f\x8b'):
-            return decompress_stream(gzip.decompress(data))
-        if data.startswith((b'\x78\x9c', b'\x78\x01', b'\x78\xda')):
-            return decompress_stream(zlib.decompress(data))
-    except:
-        pass
+        if data.startswith(b'\x1f\x8b'): return decompress_stream(gzip.decompress(data))
+        if data.startswith((b'\x78\x9c', b'\x78\x01', b'\x78\xda')): return decompress_stream(zlib.decompress(data))
+    except: pass
     return data
 
 def extract_clean_name(obj, data, default_type: str) -> str:
     if hasattr(obj, 'container') and obj.container:
-        base_mapped_path = os.path.basename(obj.container)
-        if base_mapped_path:
-            return os.path.splitext(base_mapped_path)[0]
+        base = os.path.basename(obj.container)
+        if base: return os.path.splitext(base)[0]
     for attr in ["name", "m_Name", "m_name"]:
         val = getattr(data, attr, "")
-        if isinstance(val, str) and val.strip():
-            return val.strip()
+        if isinstance(val, str) and val.strip(): return val.strip()
     return f"{default_type}_{obj.path_id}"
 
-def dump_obj_to_dict(obj_data) -> dict:
-    out = {}
+def build_obj_mesh(mesh) -> str:
     try:
-        if hasattr(obj_data, "read_typetree"):
-            return obj_data.read_typetree()
-    except:
-        pass
-    for attr in dir(obj_data):
-        if attr.startswith('_') or attr in ['read', 'assets_file', 'reader', 'image', 'samples']:
-            continue
-        try:
-            val = getattr(obj_data, attr)
-            if isinstance(val, (int, float, str, bool)):
-                out[attr] = val
-            elif isinstance(val, bytes):
-                out[attr] = val.hex()[:500] + "..." if len(val) > 500 else val.hex()
-        except:
-            pass
-    return out
+        verts = mesh.vertices
+        indices = mesh.indices
+        uvs = mesh.uv
+        normals = mesh.normals
+        if not verts: return ""
+        
+        sb = [f"o {mesh.name}"]
+        for v in verts:
+            sb.append(f"v {-v.x} {v.y} {v.z}")
+        for uv in uvs:
+            sb.append(f"vt {uv.x} {uv.y}")
+        for n in normals:
+            sb.append(f"vn {-n.x} {n.y} {n.z}")
+            
+        for i in range(0, len(indices), 3):
+            v1, v2, v3 = indices[i]+1, indices[i+1]+1, indices[i+2]+1
+            if uvs:
+                sb.append(f"f {v1}/{v1}/{v1} {v3}/{v3}/{v3} {v2}/{v2}/{v2}")
+            else:
+                sb.append(f"f {v1} {v3} {v2}")
+        return "\n".join(sb)
+    except: return ""
 
-def process_object_unrestricted(obj, raw_env_data: bytes):
+def dump_typetree(obj) -> dict:
+    try:
+        if hasattr(obj, "read_typetree"): return obj.read_typetree()
+    except: pass
+    return {"m_Name": getattr(obj, "name", "Object")}
+
+def process_object(obj, raw_env):
     try:
         t = obj.type.name
         data = obj.read()
-        pristine_name = extract_clean_name(obj, data, t)
-        safe_name = re.sub(r'[<>:"/\|?*\x00-\x1f]', "", pristine_name)
+        p_name = extract_clean_name(obj, data, t)
+        safe_name = re.sub(r'[<>:"/\|?*\x00-\x1f]', "", p_name)
 
-        if t == "TextAsset":
-            raw = getattr(data, "m_Script", b"")
-            if isinstance(raw, str): raw = raw.encode('utf-8', errors='replace')
-            ext = ".txt"
-            label = "Text File"
-            if safe_name.lower().endswith('.atlas') or raw.startswith(b"\n") or b"size:" in raw:
-                if not safe_name.lower().endswith('.atlas'): ext = ".atlas.txt"
-                label = "Atlas Sheet"
-            elif raw.startswith((b"{", b"[")):
-                ext = ".json"
-                label = "Data Config"
-            return f"{safe_name}{ext}", raw, f"Text/{safe_name}{ext}", label
-
+        if t == "Mesh":
+            obj_data = build_obj_mesh(data)
+            if obj_data: return f"{safe_name}.obj", obj_data.encode(), f"Meshes/{safe_name}.obj", "3D Mesh"
+            return f"{safe_name}.json", json.dumps(dump_typetree(data)).encode(), f"Meshes/{safe_name}.json", "Mesh Data"
+        
         elif t in ["Texture2D", "Sprite"] and hasattr(data, 'image'):
             buf = io.BytesIO()
-            data.image.save(buf, format="PNG", optimize=False)
-            return f"{safe_name}.png", buf.getvalue(), f"Textures/{safe_name}.png", f"{t}"
-
-        elif t == "SpriteAtlas":
-            tree_data = dump_obj_to_dict(data)
-            js_bytes = json.dumps(tree_data, indent=2, ensure_ascii=False).encode('utf-8')
-            return f"{safe_name}_atlas.json", js_bytes, f"Mapping/{safe_name}_atlas.json", "SpriteAtlas Map"
-
+            data.image.save(buf, format="PNG")
+            return f"{safe_name}.png", buf.getvalue(), f"Textures/{safe_name}.png", t
+            
         elif t == "AudioClip":
-            samples = getattr(data, "samples", None)
-            if samples and list(samples.keys()):
-                audio_filename = list(samples.keys())[0]
-                return audio_filename, samples[audio_filename], f"Audio/{audio_filename}", "Audio Track"
             raw = obj.get_raw_data()
             ext = ".ogg" if raw.startswith(b'OggS') else ".wav"
-            return f"{safe_name}{ext}", raw, f"Audio/{safe_name}{ext}", "Audio Track"
+            return f"{safe_name}{ext}", raw, f"Audio/{safe_name}{ext}", "Audio"
 
         elif t == "VideoClip":
             raw = obj.get_raw_data()
             if len(raw) < 1024:
-                match = raw_env_data.find(b'ftyp')
-                if match != -1:
-                    start_pos = max(0, match - 4)
-                    raw = raw_env_data[start_pos:start_pos + 15_000_000]
-            return f"{safe_name}.mp4", raw, f"Video/{safe_name}.mp4", "Video Clip"
-
-        elif t == "Mesh":
-            try:
-                # Using the old working code's mesh export method
-                mesh_data = data.export().encode('utf-8')
-                return f"{safe_name}.obj", mesh_data, f"Meshes/{safe_name}.obj", "3D Mesh"
-            except:
-                tree_data = dump_obj_to_dict(data)
-                js_bytes = json.dumps(tree_data, indent=2, ensure_ascii=False).encode('utf-8')
-                return f"{safe_name}_mesh.json", js_bytes, f"Geometry/Mesh/{safe_name}.json", "Mesh Schema"
-
-        elif t in ["GameObject", "MonoBehaviour", "ScriptableObject", "SkinnedMeshRenderer", "MeshRenderer"]:
-            tree_data = dump_obj_to_dict(data)
-            js_bytes = json.dumps(tree_data, indent=2, ensure_ascii=False).encode('utf-8')
-            folder = "Hierarchy" if t == "GameObject" else "Scripts" if "Script" in t else "Geometry"
-            return f"{safe_name}_{t}.json", js_bytes, f"{folder}/{t}/{safe_name}.json", f"{t} Schema"
-
-        elif t in ["Material", "Shader"]:
-            tree_data = dump_obj_to_dict(data)
-            js_bytes = json.dumps(tree_data, indent=2, ensure_ascii=False).encode('utf-8')
-            return f"{safe_name}_{t}.json", js_bytes, f"Shaders_Materials/{t}/{safe_name}.json", f"{t} Config"
-
-        elif t in ["AnimationClip", "AnimatorController", "Animator"]:
-            tree_data = dump_obj_to_dict(data)
-            js_bytes = json.dumps(tree_data, indent=2, ensure_ascii=False).encode('utf-8')
-            return f"{safe_name}_{t}.json", js_bytes, f"Animations/{t}/{safe_name}.json", "Animation Map"
+                match = raw_env.find(b'ftyp')
+                if match != -1: raw = raw_env[max(0, match-4):max(0, match-4)+15000000]
+            return f"{safe_name}.mp4", raw, f"Video/{safe_name}.mp4", "Video"
 
         elif t == "Font":
-            raw_font_data = getattr(data, "m_FontData", b"")
-            if raw_font_data and len(raw_font_data) > 10:
-                ext = ".otf" if raw_font_data.startswith(b'OTTO') else ".ttf"
-                return f"{safe_name}{ext}", raw_font_data, f"Fonts/{safe_name}{ext}", "Font File"
-            return f"{safe_name}_font.json", json.dumps(dump_obj_to_dict(data)).encode('utf-8'), f"Fonts/{safe_name}.json", "Font Metadata"
+            raw = getattr(data, "m_FontData", b"")
+            if raw:
+                ext = ".otf" if raw.startswith(b'OTTO') else ".ttf"
+                return f"{safe_name}{ext}", raw, f"Fonts/{safe_name}{ext}", "Font"
 
-        elif t == "AssetBundle":
-            tree_data = dump_obj_to_dict(data)
-            js_bytes = json.dumps(tree_data, indent=2, ensure_ascii=False).encode('utf-8')
-            return f"{safe_name}_manifest.json", js_bytes, f"Containers/{safe_name}.json", "Bundle Manifest"
+        elif t in ["MonoBehaviour", "Material", "Shader", "GameObject", "AnimationClip", "AnimatorController"]:
+            return f"{safe_name}.json", json.dumps(dump_typetree(data), indent=2).encode(), f"{t}/{safe_name}.json", t
 
-        else:
-            try:
-                tree_data = dump_obj_to_dict(data)
-                if tree_data:
-                    js_bytes = json.dumps(tree_data, indent=2, ensure_ascii=False).encode('utf-8')
-                    return f"{safe_name}_{t}.json", js_bytes, f"Other/{t}/{safe_name}.json", f"{t}"
-            except: pass
-            raw_bytes = obj.get_raw_data()
-            if raw_bytes:
-                return f"{safe_name}_{t}.dat", raw_bytes, f"Other/{t}/{safe_name}.dat", f"{t}"
-    except: pass
-    return None
+        return f"{safe_name}.dat", obj.get_raw_data(), f"Other/{t}/{safe_name}.dat", t
+    except: return None
 
-def convert_astc_pair(rgb_bytes, sa_bytes=None) -> bytes:
-    # ASTC Header: \x13\xab\xa1\x5c
-    bw, bh = rgb_bytes[4], rgb_bytes[5]
-    w = struct.unpack('<I', rgb_bytes[7:10] + b'\x00')[0]
-    h = struct.unpack('<I', rgb_bytes[10:13] + b'\x00')[0]
-    
-    rgb_dec = texture2ddecoder.decode_astc(rgb_bytes[16:], w, h, bw, bh)
-    img_rgb = Image.frombytes("RGBA", (w, h), rgb_dec)
-    
-    if sa_bytes and sa_bytes.startswith(b'\x13\xab\xa1\x5c'):
-        sa_dec = texture2ddecoder.decode_astc(sa_bytes[16:], w, h, bw, bh)
-        img_sa = Image.frombytes("RGBA", (w, h), sa_dec)
+def decode_astc_pair(rgb_data, sa_data=None):
+    if not rgb_data.startswith(b'\x13\xab\xa1\x5c'): return None
+    bw, bh = rgb_data[4], rgb_data[5]
+    w = struct.unpack('<I', rgb_data[7:10] + b'\x00')[0]
+    h = struct.unpack('<I', rgb_data[10:13] + b'\x00')[0]
+    dec_rgb = texture2ddecoder.decode_astc(rgb_data[16:], w, h, bw, bh)
+    img_rgb = Image.frombytes("RGBA", (w, h), dec_rgb)
+    if sa_data and sa_data.startswith(b'\x13\xab\xa1\x5c'):
+        dec_sa = texture2ddecoder.decode_astc(sa_data[16:], w, h, bw, bh)
+        img_sa = Image.frombytes("RGBA", (w, h), dec_sa)
         r, g, b, _ = img_rgb.split()
         a, _, _, _ = img_sa.split()
-        final_img = Image.merge("RGBA", (r, g, b, a))
-    else:
-        final_img = img_rgb
-        
-    output = io.BytesIO()
-    final_img.save(output, format="PNG")
-    return output.getvalue()
-
-def convert_ktx_to_png_fallback(file_bytes) -> bytes:
-    f = io.BytesIO(file_bytes)
-    header = f.read(64)
-    if len(header) < 64 or header[:12] != b'\xABKTX 11\xBB\r\n\x1A\n': raise Exception("Invalid KTX")
-    gl_internal_format = struct.unpack('<I', header[28:32])[0]
-    width = struct.unpack('<I', header[36:40])[0]
-    height = struct.unpack('<I', header[40:44])[0]
-    bytes_of_kv = struct.unpack('<I', header[60:64])[0]
-    f.seek(64 + bytes_of_kv)
-    image_size = struct.unpack('<I', f.read(4))[0]
-    data = f.read(image_size)
-    if gl_internal_format == 0x8D64: decoded = texture2ddecoder.decode_etc1(data, width, height)
-    elif 0x93B0 <= gl_internal_format <= 0x93BD:
-        astc_formats = {0x93B0:(4,4), 0x93B1:(5,4), 0x93B2:(5,5), 0x93B3:(6,5), 0x93B4:(6,6), 0x93B5:(8,5), 0x93B6:(8,6), 0x93B7:(8,8), 0x93B8:(10,5), 0x93B9:(10,6), 0x93BA:(10,8), 0x93BB:(10,10), 0x93BC:(12,10), 0x93BD:(12,12)}
-        bx, by = astc_formats[gl_internal_format]
-        decoded = texture2ddecoder.decode_astc(data, width, height, bx, by)
-    elif gl_internal_format == 0x8058: decoded = data[:width*height*4]
-    else: raise Exception("Unsupported KTX")
-    img = Image.frombytes("RGBA", (width, height), decoded)
-    # KTX swap BGR to RGB
-    r, g, b, a = img.split()
-    img = Image.merge("RGBA", (b, g, r, a)).transpose(Image.FLIP_TOP_BOTTOM)
-    output = io.BytesIO()
-    img.save(output, format="PNG")
-    return output.getvalue()
+        return Image.merge("RGBA", (r, g, b, a))
+    return img_rgb
 
 @app.route('/api/extract', methods=['GET', 'POST'])
-def handle_universal_extraction_pipeline():
+def handle_api():
     global GLOBAL_CACHE_REGISTRY
-    download_type = request.args.get('download_type', '')
-
-    if download_type == 'zip':
-        if not GLOBAL_CACHE_REGISTRY.get('extracted'): return jsonify({"error": "Cache is empty"}), 400
+    dtype = request.args.get('download_type', '')
+    if dtype in ['zip', 'zip_filtered']:
+        if 'extracted' not in GLOBAL_CACHE_REGISTRY: return jsonify({"error": "No cache"}), 400
+        indices = request.args.get('indices', '')
+        idx_set = set(int(i) for i in indices.split(',') if i.strip()) if indices else None
+        zip_mode = request.args.get('zip_mode', 'normal')
         
-        filter_indices = request.args.get('indices', '')
-        # Always download grouped (into folders) as default
-        target_list = GLOBAL_CACHE_REGISTRY['extracted']
-        
-        if filter_indices:
-            idx_list = [int(i) for i in filter_indices.split(',') if i.strip().isdigit()]
-            target_list = [item for item in target_list if item['index'] in idx_list]
-
         zip_io = io.BytesIO()
         with zipfile.ZipFile(zip_io, "w", zipfile.ZIP_DEFLATED) as zf:
-            for item in target_list:
-                # Group related assets into folders (textures, meshes, etc.)
-                zf.writestr(item['zip_path'], item['bytes'])
+            for idx, item in enumerate(GLOBAL_CACHE_REGISTRY['extracted']):
+                if idx_set is not None and idx not in idx_set: continue
+                path = item['zip_path'] if zip_mode == 'grouped' else item['name']
+                zf.writestr(path, item['bytes'])
         zip_io.seek(0)
-        
-        orig_filename = GLOBAL_CACHE_REGISTRY.get('original_name', 'assets')
-        # Clean zip name: before . or -
-        clean_name = re.split(r'[-.]', orig_filename)[0]
-        return send_file(zip_io, mimetype='application/zip', as_attachment=True, download_name=f"{clean_name}[Extracted].zip")
+        orig = GLOBAL_CACHE_REGISTRY.get('original_name', 'Assets')
+        name = re.split(r'[.\-]', orig)[0] + "[Extracted].zip"
+        return send_file(zip_io, mimetype='application/zip', as_attachment=True, download_name=name)
 
-    elif download_type == 'single':
-        file_idx = int(request.args.get('file_index', -1))
-        if not GLOBAL_CACHE_REGISTRY.get('extracted') or file_idx < 0 or file_idx >= len(GLOBAL_CACHE_REGISTRY['extracted']):
-            return jsonify({"error": "Target not found"}), 400
-        item = GLOBAL_CACHE_REGISTRY['extracted'][file_idx]
-        return send_file(io.BytesIO(item['bytes']), mimetype='application/octet-stream', as_attachment=True, download_name=item['name'])
-
-    if 'asset_bundle' not in request.files: return jsonify({"error": "No file upload source"}), 400
+    if 'asset_bundle' not in request.files: return jsonify({"error": "No file"}), 400
+    up_files = request.files.getlist('asset_bundle')
+    extracted, manifest, seen = [], [], set()
     
-    try:
-        uploaded_files = request.files.getlist('asset_bundle')
-        GLOBAL_CACHE_REGISTRY['original_name'] = uploaded_files[0].filename
-        
-        extracted_list = []
-        json_manifest = []
-        seen_md5 = set()
-        counter = 0
+    astc_list = [f for f in up_files if f.filename.lower().endswith('.astc')]
+    if astc_list:
+        rgb = next((f for f in astc_list if 'rgb' in f.filename.lower()), astc_list[0])
+        sa = next((f for f in astc_list if 'sa' in f.filename.lower() or 'alpha' in f.filename.lower()), None)
+        try:
+            img = decode_astc_pair(rgb.read(), sa.read() if sa else None)
+            buf = io.BytesIO()
+            img.save(buf, format="PNG")
+            extracted.append({'name': 'astc_decoded.png', 'zip_path': 'Textures/astc_decoded.png', 'bytes': buf.getvalue()})
+            manifest.append({'index': 0, 'name': 'astc_decoded.png', 'label': 'Texture2D'})
+        except Exception as e: return jsonify({"error": str(e)}), 500
+    else:
+        u_file = up_files[0]
+        raw_bytes = u_file.read()
+        decomp = decompress_stream(raw_bytes)
+        if decomp.startswith(b'\xABKTX 11'):
+            w = struct.unpack('<I', decomp[36:40])[0]
+            h = struct.unpack('<I', decomp[40:44])[0]
+            kv = struct.unpack('<I', decomp[60:64])[0]
+            dec = texture2ddecoder.decode_etc1(decomp[64+kv+4:], w, h)
+            img = Image.frombytes("RGBA", (w, h), dec)
+            b,g,r,a = img.split()
+            img = Image.merge("RGBA", (r,g,b,a)).transpose(Image.FLIP_TOP_BOTTOM)
+            buf = io.BytesIO()
+            img.save(buf, format="PNG")
+            extracted.append({'name': 'ktx_decoded.png', 'zip_path': 'Textures/ktx_decoded.png', 'bytes': buf.getvalue()})
+            manifest.append({'index': 0, 'name': 'ktx_decoded.png', 'label': 'Texture2D'})
+        else:
+            env = UnityPy.load(decomp)
+            count = 0
+            for obj in env.objects:
+                res = process_object(obj, decomp)
+                if res:
+                    fn, fb, zp, lb = res
+                    m5 = hashlib.md5(fb).hexdigest()
+                    if m5 not in seen:
+                        seen.add(m5); extracted.append({'name': fn, 'zip_path': zp, 'bytes': fb})
+                        manifest.append({'index': count, 'name': fn, 'label': lb}); count += 1
+            del env
+            gc.collect()
 
-        # Special logic for ASTC files (.astc)
-        astc_list = [f for f in uploaded_files if f.filename.lower().endswith('.astc')]
-        if astc_list:
-            rgb_f = next((f for f in astc_list if 'rgb' in f.filename.lower()), astc_list[0])
-            sa_f = next((f for f in astc_list if 'sa' in f.filename.lower() or 'alpha' in f.filename.lower()), None)
-            
-            png = convert_astc_pair(rgb_f.read(), sa_f.read() if sa_f else None)
-            name = os.path.splitext(rgb_f.filename)[0] + ".png"
-            extracted_list.append({'index': 0, 'name': name, 'zip_path': f"Textures/{name}", 'bytes': png, 'label': "Texture2D"})
-            json_manifest.append({'index': 0, 'name': name, 'path': f"Textures/{name}", 'label': "Texture2D"})
-            GLOBAL_CACHE_REGISTRY['extracted'] = extracted_list
-            return jsonify({"files": json_manifest})
-
-        # Standard AssetBundle / Unity logic
-        raw_bytes = uploaded_files[0].read()
-        decompressed_data = decompress_stream(raw_bytes)
-        
-        if decompressed_data.startswith(b'\xABKTX 11\xBB\r\n\x1A\n'):
-            png = convert_ktx_to_png_fallback(decompressed_data)
-            name = os.path.splitext(uploaded_files[0].filename)[0] + ".png"
-            extracted_list.append({'index': 0, 'name': name, 'zip_path': f"Textures/{name}", 'bytes': png, 'label': "Texture2D"})
-            json_manifest.append({'index': 0, 'name': name, 'path': f"Textures/{name}", 'label': "Texture2D"})
-            GLOBAL_CACHE_REGISTRY['extracted'] = extracted_list
-            return jsonify({"files": json_manifest})
-
-        env = UnityPy.load(decompressed_data)
-        for obj in env.objects:
-            res = process_object_unrestricted(obj, decompressed_data)
-            if res:
-                fname, fbytes, zpath, tlabel = res
-                h = hashlib.md5(fbytes).hexdigest()
-                if h not in seen_md5:
-                    seen_md5.add(h)
-                    extracted_list.append({'index': counter, 'name': fname, 'zip_path': zpath, 'bytes': fbytes, 'label': tlabel})
-                    json_manifest.append({'index': counter, 'name': fname, 'path': zpath, 'label': tlabel})
-                    counter += 1
-        
-        del env
-        gc.collect()
-        if not extracted_list: return jsonify({"error": "No elements found inside the file"}), 400
-        GLOBAL_CACHE_REGISTRY['extracted'] = extracted_list
-        return jsonify({"files": json_manifest})
-        
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    GLOBAL_CACHE_REGISTRY['extracted'] = extracted
+    GLOBAL_CACHE_REGISTRY['original_name'] = up_files[0].filename
+    return jsonify({"files": manifest})
 
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
-def serve_ui_layout(path):
-    try:
-        with open(os.path.join(BASE_DIR, 'index.html'), 'r', encoding='utf-8') as f: return f.read()
-    except Exception as e: return f"System Error: {str(e)}", 500
+def serve_ui(path):
+    with open(os.path.join(BASE_DIR, 'index.html'), 'r', encoding='utf-8') as f: return f.read()
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=10000)
