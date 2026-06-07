@@ -20,23 +20,23 @@ body::before { content: ""; position: fixed; inset: 0; background: rgba(0, 0, 0,
 .brand-strip { width: 100%; height: 60px; background: #000; border-b: 1px solid #111; display: flex; align-items: center; justify-content: center; position: relative; }
 .brand-line { width: 100%; height: 3px; background: var(--ff-yellow); box-shadow: 0 2px 10px rgba(255, 222, 0, 0.3); }
 
-/* Master Layout Framework Workspace Proportions Grid */
+/* Master Grid Grid Matrix Workspace Properties */
 .main-grid-container { display: grid; grid-template-columns: repeat(1, 1fr); gap: 24px; max-width: 1400px; margin: 0 auto; padding: 0 20px 40px 20px; }
 @media (min-width: 1024px) { .main-grid-container { grid-template-columns: repeat(3, 1fr); } }
 
-/* Unified Structural Panel Parameters Architectural Blueprint Rules */
+/* Rigid Uniform Layout Sizing Matrix Panel Rules */
 .uniform-panel { 
     background: #0a0a0a; border: 1px solid #1f1f1f; position: relative; 
     box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8); height: 500px; display: flex; 
     flex-direction: column; transition: height 0.25s cubic-bezier(0.4, 0, 0.2, 1); min-width: 0; 
 }
 
-/* Dynamic Low-Count Execution Window Scaling Limits (No Cropping, No Scroll) */
-.uniform-panel.fit-content-exact { height: auto !important; min-height: 180px; }
-.uniform-panel.fit-content-exact .scrollable-content-box { flex: none; height: auto; max-height: 380px; overflow-y: visible !important; }
+/* Precise Dynamic Adaptive Expansion for Low File Quantities to Prevent Cropping and Scrollbars */
+.uniform-panel.fit-content-low { height: auto !important; min-height: 200px; }
+.uniform-panel.fit-content-low .scrollable-content-box { flex: none; height: auto; overflow: visible !important; }
 
-/* Locked Rigid Layout Frame Rules for Panels 1 and 3 */
-.fixed-frame-panel { height: 500px !important; }
+/* Locked Rigid Geometry Bounds Matrix Configuration for the Preview Module Container */
+.fixed-preview-panel { height: 500px !important; }
 
 @media (min-width: 1024px) {
     .panel-1 { border-radius: 24px 0 0 24px; }
@@ -45,14 +45,14 @@ body::before { content: ""; position: fixed; inset: 0; background: rgba(0, 0, 0,
 }
 @media (max-width: 1023px) {
     .uniform-panel { border-radius: 16px; margin-bottom: 16px; height: 500px !important; }
-    .uniform-panel.fit-content-exact { height: auto !important; }
+    .uniform-panel.fit-content-low { height: auto !important; }
 }
 
 .uniform-panel::before { content: ""; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--ff-yellow); z-index: 10; }
 .panel-body { padding: 24px; flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
 .scrollable-content-box { flex: 1; background: #060608; border: 1px solid #1a1a1f; border-radius: 16px; overflow: hidden; position: relative; }
 
-/* Switchable Mode Header Toggles Row */
+/* Switchable Tab Elements Row Container */
 .tab-row { display: flex; background: #111115; padding: 4px; border-radius: 12px; border: 1px solid #1f1f26; margin-bottom: 16px; gap: 4px; }
 .tab-btn { flex: 1; text-align: center; padding: 8px 4px; font-size: 11px; font-weight: 700; color: #a1a1aa; border-radius: 8px; cursor: pointer; transition: all 0.2s; text-transform: uppercase; border: 1px solid transparent; }
 .tab-btn:hover { color: #fff; background: #16161f; }
@@ -61,34 +61,29 @@ body::before { content: ""; position: fixed; inset: 0; background: rgba(0, 0, 0,
 .btn-mechanical { cursor: pointer; font-family: 'GFF-Bold'; text-transform: uppercase; font-style: italic; display: flex; align-items: center; justify-content: center; border-radius: 16px; gap: 12px; background: var(--ff-yellow); color: #000; box-shadow: 0 5px 0 #c2a900; transition: all 0.1s; user-select: none; }
 .btn-mechanical:active { transform: translateY(2px); box-shadow: 0 2px 0 #c2a900; }
 
-.upload-deck { background: #121212; border: 2px dashed #2a2a2a; border-radius: 20px; display: flex; align-items: center; height: 130px; cursor: pointer; transition: all 0.2s; min-width: 0; }
+.upload-deck { background: #121212; border: 2px dashed #2a2a2a; border-radius: 20px; display: flex; align-items: center; height: 110px; cursor: pointer; transition: all 0.2s; min-width: 0; }
 
-/* High-Readability Optimized Dropdown Component Architecture */
-.custom-dropdown { position: relative; width: auto; min-width: 175px; max-width: 250px; }
+/* Multi-Select High Precision Wide Dropdown Layout */
+.custom-dropdown { position: relative; width: auto; min-width: 140px; }
 .dropdown-trigger { background: #121216; border: 1px solid #272732; padding: 8px 14px; border-radius: 10px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 11px; font-weight: 700; color: #e4e4e7; transition: all 0.2s; gap: 8px; }
 .dropdown-trigger:hover { border-color: #3f3f46; background: #16161f; }
-.dropdown-menu { position: absolute; top: calc(100% + 6px); right: 0; left: 0; background: #0c0c10; border: 1px solid #272732; border-radius: 12px; z-index: 50; max-height: 240px; overflow-y: auto; display: none; box-shadow: 0 15px 35px rgba(0,0,0,0.7); }
+.dropdown-menu { position: absolute; top: calc(100% + 6px); right: 0; background: #0c0c10; border: 1px solid #272732; border-radius: 12px; z-index: 50; max-height: 260px; width: 210px; overflow-y: auto; display: none; box-shadow: 0 15px 35px rgba(0,0,0,0.7); }
 .dropdown-menu.active { display: block; }
-.dropdown-item { padding: 10px 14px; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; transition: all 0.15s; border-bottom: 1px solid #14141a; color: #a1a1aa; }
+.dropdown-item { padding: 9px 14px; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; transition: all 0.15s; border-bottom: 1px solid #14141a; color: #a1a1aa; }
 .dropdown-item:hover { background: #171722; color: #fff; }
 .dropdown-item.selected { color: var(--ff-yellow); background: #12121a; font-weight: 600; }
 
-/* Cinematic Widescreen Widescreen Media Display Box Module Parameters Matrix */
-.cinematic-widescreen-frame { width: 100%; aspect-ratio: 16 / 9; background: #0d0d0f; border-radius: 12px; border: 1px solid #1f1f26; overflow: hidden; position: relative; }
+/* Cinematic Core 16:9 Proportional Aspect Window Architecture Rules */
+.aspect-16-9-viewport { width: 100%; aspect-ratio: 16 / 9; background: #020203; border-radius: 12px; border: 1px solid #121218; overflow: hidden; display: flex; align-items: center; justify-content: center; position: relative; }
 
-/* Immersive Widescreen Playback Controller System Mechanical Skins */
-.custom-player-wrapper { display: flex; flex-direction: column; width: 100%; height: 100%; background: #020203; position: relative; }
-.media-canvas-container { flex: 1; width: 100%; height: 100%; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer; }
-.custom-control-bar { height: 44px; background: #111116; border-top: 1px solid #1e1e26; display: flex; align-items: center; padding: 0 16px; gap: 14px; width: 100%; z-index: 20; position: relative; }
+/* Media Control Interface Layout - Controls Isolated Below the Media Elements */
+.custom-player-wrapper { display: flex; flex-direction: column; width: 100%; height: 100%; justify-content: space-between; padding: 4px; background: transparent; position: relative; }
+.custom-control-bar { height: 48px; background: #111116; border: 1px solid #1e1e26; border-radius: 12px; display: flex; align-items: center; padding: 0 14px; gap: 14px; margin-top: 10px; flex-shrink: 0; }
 .player-progress-slider { flex: 1; -webkit-appearance: none; appearance: none; height: 4px; background: #272732; border-radius: 2px; outline: none; cursor: pointer; }
 .player-progress-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 10px; height: 10px; border-radius: 50%; background: var(--ff-yellow); box-shadow: 0 0 6px var(--ff-yellow); }
 
-/* Absolute Widescreen Center Touch / Click Playback Interaction Core HUD */
-.center-hud-touch-trigger { position: absolute; width: 56px; height: 56px; background: rgba(0, 0, 0, 0.75); border: 1px solid rgba(255, 222, 0, 0.4); box-shadow: 0 0 15px rgba(0,0,0,0.5); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--ff-yellow); font-size: 18px; transition: all 0.2s ease-in-out; pointer-events: none; opacity: 1; z-index: 30; }
-.media-canvas-container:hover .center-hud-touch-trigger { transform: scale(1.1); background: rgba(0, 0, 0, 0.85); border-color: var(--ff-yellow); }
-.center-hud-touch-trigger.playing-fade { opacity: 0; transform: scale(0.8); }
-
-#audioVisualizerCanvas { width: 100%; height: 100%; background: #040406; }
+/* Full-Width Enhanced High-Fidelity Audio Canvas Area Mapping */
+#audioVisualizerCanvas { width: 100%; height: 100%; background: #040406; display: block; }
 .pixelated-render { image-rendering: pixelated; max-height: 100%; max-width: 100%; object-fit: contain; }
 .babylon-canvas-viewport { width: 100%; height: 100%; display: block; outline: none; background: #0d0d12; }
 
@@ -117,7 +112,7 @@ body::before { content: ""; position: fixed; inset: 0; background: rgba(0, 0, 0,
 </div>
 
 <div class="main-grid-container">
-    <div class="uniform-panel panel-1 fixed-frame-panel">
+    <div class="uniform-panel panel-1">
         <div class="panel-body justify-between">
             <div>
                 <h2 class="text-xs font-black text-white uppercase tracking-wider mb-1 gff">Input Stream</h2>
@@ -157,7 +152,7 @@ body::before { content: ""; position: fixed; inset: 0; background: rgba(0, 0, 0,
         </div>
     </div>
 
-    <div id="listWindowPanel" class="uniform-panel panel-2 fit-content-exact">
+    <div id="listWindowPanel" class="uniform-panel panel-2 fit-content-low">
         <div class="panel-body">
             <div class="flex items-center justify-between mb-4 border-b border-zinc-900 pb-3 flex-shrink-0 min-w-0">
                 <div class="min-w-0 text-left mr-2">
@@ -167,9 +162,8 @@ body::before { content: ""; position: fixed; inset: 0; background: rgba(0, 0, 0,
                 <div class="flex items-center gap-2 hidden" id="listActions">
                     <div class="custom-dropdown" id="filterDropdown">
                         <div class="dropdown-trigger" id="filterTrigger">
-                            <i class="fa-solid fa-filter text-[10px] text-zinc-400 flex-shrink-0"></i>
-                            <span class="truncate">Filter</span> 
-                            <i class="fa-solid fa-angle-down text-[9px] flex-shrink-0 text-zinc-500 ml-auto"></i>
+                            <span><i class="fa-solid fa-filter text-[10px] mr-1.5 text-zinc-400"></i>Filter</span> 
+                            <i class="fa-solid fa-chevron-down text-[9px] flex-shrink-0 text-zinc-500"></i>
                         </div>
                         <div class="dropdown-menu custom-scrollbar" id="filterMenu"></div>
                     </div>
@@ -178,30 +172,35 @@ body::before { content: ""; position: fixed; inset: 0; background: rgba(0, 0, 0,
                     </button>
                 </div>
             </div>
-            <div class="scrollable-content-box">
-                <div id="listEmptyState" class="absolute inset-0 flex flex-col items-center justify-center text-zinc-700 p-4">
-                    <i class="fa-solid fa-layer-group text-2xl mb-2"></i>
-                    <span class="text-[9px] font-bold gff uppercase tracking-widest">Awaiting Active Compilation</span>
+            <div class="scrollable-content-box flex-1 flex flex-col">
+                <div id="listEmptyState" class="flex-1 flex flex-col items-center justify-center text-zinc-700 p-8 text-center">
+                    <i class="fa-solid fa-folder-tree text-3xl mb-3 text-zinc-800"></i>
+                    <span class="text-[9px] font-bold gff uppercase tracking-widest text-zinc-600 block">No Assets Loaded</span>
+                    <p class="text-[10px] text-zinc-500 max-w-[180px] mt-1 leading-normal">Execute package extraction stream to build index registry.</p>
                 </div>
-                <div id="fileList" class="hidden p-2 space-y-1 min-w-0"></div>
+                <div id="listLoadingState" class="hidden flex-1 flex flex-col items-center justify-center text-zinc-500 p-8 text-center">
+                    <i class="fa-solid fa-circle-notch fa-spin text-yellow-500 text-2xl mb-3"></i>
+                    <span class="text-[10px] font-bold gff uppercase tracking-wider text-zinc-400">Compiling Array...</span>
+                </div>
+                <div id="fileList" class="hidden flex-1 overflow-y-auto p-2 space-y-1 custom-scrollbar min-w-0"></div>
             </div>
         </div>
     </div>
 
-    <div id="previewTargetWorkspace" class="uniform-panel panel-3 fixed-frame-panel">
+    <div id="previewTargetWorkspace" class="uniform-panel panel-3 fixed-preview-panel">
         <div class="panel-body">
             <div class="mb-4 border-b border-zinc-900 pb-3 flex-shrink-0">
                 <h2 class="text-xs font-black text-white uppercase tracking-wider gff">Live Preview</h2>
                 <p class="text-[10px] text-zinc-500">Visualizing data stream.</p>
             </div>
-            <div class="scrollable-content-box bg-black flex flex-col justify-center p-2">
+            <div class="scrollable-content-box bg-black flex flex-col p-2">
                 <div id="previewFallback" class="flex-1 flex flex-col items-center justify-center text-zinc-800 p-4">
                     <i class="fa-solid fa-eye text-2xl mb-2"></i>
                     <span class="text-[9px] font-bold gff uppercase tracking-wide">Inspect Target</span>
                 </div>
-                <div id="previewContent" class="hidden flex flex-col min-w-0 overflow-hidden w-full">
-                    <div id="mediaBox" class="cinematic-widescreen-frame flex items-center justify-center"></div>
-                    <div class="mt-3 bg-[#121216] p-2.5 rounded-xl border border-zinc-800 flex items-center justify-between gap-3 flex-shrink-0 min-w-0">
+                <div id="previewContent" class="hidden flex-1 flex flex-col min-w-0 overflow-hidden justify-between">
+                    <div id="mediaBox" class="w-full flex flex-col min-h-0 flex-1 justify-center"></div>
+                    <div class="mt-3 bg-[#121216] p-2 rounded-xl border border-zinc-800 flex items-center justify-between gap-3 flex-shrink-0 min-w-0">
                         <div class="min-w-0 flex-1 text-left px-1">
                             <p id="mediaTitle" class="text-[11px] font-bold text-zinc-300 truncate">Asset File Matrix</p>
                             <p id="mediaTypeLabel" class="text-[8px] font-black text-zinc-600 uppercase gff tracking-wider">Type</p>
@@ -221,10 +220,13 @@ let activeCache = [];
 let selectedFilters = new Set();
 let activeExtractionMode = "bundle";
 
-// Audio Engine Nodes State Pointers
+// Priority ordered label mapping constants for filter dropdown structure
+const FILTER_ORDER = ["2D Texture", "Audio", "Text", "Mesh"];
+
+// Audio Node Stream Global Arrays
 let audioCtx, audioSource, audioAnalyser, audioAnimationId;
 
-// Babylon.js Viewport Core Context Vectors
+// Babylon.js Rendering Engine Scope Instances
 let babylonEngine, babylonScene;
 
 const fileInput = document.getElementById("fileInput");
@@ -246,7 +248,9 @@ document.getElementById('filterTrigger').onclick = (e) => {
     filterDropdown.querySelector('.dropdown-menu').classList.toggle('active');
 };
 document.addEventListener('click', () => {
-    filterDropdown.querySelector('.dropdown-menu').classList.remove('active');
+    filterDropdown.querySelector('.dropdown-menu').classList.remove('remove');
+    const menu = filterDropdown.querySelector('.dropdown-menu');
+    if (menu) menu.classList.remove('active');
 });
 
 fileInput.onchange = () => {
@@ -268,8 +272,14 @@ document.getElementById('extractorForm').onsubmit = async (e) => {
     document.getElementById('statusBadge').style.color = "var(--ff-yellow)";
     document.getElementById('statusText').innerText = "PROCESSING";
     document.getElementById('statusDescText').innerText = `Parsing workspace...`;
-    document.getElementById('listEmptyState').innerHTML = `<i class="fa-solid fa-circle-notch fa-spin text-yellow-500 text-xl"></i>`;
     
+    // Fire reactive panel placeholder states immediately on click trigger sequence
+    document.getElementById('listEmptyState').classList.add('hidden');
+    document.getElementById('listLoadingState').classList.remove('hidden');
+    fileList.classList.add('hidden');
+    document.getElementById('listActions').classList.add('hidden');
+    listWindowPanel.classList.remove('fit-content-low');
+
     const formData = new FormData();
     formData.append("asset_bundle", file);
     formData.append("extraction_mode", activeExtractionMode);
@@ -282,19 +292,18 @@ document.getElementById('extractorForm').onsubmit = async (e) => {
         activeCache = data.files || [];
         selectedFilters.clear();
         
-        // Populate standard index tables
+        document.getElementById('listLoadingState').classList.add('hidden');
         renderList(true); 
         updateFilterMenu();
         
         document.getElementById('listActions').classList.remove('hidden');
-        document.getElementById('listEmptyState').classList.add('hidden');
         fileList.classList.remove('hidden');
         
         document.getElementById('statusBadge').innerText = "SUCCESS";
         document.getElementById('statusBadge').style.color = "var(--ff-emerald)";
         document.getElementById('statusDescText').innerText = `Successfully parsed ${activeCache.length} individual items.`;
 
-        // Direct pipeline automation trigger rules when an individual singular file is located
+        // Automated continuous execution routing if exactly 1 data stream element is unpacked
         if(activeCache.length === 1) {
             const initialRowNode = fileList.firstElementChild;
             selectFile(activeCache[0], initialRowNode);
@@ -303,19 +312,27 @@ document.getElementById('extractorForm').onsubmit = async (e) => {
         document.getElementById('statusBadge').innerText = "FAILED";
         document.getElementById('statusBadge').style.color = "var(--ff-red)";
         document.getElementById('statusDescText').innerText = err.message;
+        document.getElementById('listLoadingState').classList.add('hidden');
+        document.getElementById('listEmptyState').classList.remove('hidden');
         document.getElementById('listEmptyState').innerHTML = `<i class="fa-solid fa-triangle-exclamation text-red-500 text-xl mb-1"></i><span class="text-[10px] text-zinc-500">Extraction Fault</span>`;
     }
 };
 
 function updateFilterMenu() {
-    const labels = [...new Set(activeCache.map(i => i.label))].sort();
+    const rawLabels = [...new Set(activeCache.map(i => i.label))];
+    
+    // Sort array content fields ensuring premium targets float to top spectrum
+    const prioritizedLabels = FILTER_ORDER.filter(l => rawLabels.includes(l));
+    const secondaryLabels = rawLabels.filter(l => !FILTER_ORDER.includes(l)).sort();
+    const finalizedLabels = [...prioritizedLabels, ...secondaryLabels];
+
     const menu = document.getElementById('filterMenu');
     menu.innerHTML = `
-        <div class="dropdown-item font-bold border-b border-zinc-800 text-[9px] text-zinc-500 tracking-wider uppercase" onclick="toggleFilter('CLEAR_ALL')">
-            <span>Clear Workspace Filters</span> <i class="fa-solid fa-trash-can text-[10px]"></i>
+        <div class="dropdown-item font-bold border-b border-zinc-800 text-[9px] text-zinc-500 tracking-wider uppercase" onclick="clearFilters(event)">
+            <span>Clear Filter Options</span> <i class="fa-solid fa-trash-can text-[10px]"></i>
         </div>`;
     
-    labels.forEach(label => {
+    finalizedLabels.forEach(label => {
         const isSelected = selectedFilters.has(label);
         const item = document.createElement('div');
         item.className = `dropdown-item ${isSelected ? 'selected' : ''}`;
@@ -329,27 +346,31 @@ function updateFilterMenu() {
 }
 
 function toggleFilter(label) {
-    if(label === 'CLEAR_ALL') {
-        selectedFilters.clear();
-        document.getElementById('filterTrigger').querySelector('span').innerText = "Filter";
+    if(selectedFilters.has(label)) {
+        selectedFilters.delete(label);
     } else {
-        if(selectedFilters.has(label)) {
-            selectedFilters.delete(label);
-        } else {
-            selectedFilters.add(label);
-        }
-        
-        // Dynamic textual tracking header mapping for active filter states
-        if(selectedFilters.size === 0) {
-            document.getElementById('filterTrigger').querySelector('span').innerText = "Filter";
-        } else if(selectedFilters.size === 1) {
-            document.getElementById('filterTrigger').querySelector('span').innerText = selectedFilters.values().next().value;
-        } else {
-            document.getElementById('filterTrigger').querySelector('span').innerText = `Selected (${selectedFilters.size})`;
-        }
+        selectedFilters.add(label);
     }
+    
+    const triggerSpan = document.getElementById('filterTrigger').querySelector('span');
+    if(selectedFilters.size === 0) {
+        triggerSpan.innerHTML = `<i class="fa-solid fa-filter text-[10px] mr-1.5 text-zinc-400"></i>Filter`;
+    } else if(selectedFilters.size === 1) {
+        triggerSpan.innerText = [...selectedFilters][0];
+    } else {
+        triggerSpan.innerText = `Active (${selectedFilters.size})`;
+    }
+    
     updateFilterMenu();
-    renderList(false); // Maintain structured layout proportions unchanged across filtering operations
+    renderList(false); // Maintain exact layout boundary boxes during filter multi-select sequences
+}
+
+function clearFilters(e) {
+    e.stopPropagation();
+    selectedFilters.clear();
+    document.getElementById('filterTrigger').querySelector('span').innerHTML = `<i class="fa-solid fa-filter text-[10px] mr-1.5 text-zinc-400"></i>Filter`;
+    updateFilterMenu();
+    renderList(false);
 }
 
 function renderList(isInitialPayloadLoad = false) {
@@ -357,25 +378,19 @@ function renderList(isInitialPayloadLoad = false) {
     const filtered = activeCache.filter(i => selectedFilters.size === 0 || selectedFilters.has(i.label));
     document.getElementById('cacheCounterText').innerText = `${filtered.length} Display Objects Inside View`;
     
-    // Exact sizing rules to seamlessly balance low element arrays with high volume grids
-    if(isInitialPayloadLoad) {
-        if(activeCache.length > 0 && activeCache.length <= 3) {
-            listWindowPanel.classList.add('fit-content-exact');
-            fileList.style.overflowY = 'visible';
+    // Sizing Rules for Low File Counts: Expand to seamlessly fit 1-3 items without cropping or scrolling
+    if (isInitialPayloadLoad) {
+        if(filtered.length > 0 && filtered.length <= 3) {
+            listWindowPanel.classList.add('fit-content-low');
         } else {
-            listWindowPanel.classList.remove('fit-content-exact');
-            fileList.style.overflowY = 'auto';
-            fileList.style.maxHeight = '380px';
+            listWindowPanel.classList.remove('fit-content-low');
         }
     } else {
-        // Enforce sticky constraint bounding frames to eliminate voids
-        if(activeCache.length <= 3) {
-            listWindowPanel.classList.add('fit-content-exact');
-            fileList.style.overflowY = 'visible';
+        // Enforce rigid height boundaries when filtering to preserve workspace stability
+        if (activeCache.length <= 3) {
+            listWindowPanel.classList.add('fit-content-low');
         } else {
-            listWindowPanel.classList.remove('fit-content-exact');
-            fileList.style.overflowY = 'auto';
-            fileList.style.maxHeight = '380px';
+            listWindowPanel.classList.remove('fit-content-low');
         }
     }
     
@@ -431,47 +446,52 @@ async function selectFile(item, element) {
     document.getElementById('singleSaveBtn').href = url;
     document.getElementById('singleSaveBtn').setAttribute('download', item.name);
     
-    mediaBox.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin text-zinc-700 text-lg"></i>`;
+    mediaBox.innerHTML = `<div class="w-full h-full flex items-center justify-center"><i class="fa-solid fa-circle-notch fa-spin text-zinc-700 text-lg"></i></div>`;
     const ext = item.name.split('.').pop().toLowerCase();
     const isMesh = item.label.toLowerCase().includes('mesh') || item.label.toLowerCase().includes('3d') || ['obj','gltf','glb'].includes(ext);
 
-    // Smooth scroll focal adjustment targeted directly onto viewer bounds
+    // Smooth focal adjustment scroll down immediately into viewport block space
     document.getElementById('previewTargetWorkspace').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
     if (isMesh) {
-        const id = "babylon_canvas_" + Math.random().toString(36).substr(2, 9);
-        mediaBox.innerHTML = `<canvas id="${id}" class="babylon-canvas-viewport"></canvas>`;
-        initBabylonMeshScene(id, url, item.name);
+        mediaBox.innerHTML = `
+            <div class="custom-player-wrapper">
+                <div class="aspect-16-9-viewport">
+                    <canvas id="babylonAssetCanvas" class="babylon-canvas-viewport"></canvas>
+                </div>
+            </div>`;
+        initBabylonMeshScene("babylonAssetCanvas", url, item.name);
     } else if(['png','jpg','jpeg','webp'].includes(ext)) {
-        mediaBox.innerHTML = `<div class="w-full h-full flex items-center justify-center p-2"><img src="${url}" class="pixelated-render"></div>`;
+        mediaBox.innerHTML = `
+            <div class="custom-player-wrapper">
+                <div class="aspect-16-9-viewport">
+                    <img src="${url}" class="pixelated-render">
+                </div>
+            </div>`;
     } else if(['mp4','mkv','webm','mov'].includes(ext) || item.label.toLowerCase().includes('video')) {
         mediaBox.innerHTML = `
             <div class="custom-player-wrapper">
-                <div class="media-canvas-container" id="videoScreenContainer">
+                <div class="aspect-16-9-viewport">
                     <video id="customVideoPlayer" src="${url}" class="w-full h-full object-contain"></video>
-                    <div id="videoCenterHudBtn" class="center-hud-touch-trigger">
-                        <i class="fa-solid fa-play ml-0.5" id="hudActionIcon"></i>
-                    </div>
                 </div>
                 <div class="custom-control-bar">
+                    <button id="videoPlayBtn" class="text-zinc-400 hover:text-white transition-all text-xs flex-shrink-0 w-4"><i class="fa-solid fa-play"></i></button>
                     <input type="range" id="videoTimeline" class="player-progress-slider" value="0" min="0" max="100">
-                    <span id="videoTimeLabel" class="text-[9px] font-mono text-zinc-500 select-none">00:00</span>
+                    <span id="videoTimeLabel" class="text-[9px] font-mono text-zinc-500 select-none flex-shrink-0">00:00</span>
                 </div>
             </div>`;
         initCustomVideoController();
     } else if(['mp3','wav','ogg'].includes(ext) || item.label.toLowerCase().includes('audio')) {
         mediaBox.innerHTML = `
             <div class="custom-player-wrapper">
-                <div class="media-canvas-container flex-col" id="audioScreenContainer">
+                <div class="aspect-16-9-viewport">
                     <canvas id="audioVisualizerCanvas"></canvas>
                     <audio id="customAudioPlayer" src="${url}" crossorigin="anonymous" class="hidden"></audio>
-                    <div id="audioCenterHudBtn" class="center-hud-touch-trigger">
-                        <i class="fa-solid fa-play ml-0.5" id="audioHudActionIcon"></i>
-                    </div>
                 </div>
                 <div class="custom-control-bar">
+                    <button id="audioPlayBtn" class="text-zinc-400 hover:text-white transition-all text-xs flex-shrink-0 w-4"><i class="fa-solid fa-play"></i></button>
                     <input type="range" id="audioTimeline" class="player-progress-slider" value="0" min="0" max="100">
-                    <span id="audioTimeLabel" class="text-[9px] font-mono text-zinc-500 select-none">00:00</span>
+                    <span id="audioTimeLabel" class="text-[9px] font-mono text-zinc-500 select-none flex-shrink-0">00:00</span>
                 </div>
             </div>`;
         initCustomAudioController();
@@ -479,7 +499,12 @@ async function selectFile(item, element) {
         try {
             const r = await fetch(url);
             const txt = await r.text();
-            mediaBox.innerHTML = `<pre class="text-[10px] font-mono text-zinc-500 p-4 w-full h-full overflow-auto text-left whitespace-pre-wrap select-text custom-scrollbar bg-[#050507]">${txt.slice(0, 4000)}</pre>`;
+            mediaBox.innerHTML = `
+                <div class="custom-player-wrapper">
+                    <div class="aspect-16-9-viewport">
+                        <pre class="text-[10px] font-mono text-zinc-500 p-4 w-full h-full overflow-auto text-left whitespace-pre-wrap select-text custom-scrollbar bg-[#050507]">${txt.slice(0, 4000)}</pre>
+                    </div>
+                </div>`;
         } catch {
             mediaBox.innerHTML = `<div class="text-center text-zinc-700 p-4"><i class="fa-solid fa-file-circle-exclamation text-2xl"></i></div>`;
         }
@@ -507,22 +532,20 @@ function initBabylonMeshScene(canvasId, modelUrl, filename) {
     const camera = new BABYLON.ArcRotateCamera("TacticalCamera", Math.PI / 2, Math.PI / 2.5, 4, BABYLON.Vector3.Zero(), babylonScene);
     camera.attachControl(canvas, true);
     camera.wheelPrecision = 45;
-    camera.lowerRadiusLimit = 1.2;
-    camera.upperRadiusLimit = 20;
 
     const atmosphericLight = new BABYLON.HemisphericLight("ambientAtmosphere", new BABYLON.Vector3(0, 1, 0), babylonScene);
-    atmosphericLight.intensity = 0.5;
-    atmosphericLight.groundColor = new BABYLON.Color3(0.12, 0.12, 0.16);
+    atmosphericLight.intensity = 0.55;
 
     const keyDirectionalLight = new BABYLON.DirectionalLight("studioKeyLight", new BABYLON.Vector3(6, 12, 5), babylonScene);
-    keyDirectionalLight.intensity = 0.9;
+    keyDirectionalLight.intensity = 0.85;
 
+    // Grid baseline mapping layout
     const structuralGrid = BABYLON.MeshBuilder.CreateGround("workspaceGrid", { width: 14, height: 14, subdivisions: 28 }, babylonScene);
     const gridMaterial = new BABYLON.StandardMaterial("gridMaterialSet", babylonScene);
     gridMaterial.wireframe = true;
-    gridMaterial.diffuseColor = new BABYLON.Color3(0.15, 0.15, 0.22);
+    gridMaterial.diffuseColor = new BABYLON.Color3(0.14, 0.14, 0.2);
     structuralGrid.material = gridMaterial;
-    structuralGrid.position.y = -1.2;
+    structuralGrid.position.y = -1.1;
 
     const explicitExt = filename.toLowerCase().endsWith('.obj') ? ".obj" : ".obj";
 
@@ -530,7 +553,7 @@ function initBabylonMeshScene(canvasId, modelUrl, filename) {
         if (!meshes || meshes.length === 0) return;
 
         const premiumMaterial = new BABYLON.StandardMaterial("eliteModelMat", babylonScene);
-        premiumMaterial.diffuseColor = new BABYLON.Color3(0.8, 0.12, 0.22); 
+        premiumMaterial.diffuseColor = new BABYLON.Color3(0.85, 0.15, 0.2); 
         premiumMaterial.specularColor = new BABYLON.Color3(1.0, 0.85, 0.0); 
         premiumMaterial.specularPower = 32;
         premiumMaterial.backFaceCulling = false;
@@ -550,19 +573,17 @@ function initBabylonMeshScene(canvasId, modelUrl, filename) {
 
         const computedCenter = min.add(max).scale(0.5);
         const dimensionsSize = max.subtract(min);
-        const targetScaleFactor = 2.5 / Math.max(dimensionsSize.x, dimensionsSize.y, dimensionsSize.z);
+        const targetScaleFactor = 2.4 / Math.max(dimensionsSize.x, dimensionsSize.y, dimensionsSize.z);
 
         meshes.forEach(mesh => {
             mesh.position.subtractInPlace(computedCenter);
             mesh.scaling = new BABYLON.Vector3(targetScaleFactor, targetScaleFactor, targetScaleFactor);
         });
-
-        document.getElementById('statusDescText').innerText = "3D asset parsed and centered cleanly inside viewport mesh container.";
-    }, function() {}, function(scene, msg, ex) {
-        const proxyCube = BABYLON.MeshBuilder.CreateBox("fallbackBoxProxy", { size: 1.3 }, babylonScene);
+    }, function() {}, function() {
+        const proxyCube = BABYLON.MeshBuilder.CreateBox("fallbackBoxProxy", { size: 1.2 }, babylonScene);
         const errorMat = new BABYLON.StandardMaterial("errMat", babylonScene);
         errorMat.wireframe = true;
-        errorMat.diffuseColor = new BABYLON.Color3(0.5, 0.1, 0.7);
+        errorMat.diffuseColor = new BABYLON.Color3(0.5, 0.1, 0.6);
         proxyCube.material = errorMat;
     }, explicitExt);
 
@@ -579,29 +600,14 @@ function resizeBabylonViewportMatrix() {
 
 function initCustomVideoController() {
     const video = document.getElementById('customVideoPlayer');
-    const container = document.getElementById('videoScreenContainer');
-    const hudBtn = document.getElementById('videoCenterHudBtn');
-    const hudIcon = document.getElementById('hudActionIcon');
+    const playBtn = document.getElementById('videoPlayBtn');
     const timeline = document.getElementById('videoTimeline');
     const timeLabel = document.getElementById('videoTimeLabel');
 
-    function toggleVideoPlayback() {
-        if(video.paused) {
-            video.play();
-            hudIcon.className = "fa-solid fa-pause";
-            hudBtn.classList.add('playing-fade');
-        } else {
-            video.pause();
-            hudIcon.className = "fa-solid fa-play ml-0.5";
-            hudBtn.classList.remove('playing-fade');
-        }
-    }
-
-    container.onclick = (e) => {
-        e.stopPropagation();
-        toggleVideoPlayback();
+    playBtn.onclick = () => {
+        if(video.paused) { video.play(); playBtn.innerHTML = `<i class="fa-solid fa-pause"></i>`; }
+        else { video.pause(); playBtn.innerHTML = `<i class="fa-solid fa-play"></i>`; }
     };
-
     video.ontimeupdate = () => {
         if(!video.duration) return;
         timeline.value = (video.currentTime / video.duration) * 100;
@@ -610,17 +616,11 @@ function initCustomVideoController() {
     timeline.oninput = () => {
         video.currentTime = (timeline.value / 100) * video.duration;
     };
-    video.onended = () => {
-        hudIcon.className = "fa-solid fa-rotate-right";
-        hudBtn.classList.remove('playing-fade');
-    };
 }
 
 function initCustomAudioController() {
     const audio = document.getElementById('customAudioPlayer');
-    const container = document.getElementById('audioScreenContainer');
-    const hudBtn = document.getElementById('audioCenterHudBtn');
-    const hudIcon = document.getElementById('audioHudActionIcon');
+    const playBtn = document.getElementById('audioPlayBtn');
     const timeline = document.getElementById('audioTimeline');
     const timeLabel = document.getElementById('audioTimeLabel');
     const canvas = document.getElementById('audioVisualizerCanvas');
@@ -630,24 +630,11 @@ function initCustomAudioController() {
     canvas.height = canvas.clientHeight * window.devicePixelRatio;
     ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
 
-    function toggleAudioPlayback() {
+    playBtn.onclick = () => {
         if(!audioCtx) { initAudioContextEngine(audio, canvas, ctx); }
-        if(audio.paused) {
-            audio.play();
-            hudIcon.className = "fa-solid fa-pause";
-            hudBtn.classList.add('playing-fade');
-        } else {
-            audio.pause();
-            hudIcon.className = "fa-solid fa-play ml-0.5";
-            hudBtn.classList.remove('playing-fade');
-        }
-    }
-
-    container.onclick = (e) => {
-        e.stopPropagation();
-        toggleAudioPlayback();
+        if(audio.paused) { audio.play(); playBtn.innerHTML = `<i class="fa-solid fa-pause"></i>`; }
+        else { audio.pause(); playBtn.innerHTML = `<i class="fa-solid fa-play"></i>`; }
     };
-
     audio.ontimeupdate = () => {
         if(!audio.duration) return;
         timeline.value = (audio.currentTime / audio.duration) * 100;
@@ -655,10 +642,6 @@ function initCustomAudioController() {
     };
     timeline.oninput = () => {
         audio.currentTime = (timeline.value / 100) * audio.duration;
-    };
-    audio.onended = () => {
-        hudIcon.className = "fa-solid fa-rotate-right";
-        hudBtn.classList.remove('playing-fade');
     };
     
     ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
@@ -680,31 +663,32 @@ function initAudioContextEngine(audioElement, canvas, ctx) {
     const w = canvas.clientWidth;
     const h = canvas.clientHeight;
 
-    function drawSymmetricGlowWaves() {
-        audioAnimationId = requestAnimationFrame(drawSymmetricGlowWaves);
+    function drawFullSymmetricWaves() {
+        audioAnimationId = requestAnimationFrame(drawFullSymmetricWaves);
         audioAnalyser.getByteFrequencyData(dataArray);
 
         ctx.fillStyle = '#040406';
         ctx.fillRect(0, 0, w, h);
 
-        const barWidth = (w / bufferLength) * 1.2;
+        const barWidth = w / bufferLength;
         let x = 0;
 
         for(let i = 0; i < bufferLength; i++) {
             const normalizedVal = dataArray[i] / 255;
-            const barHeight = normalizedVal * h * 0.75;
+            const barHeight = normalizedVal * h * 0.8;
             
-            ctx.fillStyle = `rgba(56, 189, 248, ${0.4 + normalizedVal})`;
-            ctx.fillRect(x, (h / 2) - (barHeight / 2), barWidth - 1.5, barHeight);
+            // Full screen edge-to-edge balanced symmetric layout tracking
+            ctx.fillStyle = `rgba(56, 189, 248, ${0.45 + normalizedVal})`;
+            ctx.fillRect(x, (h / 2) - (barHeight / 2), barWidth - 1, barHeight);
             
             ctx.fillStyle = 'var(--ff-cyan)';
-            ctx.fillRect(x, (h / 2) - (barHeight / 2) - 1, barWidth - 1.5, 2);
-            ctx.fillRect(x, (h / 2) + (barHeight / 2) - 1, barWidth - 1.5, 2);
+            ctx.fillRect(x, (h / 2) - (barHeight / 2) - 1, barWidth - 1, 1.5);
+            ctx.fillRect(x, (h / 2) + (barHeight / 2) - 1, barWidth - 1, 1.5);
 
             x += barWidth;
         }
     }
-    drawSymmetricGlowWaves();
+    drawFullSymmetricWaves();
 }
 
 function formatTimeMetrics(secs) {
