@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Assets Extractor | ELITE Masterpiece</title>
+<title>Assets Extractor | ELITE Pro Ultimate</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
@@ -13,94 +13,87 @@
 <style>
 @font-face { font-family: 'GFF-Bold'; src: url('https://dl.dir.freefiremobile.com/common/web_event/common/fonts/website/GFFLatinW05-Bold.woff') format('woff'); }
 :root { --ff-yellow: #ffde00; --ff-emerald: #00ffa3; --ff-red: #ff3e3e; --ff-cyan: #38bdf8; }
-body { background: #000; color: #fff; min-height: 100vh; background-image: url('https://dl.dir.freefiremobile.com/common/web_event/official2/dist/client/img/bg_pc.617c669.jpg'); background-size: cover; background-attachment: fixed; font-family: 'Inter', sans-serif; overflow-x: hidden; }
-body::before { content: ""; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.94); z-index: -1; }
+body { background: #030305; color: #fff; min-height: 100vh; font-family: 'Inter', sans-serif; overflow-x: hidden; }
 .gff { font-family: 'GFF-Bold', sans-serif; }
 
 .brand-strip { width: 100%; height: 60px; background: #000; border-b: 1px solid #111; display: flex; align-items: center; justify-content: center; position: relative; }
 .brand-line { width: 100%; height: 3px; background: var(--ff-yellow); box-shadow: 0 2px 10px rgba(255, 222, 0, 0.3); }
 
-/* Master Grid Grid Matrix Workspace Properties */
+/* Master Grid Layout Matrix Workspace */
 .main-grid-container { display: grid; grid-template-columns: repeat(1, 1fr); gap: 24px; max-width: 1400px; margin: 0 auto; padding: 0 20px 40px 20px; }
 @media (min-width: 1024px) { .main-grid-container { grid-template-columns: repeat(3, 1fr); } }
 
 /* Rigid Uniform Layout Sizing Matrix Panel Rules */
 .uniform-panel { 
-    background: #0a0a0a; border: 1px solid #1f1f1f; position: relative; 
-    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8); height: 500px; display: flex; 
+    background: #09090d; border: 1px solid #181822; position: relative; 
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8); height: 490px; display: flex; 
     flex-direction: column; transition: height 0.25s cubic-bezier(0.4, 0, 0.2, 1); min-width: 0; 
 }
 
-/* Precise Dynamic Adaptive Expansion for Low File Quantities to Prevent Cropping and Scrollbars */
+/* Precise Dynamic Adaptive Expansion for Low File Quantities to Prevent Cropping */
 .uniform-panel.fit-content-low { height: auto !important; min-height: 200px; }
 .uniform-panel.fit-content-low .scrollable-content-box { flex: none; height: auto; overflow: visible !important; }
-
-/* Locked Rigid Geometry Bounds Matrix Configuration for the Preview Module Container */
-.fixed-preview-panel { height: 500px !important; }
+.fixed-preview-panel { height: 490px !important; }
 
 @media (min-width: 1024px) {
-    .panel-1 { border-radius: 24px 0 0 24px; }
+    .panel-1 { border-radius: 20px 0 0 20px; }
     .panel-2 { border-radius: 0; }
-    .panel-3 { border-radius: 0 24px 24px 0; }
+    .panel-3 { border-radius: 0 20px 20px 0; }
 }
 @media (max-width: 1023px) {
-    .uniform-panel { border-radius: 16px; margin-bottom: 16px; height: 500px !important; }
+    .uniform-panel { border-radius: 16px; margin-bottom: 16px; height: 490px !important; }
     .uniform-panel.fit-content-low { height: auto !important; }
 }
 
 .uniform-panel::before { content: ""; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--ff-yellow); z-index: 10; }
-.panel-body { padding: 20px; flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; justify-content: space-between; }
-.scrollable-content-box { flex: 1; background: #060608; border: 1px solid #1a1a1f; border-radius: 16px; overflow: hidden; position: relative; }
+.panel-body { padding: 22px; flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+.scrollable-content-box { flex: 1; background: #040406; border: 1px solid #13131a; border-radius: 14px; overflow: hidden; position: relative; }
 
-/* Switchable Tab Elements Row Container */
-.tab-row { display: flex; background: #111115; padding: 4px; border-radius: 12px; border: 1px solid #1f1f26; margin-bottom: 12px; gap: 4px; }
-.tab-btn { flex: 1; text-align: center; padding: 8px 4px; font-size: 11px; font-weight: 700; color: #a1a1aa; border-radius: 8px; cursor: pointer; transition: all 0.2s; text-transform: uppercase; border: 1px solid transparent; }
-.tab-btn:hover { color: #fff; background: #16161f; }
-.tab-btn.active { background: #1a1a24; color: var(--ff-yellow); border-color: #2a2a38; box-shadow: inset 0 1px 3px rgba(0,0,0,0.4); }
+/* Switchable Mode Header Row Tabs */
+.tab-row { display: flex; background: #0f0f14; padding: 4px; border-radius: 10px; border: 1px solid #1b1b24; margin-bottom: 14px; gap: 4px; }
+.tab-btn { flex: 1; text-align: center; padding: 7px 4px; font-size: 11px; font-weight: 700; color: #8e8e93; border-radius: 6px; cursor: pointer; transition: all 0.2s; text-transform: uppercase; }
+.tab-btn:hover { color: #fff; background: #14141c; }
+.tab-btn.active { background: #1a1a26; color: var(--ff-yellow); box-shadow: inset 0 1px 2px rgba(0,0,0,0.5); }
 
-/* Tactical Mechanical Processing Extract Buttons Configurations */
-.btn-mechanical { cursor: pointer; font-family: 'GFF-Bold'; text-transform: uppercase; font-style: italic; display: flex; align-items: center; justify-content: center; border-radius: 16px; gap: 12px; background: var(--ff-yellow); color: #000; box-shadow: 0 5px 0 #c2a900; transition: all 0.1s; user-select: none; }
-.btn-mechanical:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 2px 0 #c2a900; }
-.btn-mechanical:disabled { background: #27272a !important; color: #71717a !important; box-shadow: 0 5px 0 #18181b !important; cursor: not-allowed !important; transform: none !important; opacity: 0.8; }
+/* Extract Buttons Configurations */
+.btn-mechanical { cursor: pointer; font-family: 'GFF-Bold'; text-transform: uppercase; font-style: italic; display: flex; align-items: center; justify-content: center; border-radius: 14px; gap: 12px; background: var(--ff-yellow); color: #000; box-shadow: 0 5px 0 #bfa600; transition: all 0.1s; user-select: none; }
+.btn-mechanical:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 2px 0 #bfa600; }
+.btn-mechanical:disabled { background: #222226 !important; color: #55555c !important; box-shadow: 0 5px 0 #141416 !important; cursor: not-allowed !important; transform: none !important; opacity: 0.8; }
 
-/* Upload Deck Design with Balanced Padding Allocation */
-.upload-deck { background: #121212; border: 2px dashed #2a2a2a; border-radius: 20px; display: flex; align-items: center; height: 96px; cursor: pointer; transition: all 0.2s; min-width: 0; position: relative; }
-.upload-deck.dragover { border-color: var(--ff-yellow); background: #171712; box-shadow: inset 0 0 12px rgba(255,222,0,0.05); }
+/* Desktop Interactive Drag Deck Area Frame */
+.upload-deck { background: #07070a; border: 2px dashed #1e1e2b; border-radius: 14px; display: flex; align-items: center; height: 96px; cursor: pointer; transition: all 0.2s ease-in-out; min-width: 0; position: relative; }
+.upload-deck.dragover-active { border-color: var(--ff-yellow); background: #0f0f12; box-shadow: inset 0 0 12px rgba(255, 222, 0, 0.08); }
 
-/* Multi-Select High Precision Wide Dropdown Layout */
-.custom-dropdown { position: relative; width: auto; min-width: 140px; }
-.dropdown-trigger { background: #121216; border: 1px solid #272732; padding: 8px 14px; border-radius: 10px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 11px; font-weight: 700; color: #e4e4e7; transition: all 0.2s; gap: 8px; }
-.dropdown-trigger:hover { border-color: #3f3f46; background: #16161f; }
-.dropdown-menu { position: absolute; top: calc(100% + 6px); right: 0; background: #0c0c10; border: 1px solid #272732; border-radius: 12px; z-index: 50; max-height: 260px; width: 210px; overflow-y: auto; display: none; box-shadow: 0 15px 35px rgba(0,0,0,0.7); }
+/* Multi-Select Wide Filter Custom Dropdown Layout */
+.custom-dropdown { position: relative; width: auto; min-width: 130px; }
+.dropdown-trigger { background: #0e0e14; border: 1px solid #1e1e2b; padding: 8px 12px; border-radius: 8px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 11px; font-weight: 700; color: #e4e4e7; transition: all 0.2s; gap: 8px; }
+.dropdown-trigger:hover { border-color: #3f3f46; background: #14141c; }
+.dropdown-menu { position: absolute; top: calc(100% + 6px); right: 0; background: #07070a; border: 1px solid #1e1e2b; border-radius: 10px; z-index: 50; max-height: 260px; width: 200px; overflow-y: auto; display: none; box-shadow: 0 15px 35px rgba(0,0,0,0.8); }
 .dropdown-menu.active { display: block; }
-.dropdown-item { padding: 9px 14px; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; transition: all 0.15s; border-bottom: 1px solid #14141a; color: #a1a1aa; }
-.dropdown-item:hover { background: #171722; color: #fff; }
-.dropdown-item.selected { color: var(--ff-yellow); background: #12121a; font-weight: 600; }
+.dropdown-item { padding: 9px 14px; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; transition: all 0.15s; border-bottom: 1px solid #111116; color: #a1a1aa; }
+.dropdown-item:hover { background: #12121c; color: #fff; }
+.dropdown-item.selected { color: var(--ff-yellow); background: #0d0d14; font-weight: 600; }
 
-/* Full Frame Cinematic 16:9 Viewport Architecture Layout mapping rules */
-.aspect-16-9-viewport { width: 100%; height: 100%; background: #020203; border-radius: 12px; border: 1px solid #121218; overflow: hidden; display: flex; align-items: center; justify-content: center; position: relative; flex: 1; }
-@media (min-width: 400px) { .aspect-16-9-viewport { aspect-ratio: 16 / 9; } }
+/* Cinematic Proportional Aspect Windows Viewports */
+.aspect-16-9-viewport { width: 100%; height: 100%; background: #020203; border-radius: 10px; border: 1px solid #101016; overflow: hidden; display: flex; align-items: center; justify-content: center; position: relative; }
+@media (min-width: 400px) { .aspect-16-9-viewport { aspect-ratio: 16 / 9; height: auto; } }
 
-/* Full Screen Expansion for Objects That Do Not Require Control Interfaces Below Them */
-.full-viewport-mesh { border-radius: 12px; height: 100% !important; width: 100% !important; aspect-ratio: auto !important; }
+/* Full Expansion Framework for 3D Viewport Panels to Consume Controls Blank Space */
+.full-viewport-mesh { height: 100% !important; aspect-ratio: auto !important; }
 
-/* Media Control Interface Layout - Controls Isolated Below the Media Elements */
-.custom-player-wrapper { display: flex; flex-direction: column; width: 100%; height: 100%; justify-content: space-between; background: transparent; position: relative; }
-.custom-control-bar { height: 46px; background: #0d0d12; border: 1px solid #1a1a24; border-radius: 14px; display: flex; align-items: center; padding: 0 14px; gap: 12px; margin-top: 10px; flex-shrink: 0; box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
-.control-btn-premium { background: #161622; border: 1px solid #252535; width: 28px; height: 28px; border-radius: 9px; display: flex; align-items: center; justify-content: center; color: #a1a1aa; transition: all 0.2s; cursor: pointer; }
-.control-btn-premium:hover { background: #1d1d2f; color: #fff; border-color: #38bdf8; box-shadow: 0 0 8px rgba(56,189,248,0.2); }
+/* Custom Premium Player Isolated Layout Mechanics Module */
+.custom-player-wrapper { display: flex; flex-direction: column; width: 100%; height: 100%; justify-content: space-between; padding: 2px; background: transparent; position: relative; }
+.custom-control-bar { height: 44px; background: #0c0c12; border: 1px solid #1b1b26; border-radius: 10px; display: flex; align-items: center; padding: 0 12px; gap: 12px; margin-top: 8px; flex-shrink: 0; }
+.player-progress-slider { flex: 1; -webkit-appearance: none; appearance: none; height: 4px; background: #1c1c28; border-radius: 2px; outline: none; cursor: pointer; }
+.player-progress-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 10px; height: 10px; border-radius: 50%; background: var(--ff-yellow); box-shadow: 0 0 6px var(--ff-yellow); }
 
-/* Premium Linear Gradient Track Module Layout rules */
-.player-progress-slider { flex: 1; -webkit-appearance: none; appearance: none; height: 6px; background: #161622; border-radius: 3px; outline: none; cursor: pointer; position: relative; overflow: hidden; border: 1px solid #222232; }
-.player-progress-slider::-webkit-slider-runnable-track { background: linear-gradient(90deg, #161622 0%, #161622 100%); }
-.player-progress-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 10px; height: 12px; background: var(--ff-yellow); border-radius: 3px; cursor: pointer; box-shadow: -400px 0 0 400px #0284c7, 0 0 4px var(--ff-yellow); }
-
-#audioVisualizerCanvas { width: 100%; height: 100%; background: #040406; display: block; }
-.pixelated-render { image-rendering: pixelated; width: 100%; height: 100%; object-fit: contain; }
-.babylon-canvas-viewport { width: 100%; height: 100%; display: block; outline: none; background: #0d0d12; }
+/* Premium Non-Destructive Vector Render Architecture */
+.pixelated-render { width: 100%; height: 100%; object-fit: contain; background-image: linear-gradient(45deg, #050508 25%, transparent 25%), linear-gradient(-45deg, #050508 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #050508 75%), linear-gradient(-45deg, transparent 75%, #050508 75%); background-size: 16px 16px; background-position: 0 0, 0 8px, 8px -8px, -8px 0; }
+#audioVisualizerCanvas { width: 100%; height: 100%; background: #020204; display: block; }
+.babylon-canvas-viewport { width: 100%; height: 100%; display: block; outline: none; background: #060609; }
 
 .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
-.custom-scrollbar::-webkit-scrollbar-thumb { background: #222227; border-radius: 10px; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: #1c1c24; border-radius: 10px; }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--ff-yellow); }
 </style>
 </head>
@@ -113,20 +106,20 @@ body::before { content: ""; position: fixed; inset: 0; background: rgba(0, 0, 0,
 
 <div class="flex flex-col items-center pt-8 pb-6 px-4 select-none">
     <div class="text-center gff tracking-tight">
-        <span class="text-[42px] md:text-[56px] font-black italic block leading-[0.8]">ASSETS</span>
-        <span class="text-[42px] md:text-[56px] font-black italic block text-[#ffde00] leading-[0.9]">EXTRACTOR</span>
+        <span class="text-[40px] md:text-[54px] font-black italic block leading-[0.8]">ASSETS</span>
+        <span class="text-[40px] md:text-[54px] font-black italic block text-[#ffde00] leading-[0.9]">EXTRACTOR</span>
     </div>
     <div class="flex items-center gap-3 mt-4 opacity-75">
         <svg class="w-3.5 h-3.5 text-[#ffde00]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
-        <span class="text-[10px] md:text-[11px] font-bold tracking-[0.22em] uppercase text-zinc-400">AssetBundle • KTX • Unity Assets Extractor</span>
+        <span class="text-[10px] md:text-[11px] font-bold tracking-[0.22em] uppercase text-zinc-400">AssetBundle • KTX • OBJ Core Engine</span>
         <svg class="w-3.5 h-3.5 text-[#ffde00]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
     </div>
 </div>
 
 <div class="main-grid-container">
     <div class="uniform-panel panel-1">
-        <div class="panel-body">
-            <div class="w-full">
+        <div class="panel-body justify-between space-y-4">
+            <div>
                 <h2 class="text-xs font-black text-white uppercase tracking-wider mb-1 gff">Input Stream</h2>
                 <p class="text-[11px] text-zinc-500 mb-3">Select parsing workspace paradigm manually.</p>
                 
@@ -137,35 +130,35 @@ body::before { content: ""; position: fixed; inset: 0; background: rgba(0, 0, 0,
                 </div>
             </div>
             
-            <form id="extractorForm" class="w-full flex flex-col justify-center space-y-3 my-1 min-w-0">
+            <form id="extractorForm" class="flex-1 flex flex-col justify-center space-y-3 min-w-0 m-0">
                 <div class="upload-deck" id="dropZone">
-                    <div class="w-14 h-full flex items-center justify-center border-r border-zinc-800 flex-shrink-0">
-                        <i id="uploadIcon" class="fa-solid fa-box-open text-xl text-zinc-600"></i>
+                    <div class="w-14 h-full flex items-center justify-center border-r border-zinc-900 flex-shrink-0">
+                        <i id="uploadIcon" class="fa-solid fa-box-open text-lg text-zinc-600"></i>
                     </div>
                     <div class="flex-1 px-4 truncate text-left">
                         <span id="fileStatusText" class="text-[9px] font-black text-zinc-500 block gff uppercase tracking-tighter">Standby</span>
-                        <p id="fileLabel" class="gff text-[13px] text-zinc-300 truncate">Drop package here</p>
+                        <p id="fileLabel" class="gff text-[12px] text-zinc-400 truncate">Drag & Drop package here</p>
                     </div>
+                    <input type="file" id="fileInput" class="hidden">
                 </div>
-                <input type="file" id="fileInput" class="hidden">
-                <button type="submit" id="extractBtn" class="btn-mechanical w-full h-12 text-xs font-bold italic flex-shrink-0">
+                <button type="submit" id="extractBtn" class="btn-mechanical w-full h-12 text-sm font-bold italic flex-shrink-0">
                     <i class="fa-solid fa-bolt" id="btnIcon"></i> <span id="btnText">Extract Package</span>
                 </button>
             </form>
             
-            <div class="w-full bg-[#121212] border border-zinc-800/50 rounded-xl p-2.5 flex items-center gap-3 flex-shrink-0 min-w-0">
+            <div class="bg-[#0b0b10] border border-zinc-900 rounded-xl p-3 flex items-center gap-3 flex-shrink-0 min-w-0">
                 <div id="statusIcon" class="text-zinc-600 flex-shrink-0"><i class="fa-solid fa-terminal text-xs"></i></div>
                 <div class="flex-1 min-w-0 text-left">
                     <span id="statusText" class="block text-[8px] font-black text-zinc-500 uppercase gff">System Log</span>
                     <p id="statusDescText" class="text-[10px] text-zinc-400 truncate">Ready for instruction sequences.</p>
                 </div>
-                <div id="statusBadge" class="text-[9px] gff px-2 py-0.5 bg-black rounded border border-zinc-800 text-zinc-500 flex-shrink-0">IDLE</div>
+                <div id="statusBadge" class="text-[9px] gff px-2 py-0.5 bg-black rounded border border-zinc-900 text-zinc-500 flex-shrink-0">IDLE</div>
             </div>
         </div>
     </div>
 
     <div id="listWindowPanel" class="uniform-panel panel-2">
-        <div class="panel-body justify-start">
+        <div class="panel-body">
             <div class="flex items-center justify-between mb-4 border-b border-zinc-900 pb-3 flex-shrink-0 min-w-0">
                 <div class="min-w-0 text-left mr-2">
                     <h2 class="text-xs font-black text-white uppercase tracking-wider gff">Extracted</h2>
@@ -179,19 +172,19 @@ body::before { content: ""; position: fixed; inset: 0; background: rgba(0, 0, 0,
                         </div>
                         <div class="dropdown-menu custom-scrollbar" id="filterMenu"></div>
                     </div>
-                    <button onclick="downloadGroupedZip()" class="w-9 h-9 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-yellow-500 hover:text-white hover:bg-yellow-500 hover:border-yellow-500 transition-all shadow-md flex-shrink-0">
-                        <i class="fa-solid fa-file-zipper text-sm"></i>
+                    <button onclick="downloadGroupedZip()" class="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-yellow-500 hover:text-white hover:bg-yellow-500 hover:border-yellow-500 transition-all shadow-md flex-shrink-0">
+                        <i class="fa-solid fa-file-zipper text-xs"></i>
                     </button>
                 </div>
             </div>
             <div class="scrollable-content-box flex-1 flex flex-col">
                 <div id="listEmptyState" class="flex-1 flex flex-col items-center justify-center text-zinc-700 p-8 text-center">
-                    <i class="fa-solid fa-folder-tree text-3xl mb-3 text-zinc-800"></i>
+                    <i class="fa-solid fa-folder-tree text-2xl mb-3 text-zinc-800"></i>
                     <span class="text-[9px] font-bold gff uppercase tracking-widest text-zinc-600 block">No Assets Loaded</span>
                     <p class="text-[10px] text-zinc-500 max-w-[180px] mt-1 leading-normal">Execute package extraction stream to build index registry.</p>
                 </div>
-                <div id="listLoadingState" class="hidden flex-1 flex flex-col items-center justify-center text-zinc-500 p-8 text-center animate-pulse">
-                    <i class="fa-solid fa-arrows-spin fa-spin text-yellow-500 text-3xl mb-3"></i>
+                <div id="listLoadingState" class="hidden flex-1 flex flex-col items-center justify-center text-zinc-500 p-8 text-center">
+                    <i class="fa-solid fa-circle-notch fa-spin text-yellow-500 text-xl mb-3"></i>
                     <span class="text-[10px] font-bold gff uppercase tracking-wider text-zinc-400">Compiling Array...</span>
                 </div>
                 <div id="fileList" class="hidden flex-1 overflow-y-auto p-2 space-y-1 custom-scrollbar min-w-0"></div>
@@ -200,19 +193,19 @@ body::before { content: ""; position: fixed; inset: 0; background: rgba(0, 0, 0,
     </div>
 
     <div id="previewTargetWorkspace" class="uniform-panel panel-3 fixed-preview-panel">
-        <div class="panel-body justify-start">
+        <div class="panel-body">
             <div class="mb-4 border-b border-zinc-900 pb-3 flex-shrink-0">
                 <h2 class="text-xs font-black text-white uppercase tracking-wider gff">Live Preview</h2>
                 <p class="text-[10px] text-zinc-500">Visualizing data stream.</p>
             </div>
             <div class="scrollable-content-box bg-black flex flex-col p-2">
                 <div id="previewFallback" class="flex-1 flex flex-col items-center justify-center text-zinc-800 p-4">
-                    <i class="fa-solid fa-eye text-2xl mb-2"></i>
+                    <i class="fa-solid fa-eye text-xl mb-2"></i>
                     <span class="text-[9px] font-bold gff uppercase tracking-wide">Inspect Target</span>
                 </div>
                 <div id="previewContent" class="hidden flex-1 flex flex-col min-w-0 overflow-hidden justify-between">
                     <div id="mediaBox" class="w-full flex flex-col min-h-0 flex-1 justify-center"></div>
-                    <div id="metaDeckPanel" class="mt-3 bg-[#121216] p-2 rounded-xl border border-zinc-800 flex items-center justify-between gap-3 flex-shrink-0 min-w-0">
+                    <div class="mt-3 bg-[#0d0d14] p-2 rounded-xl border border-zinc-900 flex items-center justify-between gap-3 flex-shrink-0 min-w-0">
                         <div class="min-w-0 flex-1 text-left px-1">
                             <p id="mediaTitle" class="text-[11px] font-bold text-zinc-300 truncate">Asset File Matrix</p>
                             <p id="mediaTypeLabel" class="text-[8px] font-black text-zinc-600 uppercase gff tracking-wider">Type</p>
@@ -232,7 +225,8 @@ let activeCache = [];
 let selectedFilters = new Set();
 let activeExtractionMode = "bundle";
 
-const FILTER_ORDER = ["2D Texture", "Audio", "Text", "Mesh"];
+// Strict Priority Alphabetical Structural Hierarchy Array
+const FILTER_ORDER = ["2D Texture", "Mesh", "Audio", "Video", "Text", "JSON"];
 
 let audioCtx, audioSource, audioAnalyser, audioAnimationId;
 let babylonEngine, babylonScene;
@@ -245,6 +239,29 @@ const extractBtn = document.getElementById("extractBtn");
 const btnIcon = document.getElementById("btnIcon");
 const btnText = document.getElementById("btnText");
 const dropZone = document.getElementById("dropZone");
+
+// Native Desktop Drag & Drop Integration
+dropZone.onclick = () => fileInput.click();
+dropZone.addEventListener("dragover", (e) => { e.preventDefault(); dropZone.classList.add("dragover-active"); });
+dropZone.addEventListener("dragleave", () => dropZone.classList.remove("dragover-active"));
+dropZone.addEventListener("drop", (e) => {
+    e.preventDefault();
+    dropZone.classList.remove("dragover-active");
+    if (e.dataTransfer.files.length) { fileInput.files = e.dataTransfer.files; handleFileRegistration(); }
+});
+fileInput.onchange = () => handleFileRegistration();
+
+function handleFileRegistration() {
+    const file = fileInput.files[0];
+    if(!file) return;
+    fileLabel.innerText = file.name;
+    fileLabel.classList.remove('text-zinc-400');
+    fileLabel.classList.add('text-[#ffde00]');
+    // Updated to premium file loaded specific branding icon layout
+    document.getElementById('uploadIcon').className = "fa-solid fa-file-shield text-[#ffde00] text-lg";
+    document.getElementById('fileStatusText').innerText = "STREAM ATTACHED";
+    document.getElementById('fileStatusText').classList.add('text-[#ffde00]');
+}
 
 document.getElementById('extractionModeTabs').addEventListener('click', (e) => {
     const target = e.target.closest('.tab-btn');
@@ -264,42 +281,20 @@ document.addEventListener('click', () => {
     if (menu) menu.classList.remove('active');
 });
 
-// Drag and Drop Workspace Event Handlers
-dropZone.onclick = () => fileInput.click();
-dropZone.addEventListener("dragover", (e) => { e.preventDefault(); dropZone.classList.add("dragover"); });
-dropZone.addEventListener("dragleave", () => dropZone.classList.remove("dragover"));
-dropZone.addEventListener("drop", (e) => {
-    e.preventDefault();
-    dropZone.classList.remove("dragover");
-    if (e.dataTransfer.files.length > 0) {
-        fileInput.files = e.dataTransfer.files;
-        handleFileSelection(e.dataTransfer.files[0]);
-    }
-});
-fileInput.onchange = () => { if (fileInput.files[0]) handleFileSelection(fileInput.files[0]); };
-
-function handleFileSelection(file) {
-    fileLabel.innerText = file.name;
-    fileLabel.classList.add('text-[#ffde00]');
-    // Swapped target icon output layout pattern to document asset mode representation
-    document.getElementById('uploadIcon').className = "fa-solid fa-file-shield text-[#ffde00] text-xl";
-    document.getElementById('fileStatusText').innerText = "STREAM READY";
-    document.getElementById('fileStatusText').classList.add('text-[#ffde00]');
-}
-
 document.getElementById('extractorForm').onsubmit = async (e) => {
     e.preventDefault();
     const file = fileInput.files[0];
     if(!file) return;
 
+    // Premium Tactical Radar Loader Integration Sequence
     extractBtn.disabled = true;
-    btnIcon.className = "fa-solid fa-arrows-spin fa-spin text-black";
+    btnIcon.className = "fa-solid fa-ellipsis-stroke fa-bounce text-black";
     btnText.innerText = "Extracting Stream...";
 
     document.getElementById('statusBadge').innerText = "WORKING";
     document.getElementById('statusBadge').style.color = "var(--ff-yellow)";
     document.getElementById('statusText').innerText = "PROCESSING";
-    document.getElementById('statusDescText').innerText = `Parsing workspace...`;
+    document.getElementById('statusDescText').innerText = `Parsing workspace array modules...`;
     
     document.getElementById('listEmptyState').classList.add('hidden');
     document.getElementById('listLoadingState').classList.remove('hidden');
@@ -329,12 +324,11 @@ document.getElementById('extractorForm').onsubmit = async (e) => {
         document.getElementById('statusBadge').style.color = "var(--ff-emerald)";
         document.getElementById('statusDescText').innerText = `Successfully parsed ${activeCache.length} individual items.`;
 
-        // Direct scroll viewport focus navigation adjustment down onto Extracted List
+        // Sequential UI Scroll Hook down to newly built extracted index row view
         document.getElementById('listWindowPanel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
         if(activeCache.length === 1) {
-            const initialRowNode = fileList.firstElementChild;
-            selectFile(activeCache[0], initialRowNode);
+            selectFile(activeCache[0], fileList.firstElementChild);
         }
     } catch (err) {
         document.getElementById('statusBadge').innerText = "FAILED";
@@ -342,7 +336,6 @@ document.getElementById('extractorForm').onsubmit = async (e) => {
         document.getElementById('statusDescText').innerText = err.message;
         document.getElementById('listLoadingState').classList.add('hidden');
         document.getElementById('listEmptyState').classList.remove('hidden');
-        document.getElementById('listEmptyState').innerHTML = `<i class="fa-solid fa-triangle-exclamation text-red-500 text-xl mb-1"></i><span class="text-[10px] text-zinc-500">Extraction Fault</span>`;
     } finally {
         extractBtn.disabled = false;
         btnIcon.className = "fa-solid fa-bolt";
@@ -358,7 +351,7 @@ function updateFilterMenu() {
 
     const menu = document.getElementById('filterMenu');
     menu.innerHTML = `
-        <div class="dropdown-item font-bold border-b border-zinc-800 text-[9px] text-zinc-500 tracking-wider uppercase" onclick="clearFilters(event)">
+        <div class="dropdown-item font-bold border-b border-zinc-900 text-[9px] text-zinc-500 tracking-wider uppercase" onclick="clearFilters(event)">
             <span>Clear Filter Options</span> <i class="fa-solid fa-trash-can text-[10px]"></i>
         </div>`;
     
@@ -368,7 +361,7 @@ function updateFilterMenu() {
         item.className = `dropdown-item ${isSelected ? 'selected' : ''}`;
         item.innerHTML = `
             <span class="truncate pr-2">${label}</span>
-            <i class="fa-solid ${isSelected ? 'fa-square-check text-[#ffde00]' : 'fa-square text-zinc-800'} text-[12px] flex-shrink-0"></i>
+            <i class="fa-solid ${isSelected ? 'fa-square-check text-[#ffde00]' : 'fa-square text-zinc-800'} text-[11px] flex-shrink-0"></i>
         `;
         item.onclick = (e) => { e.stopPropagation(); toggleFilter(label); };
         menu.appendChild(item);
@@ -376,20 +369,13 @@ function updateFilterMenu() {
 }
 
 function toggleFilter(label) {
-    if(selectedFilters.has(label)) {
-        selectedFilters.delete(label);
-    } else {
-        selectedFilters.add(label);
-    }
+    if(selectedFilters.has(label)) selectedFilters.delete(label);
+    else selectedFilters.add(label);
     
     const triggerSpan = document.getElementById('filterTrigger').querySelector('span');
-    if(selectedFilters.size === 0) {
-        triggerSpan.innerHTML = `<i class="fa-solid fa-filter text-[10px] mr-1.5 text-zinc-400"></i>Filter`;
-    } else if(selectedFilters.size === 1) {
-        triggerSpan.innerText = [...selectedFilters][0];
-    } else {
-        triggerSpan.innerText = `Active (${selectedFilters.size})`;
-    }
+    if(selectedFilters.size === 0) triggerSpan.innerHTML = `<i class="fa-solid fa-filter text-[10px] mr-1.5 text-zinc-400"></i>Filter`;
+    else if(selectedFilters.size === 1) triggerSpan.innerText = [...selectedFilters][0];
+    else triggerSpan.innerText = `Active (${selectedFilters.size})`;
     
     updateFilterMenu();
     renderList(false);
@@ -409,33 +395,24 @@ function renderList(isInitialPayloadLoad = false) {
     document.getElementById('cacheCounterText').innerText = `${filtered.length} Display Objects Inside View`;
     
     if (isInitialPayloadLoad) {
-        if(filtered.length > 0 && filtered.length <= 3) {
-            listWindowPanel.classList.add('fit-content-low');
-        } else {
-            listWindowPanel.classList.remove('fit-content-low');
-        }
+        if(filtered.length > 0 && filtered.length <= 3) listWindowPanel.classList.add('fit-content-low');
+        else listWindowPanel.classList.remove('fit-content-low');
     } else {
-        if (activeCache.length <= 3) {
-            listWindowPanel.classList.add('fit-content-low');
-        } else {
-            listWindowPanel.classList.remove('fit-content-low');
-        }
+        if (activeCache.length <= 3) listWindowPanel.classList.add('fit-content-low');
+        else listWindowPanel.classList.remove('fit-content-low');
     }
     
-    if(filtered.length === 0) {
-        document.getElementById('listEmptyState').classList.remove('hidden');
-    } else {
-        document.getElementById('listEmptyState').classList.add('hidden');
-    }
+    if(filtered.length === 0) document.getElementById('listEmptyState').classList.remove('hidden');
+    else document.getElementById('listEmptyState').classList.add('hidden');
     
     filtered.forEach(item => {
         const row = document.createElement('div');
-        row.className = "flex items-center justify-between p-2 rounded-xl bg-[#0f0f13] border border-zinc-900 hover:border-zinc-700 cursor-pointer group min-w-0";
+        row.className = "flex items-center justify-between p-2 rounded-xl bg-[#0b0b0f] border border-zinc-900 hover:border-zinc-700 cursor-pointer group min-w-0";
         row.onclick = () => selectFile(item, row);
         row.innerHTML = `
             <div class="flex items-center gap-3 min-w-0 flex-1 text-left">
-                <div class="w-8 h-8 rounded-lg bg-black flex items-center justify-center border border-zinc-800 flex-shrink-0">
-                    <i class="fa-solid ${getIcon(item.label, item.name)} text-[11px]"></i>
+                <div class="w-8 h-8 rounded-lg bg-black flex items-center justify-center border border-zinc-900 flex-shrink-0">
+                    <i class="fa-solid ${getIcon(item.label)} text-[11px]"></i>
                 </div>
                 <div class="min-w-0 flex-1">
                     <p class="text-[11px] font-bold text-zinc-300 truncate group-hover:text-white">${item.name}</p>
@@ -448,21 +425,21 @@ function renderList(isInitialPayloadLoad = false) {
     });
 }
 
-function getIcon(label, filename = "") {
+function getIcon(label) {
     const l = label.toLowerCase();
-    const ext = filename.split('.').pop().toLowerCase();
-    if(ext === 'obj') return 'fa-cube text-purple-400';
-    if(l.includes('image') || l.includes('texture') || l.includes('ktx')) return 'fa-image text-yellow-500';
+    if(l.includes('texture') || l.includes('image')) return 'fa-image text-yellow-500';
     if(l.includes('audio')) return 'fa-volume-high text-cyan-400';
+    if(l.includes('mesh')) return 'fa-cube text-purple-400';
     if(l.includes('video')) return 'fa-play-circle text-red-500';
+    if(l.includes('json')) return 'fa-file-lines text-emerald-400';
     return 'fa-file-code text-zinc-500';
 }
 
 async function selectFile(item, element) {
     cleanPreviousMediaTracks();
 
-    document.querySelectorAll('#fileList > div').forEach(el => el.classList.remove('border-zinc-600', 'bg-[#14141a]'));
-    if(element) element.classList.add('border-zinc-600', 'bg-[#14141a]');
+    document.querySelectorAll('#fileList > div').forEach(el => el.classList.remove('border-zinc-700', 'bg-[#111118]'));
+    if(element) element.classList.add('border-zinc-700', 'bg-[#111118]');
 
     document.getElementById('previewFallback').classList.add('hidden');
     document.getElementById('previewContent').classList.remove('hidden');
@@ -476,46 +453,41 @@ async function selectFile(item, element) {
     document.getElementById('singleSaveBtn').setAttribute('download', item.name);
     
     mediaBox.innerHTML = `
-        <div class="custom-player-wrapper">
-            <div class="aspect-16-9-viewport">
-                <i class="fa-solid fa-arrows-spin fa-spin text-zinc-700 text-lg"></i>
-            </div>
-        </div>`;
+        <div class="custom-player-wrapper"><div class="aspect-16-9-viewport"><i class="fa-solid fa-circle-notch fa-spin text-zinc-800 text-lg"></i></div></div>`;
     
     const ext = item.name.split('.').pop().toLowerCase();
     
-    // Strict Verification Rule: 3D Workspace Engine initializes ONLY if extension is explicitly .obj
+    // Strict Verification Routing Framework: Locked exclusively to raw structural .obj files
     const isStrictMesh = (ext === 'obj');
 
     document.getElementById('previewTargetWorkspace').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
     if (isStrictMesh) {
-        // Full Frame Expand Configuration: Expand viewport canvas element fully over entire empty coordinate grid space
+        // Render isolated full frame canvas box without empty controller footer blocks
         mediaBox.innerHTML = `
-            <div class="custom-player-wrapper full-viewport-mesh">
+            <div class="custom-player-wrapper h-full">
                 <div class="aspect-16-9-viewport full-viewport-mesh">
                     <canvas id="babylonAssetCanvas" class="babylon-canvas-viewport"></canvas>
                 </div>
             </div>`;
         initBabylonMeshScene("babylonAssetCanvas", url, item.name);
-    } else if(['png','jpg','jpeg','webp'].includes(ext)) {
+    } else if(['png','jpg','jpeg','webp'].includes(ext) || item.label.toLowerCase().includes('texture')) {
         mediaBox.innerHTML = `
             <div class="custom-player-wrapper">
                 <div class="aspect-16-9-viewport">
                     <img src="${url}" class="pixelated-render">
                 </div>
             </div>`;
-    } else if(['mp4','mkv','webm','mov'].includes(ext) || item.label.toLowerCase().includes('video')) {
+    } else if(['mp4','mkv','webm'].includes(ext) || item.label.toLowerCase().includes('video')) {
         mediaBox.innerHTML = `
             <div class="custom-player-wrapper">
                 <div class="aspect-16-9-viewport">
                     <video id="customVideoPlayer" src="${url}" class="w-full h-full object-contain"></video>
                 </div>
                 <div class="custom-control-bar">
-                    <button id="videoPlayBtn" class="control-btn-premium text-[10px]"><i class="fa-solid fa-play"></i></button>
-                    <span id="videoTimeCurrent" class="text-[9px] font-mono text-zinc-400 select-none">00:00</span>
+                    <button id="videoPlayBtn" class="text-zinc-400 hover:text-white transition-all text-xs flex-shrink-0 w-4"><i class="fa-solid fa-play"></i></button>
                     <input type="range" id="videoTimeline" class="player-progress-slider" value="0" min="0" max="100">
-                    <span id="videoTimeTotal" class="text-[9px] font-mono text-zinc-500 select-none">00:00</span>
+                    <span id="videoTimeLabel" class="text-[9px] font-mono text-zinc-500 select-none flex-shrink-0">00:00</span>
                 </div>
             </div>`;
         initCustomVideoController();
@@ -527,10 +499,9 @@ async function selectFile(item, element) {
                     <audio id="customAudioPlayer" src="${url}" crossorigin="anonymous" class="hidden"></audio>
                 </div>
                 <div class="custom-control-bar">
-                    <button id="audioPlayBtn" class="control-btn-premium text-[10px]"><i class="fa-solid fa-play"></i></button>
-                    <span id="audioTimeCurrent" class="text-[9px] font-mono text-zinc-400 select-none">00:00</span>
+                    <button id="audioPlayBtn" class="text-zinc-400 hover:text-white transition-all text-xs flex-shrink-0 w-4"><i class="fa-solid fa-play"></i></button>
                     <input type="range" id="audioTimeline" class="player-progress-slider" value="0" min="0" max="100">
-                    <span id="audioTimeTotal" class="text-[9px] font-mono text-zinc-500 select-none">00:00</span>
+                    <span id="audioTimeLabel" class="text-[9px] font-mono text-zinc-500 select-none flex-shrink-0">00:00</span>
                 </div>
             </div>`;
         initCustomAudioController();
@@ -541,16 +512,12 @@ async function selectFile(item, element) {
             mediaBox.innerHTML = `
                 <div class="custom-player-wrapper">
                     <div class="aspect-16-9-viewport">
-                        <pre class="text-[10px] font-mono text-zinc-500 p-4 w-full h-full overflow-auto text-left whitespace-pre-wrap select-text custom-scrollbar bg-[#050507]">${txt.slice(0, 4000)}</pre>
+                        <pre class="text-[10px] font-mono text-zinc-500 p-4 w-full h-full overflow-auto text-left whitespace-pre-wrap select-text custom-scrollbar bg-[#030305]">${txt.slice(0, 4000)}</pre>
                     </div>
                 </div>`;
         } catch {
             mediaBox.innerHTML = `
-                <div class="custom-player-wrapper">
-                    <div class="aspect-16-9-viewport text-zinc-700">
-                        <i class="fa-solid fa-file-circle-exclamation text-2xl"></i>
-                    </div>
-                </div>`;
+                <div class="custom-player-wrapper"><div class="aspect-16-9-viewport text-zinc-800"><i class="fa-solid fa-file-circle-exclamation text-xl"></i></div></div>`;
         }
     }
 }
@@ -558,11 +525,7 @@ async function selectFile(item, element) {
 function cleanPreviousMediaTracks() {
     if (audioAnimationId) cancelAnimationFrame(audioAnimationId);
     if (audioCtx) { audioCtx.close(); audioCtx = null; }
-    if (babylonEngine) {
-        window.removeEventListener("resize", resizeBabylonViewportMatrix);
-        babylonEngine.dispose();
-        babylonEngine = null;
-    }
+    if (babylonEngine) { window.removeEventListener("resize", resizeBabylonViewportMatrix); babylonEngine.dispose(); babylonEngine = null; }
 }
 
 function initBabylonMeshScene(canvasId, modelUrl, filename) {
@@ -578,17 +541,17 @@ function initBabylonMeshScene(canvasId, modelUrl, filename) {
     camera.wheelPrecision = 45;
 
     const atmosphericLight = new BABYLON.HemisphericLight("ambientAtmosphere", new BABYLON.Vector3(0, 1, 0), babylonScene);
-    atmosphericLight.intensity = 0.65;
+    atmosphericLight.intensity = 0.6;
 
     const keyDirectionalLight = new BABYLON.DirectionalLight("studioKeyLight", new BABYLON.Vector3(6, 12, 5), babylonScene);
-    keyDirectionalLight.intensity = 0.95;
+    keyDirectionalLight.intensity = 0.9;
 
-    const structuralGrid = BABYLON.MeshBuilder.CreateGround("workspaceGrid", { width: 16, height: 16, subdivisions: 32 }, babylonScene);
+    const structuralGrid = BABYLON.MeshBuilder.CreateGround("workspaceGrid", { width: 14, height: 14, subdivisions: 28 }, babylonScene);
     const gridMaterial = new BABYLON.StandardMaterial("gridMaterialSet", babylonScene);
     gridMaterial.wireframe = true;
-    gridMaterial.diffuseColor = new BABYLON.Color3(0.16, 0.16, 0.25);
+    gridMaterial.diffuseColor = new BABYLON.Color3(0.12, 0.12, 0.18);
     structuralGrid.material = gridMaterial;
-    structuralGrid.position.y = -1.2;
+    structuralGrid.position.y = -1.1;
 
     BABYLON.SceneLoader.ImportMesh("", "", modelUrl, babylonScene, function (meshes) {
         if (!meshes || meshes.length === 0) return;
@@ -599,9 +562,7 @@ function initBabylonMeshScene(canvasId, modelUrl, filename) {
         premiumMaterial.specularPower = 32;
         premiumMaterial.backFaceCulling = false;
 
-        meshes.forEach(mesh => {
-            if(!mesh.material) mesh.material = premiumMaterial;
-        });
+        meshes.forEach(mesh => { if(!mesh.material) mesh.material = premiumMaterial; });
 
         let min = meshes[0].getBoundingInfo().boundingBox.minimumWorld;
         let max = meshes[0].getBoundingInfo().boundingBox.maximumWorld;
@@ -614,61 +575,43 @@ function initBabylonMeshScene(canvasId, modelUrl, filename) {
 
         const computedCenter = min.add(max).scale(0.5);
         const dimensionsSize = max.subtract(min);
-        const targetScaleFactor = 2.6 / Math.max(dimensionsSize.x, dimensionsSize.y, dimensionsSize.z);
+        const targetScaleFactor = 2.4 / Math.max(dimensionsSize.x, dimensionsSize.y, dimensionsSize.z);
 
         meshes.forEach(mesh => {
             mesh.position.subtractInPlace(computedCenter);
             mesh.scaling = new BABYLON.Vector3(targetScaleFactor, targetScaleFactor, targetScaleFactor);
         });
-    }, function() {}, function() {
-        const proxyCube = BABYLON.MeshBuilder.CreateBox("fallbackBoxProxy", { size: 1.2 }, babylonScene);
-        const errorMat = new BABYLON.StandardMaterial("errMat", babylonScene);
-        errorMat.wireframe = true;
-        errorMat.diffuseColor = new BABYLON.Color3(0.5, 0.1, 0.6);
-        proxyCube.material = errorMat;
-    }, ".obj");
+    }, function() {}, function() {}, ".obj");
 
-    babylonEngine.runRenderLoop(() => {
-        if (babylonScene) babylonScene.render();
-    });
-
+    babylonEngine.runRenderLoop(() => { if (babylonScene) babylonScene.render(); });
     window.addEventListener("resize", resizeBabylonViewportMatrix, false);
 }
 
-function resizeBabylonViewportMatrix() {
-    if (babylonEngine) babylonEngine.resize();
-}
+function resizeBabylonViewportMatrix() { if (babylonEngine) babylonEngine.resize(); }
 
 function initCustomVideoController() {
     const video = document.getElementById('customVideoPlayer');
     const playBtn = document.getElementById('videoPlayBtn');
     const timeline = document.getElementById('videoTimeline');
-    const timeCurrent = document.getElementById('videoTimeCurrent');
-    const timeTotal = document.getElementById('videoTimeTotal');
+    const timeLabel = document.getElementById('videoTimeLabel');
 
     playBtn.onclick = () => {
         if(video.paused) { video.play(); playBtn.innerHTML = `<i class="fa-solid fa-pause"></i>`; }
         else { video.pause(); playBtn.innerHTML = `<i class="fa-solid fa-play"></i>`; }
     };
-    video.onloadedmetadata = () => {
-        timeTotal.innerText = formatTimeMetrics(video.duration);
-    };
     video.ontimeupdate = () => {
         if(!video.duration) return;
         timeline.value = (video.currentTime / video.duration) * 100;
-        timeCurrent.innerText = formatTimeMetrics(video.currentTime);
+        timeLabel.innerText = formatTimeMetrics(video.currentTime);
     };
-    timeline.oninput = () => {
-        video.currentTime = (timeline.value / 100) * video.duration;
-    };
+    timeline.oninput = () => video.currentTime = (timeline.value / 100) * video.duration;
 }
 
 function initCustomAudioController() {
     const audio = document.getElementById('customAudioPlayer');
     const playBtn = document.getElementById('audioPlayBtn');
     const timeline = document.getElementById('audioTimeline');
-    const timeCurrent = document.getElementById('audioTimeCurrent');
-    const timeTotal = document.getElementById('audioTimeTotal');
+    const timeLabel = document.getElementById('audioTimeLabel');
     const canvas = document.getElementById('audioVisualizerCanvas');
     const ctx = canvas.getContext('2d');
 
@@ -681,20 +624,15 @@ function initCustomAudioController() {
         if(audio.paused) { audio.play(); playBtn.innerHTML = `<i class="fa-solid fa-pause"></i>`; }
         else { audio.pause(); playBtn.innerHTML = `<i class="fa-solid fa-play"></i>`; }
     };
-    audio.onloadedmetadata = () => {
-        timeTotal.innerText = formatTimeMetrics(audio.duration);
-    };
     audio.ontimeupdate = () => {
         if(!audio.duration) return;
         timeline.value = (audio.currentTime / audio.duration) * 100;
-        timeCurrent.innerText = formatTimeMetrics(audio.currentTime);
+        timeLabel.innerText = formatTimeMetrics(audio.currentTime);
     };
-    timeline.oninput = () => {
-        audio.currentTime = (timeline.value / 100) * audio.duration;
-    };
+    timeline.oninput = () => audio.currentTime = (timeline.value / 100) * audio.duration;
     
     ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
-    ctx.strokeStyle = '#1f1f2e'; ctx.lineWidth = 2; ctx.beginPath();
+    ctx.strokeStyle = '#151522'; ctx.lineWidth = 2; ctx.beginPath();
     ctx.moveTo(0, canvas.clientHeight/2); ctx.lineTo(canvas.clientWidth, canvas.clientHeight/2); ctx.stroke();
 }
 
@@ -716,7 +654,7 @@ function initAudioContextEngine(audioElement, canvas, ctx) {
         audioAnimationId = requestAnimationFrame(drawFullSymmetricWaves);
         audioAnalyser.getByteFrequencyData(dataArray);
 
-        ctx.fillStyle = '#040406';
+        ctx.fillStyle = '#020204';
         ctx.fillRect(0, 0, w, h);
 
         const barWidth = w / bufferLength;
@@ -740,7 +678,6 @@ function initAudioContextEngine(audioElement, canvas, ctx) {
 }
 
 function formatTimeMetrics(secs) {
-    if (isNaN(secs)) return "00:00";
     const m = Math.floor(secs / 60).toString().padStart(2, '0');
     const s = Math.floor(secs % 60).toString().padStart(2, '0');
     return `${m}:${s}`;
