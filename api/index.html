@@ -20,22 +20,22 @@ body::before { content: ""; position: fixed; inset: 0; background: rgba(0, 0, 0,
 .brand-strip { width: 100%; height: 60px; background: #000; border-b: 1px solid #111; display: flex; align-items: center; justify-content: center; position: relative; }
 .brand-line { width: 100%; height: 3px; background: var(--ff-yellow); box-shadow: 0 2px 10px rgba(255, 222, 0, 0.3); }
 
-/* Unified Frame Workspace Parameters Layout Grid */
+/* Master Grid Grid Matrix Workspace Properties */
 .main-grid-container { display: grid; grid-template-columns: repeat(1, 1fr); gap: 24px; max-width: 1400px; margin: 0 auto; padding: 0 20px 40px 20px; }
 @media (min-width: 1024px) { .main-grid-container { grid-template-columns: repeat(3, 1fr); } }
 
-/* Strict Structural Configuration Architecture Rules */
+/* Rigid Uniform Layout Sizing Matrix Panel Rules */
 .uniform-panel { 
     background: #0a0a0a; border: 1px solid #1f1f1f; position: relative; 
     box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8); height: 450px; display: flex; 
-    flex-direction: column; transition: height 0.25s ease-in-out; min-width: 0; 
+    flex-direction: column; transition: height 0.25s cubic-bezier(0.4, 0, 0.2, 1); min-width: 0; 
 }
 
-/* Smart Adaptive Constraints for Low File Entries */
-.uniform-panel.initial-low-bounds { height: auto !important; min-height: 220px; }
-.uniform-panel.initial-low-bounds .scrollable-content-box { flex: none; height: auto; max-height: 280px; min-height: 80px; }
+/* Precise Adaptive Fit Constraints for 1, 2, or 3 Asset Elements */
+.uniform-panel.fit-content-exact { height: auto !important; min-height: 160px; }
+.uniform-panel.fit-content-exact .scrollable-content-box { flex: none; height: auto; max-height: 280px; min-height: 60px; }
 
-/* Fixed Rigid Execution Bounds for Preview Module */
+/* Locked Rigid Geometry Bounds Matrix Configuration for the Preview Module Container */
 .fixed-preview-panel { height: 450px !important; }
 
 @media (min-width: 1024px) {
@@ -45,14 +45,14 @@ body::before { content: ""; position: fixed; inset: 0; background: rgba(0, 0, 0,
 }
 @media (max-width: 1023px) {
     .uniform-panel { border-radius: 16px; margin-bottom: 16px; height: 450px !important; }
-    .uniform-panel.initial-low-bounds { height: auto !important; }
+    .uniform-panel.fit-content-exact { height: auto !important; }
 }
 
 .uniform-panel::before { content: ""; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--ff-yellow); z-index: 10; }
 .panel-body { padding: 24px; flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
 .scrollable-content-box { flex: 1; background: #060608; border: 1px solid #1a1a1f; border-radius: 16px; overflow: hidden; position: relative; }
 
-/* Switchable Tab Elements Container */
+/* Switchable Tab Elements Row Container */
 .tab-row { display: flex; background: #111115; padding: 4px; border-radius: 12px; border: 1px solid #1f1f26; margin-bottom: 16px; gap: 4px; }
 .tab-btn { flex: 1; text-align: center; padding: 8px 4px; font-size: 11px; font-weight: 700; color: #a1a1aa; border-radius: 8px; cursor: pointer; transition: all 0.2s; text-transform: uppercase; border: 1px solid transparent; }
 .tab-btn:hover { color: #fff; background: #16161f; }
@@ -62,24 +62,23 @@ body::before { content: ""; position: fixed; inset: 0; background: rgba(0, 0, 0,
 .btn-mechanical:active { transform: translateY(2px); box-shadow: 0 2px 0 #c2a900; }
 
 .upload-deck { background: #121212; border: 2px dashed #2a2a2a; border-radius: 20px; display: flex; align-items: center; height: 110px; cursor: pointer; transition: all 0.2s; min-width: 0; }
-.upload-deck.dragover { border-color: var(--ff-yellow); background: #161612; }
 
-/* Streamlined Workspace Dropdown Menu */
-.custom-dropdown { position: relative; width: 100%; }
-.dropdown-trigger { background: #121216; border: 1px solid #272732; padding: 8px 14px; border-radius: 10px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 11px; font-weight: 700; color: #e4e4e7; transition: all 0.2s; }
+/* Wider UI Layout Architecture Filter Component Menu */
+.custom-dropdown { position: relative; width: auto; min-width: 160px; max-width: 240px; }
+.dropdown-trigger { background: #121216; border: 1px solid #272732; padding: 8px 14px; border-radius: 10px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 11px; font-weight: 700; color: #e4e4e7; transition: all 0.2s; gap: 8px; }
 .dropdown-trigger:hover { border-color: #3f3f46; background: #16161f; }
-.dropdown-menu { position: absolute; top: calc(100% + 6px); left: 0; right: 0; background: #0c0c10; border: 1px solid #272732; border-radius: 12px; z-index: 50; max-height: 220px; overflow-y: auto; display: none; box-shadow: 0 15px 35px rgba(0,0,0,0.7); }
+.dropdown-menu { position: absolute; top: calc(100% + 6px); right: 0; left: 0; background: #0c0c10; border: 1px solid #272732; border-radius: 12px; z-index: 50; max-height: 220px; overflow-y: auto; display: none; box-shadow: 0 15px 35px rgba(0,0,0,0.7); }
 .dropdown-menu.active { display: block; }
 .dropdown-item { padding: 9px 14px; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; transition: all 0.15s; border-bottom: 1px solid #14141a; color: #a1a1aa; }
 .dropdown-item:hover { background: #171722; color: #fff; }
 .dropdown-item.selected { color: var(--ff-yellow); background: #12121a; font-weight: 600; }
 
-/* High-Fidelity Tactical Player Interactivity Kits */
+/* Media Control Mechanics Interactivity Interface Layout Styles */
 .custom-player-wrapper { display: flex; flex-direction: column; width: 100%; height: 100%; justify-content: space-between; padding: 12px; background: #07070a; position: relative; }
 .media-canvas-container { flex: 1; width: 100%; background: #020203; border-radius: 12px; border: 1px solid #121218; overflow: hidden; display: flex; align-items: center; justify-content: center; position: relative; }
 .custom-control-bar { height: 44px; background: #111116; border: 1px solid #1e1e26; border-radius: 12px; display: flex; align-items: center; padding: 0 12px; gap: 12px; margin-top: 8px; flex-shrink: 0; }
 .player-progress-slider { flex: 1; -webkit-appearance: none; appearance: none; height: 4px; background: #272732; border-radius: 2px; outline: none; cursor: pointer; }
-.player-progress-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 10px; height: 10px; border-radius: 50%; background: var(--ff-yellow); box-shadow: 0 0 6px var(--ff-yellow); transition: transform 0.1s; }
+.player-progress-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 10px; height: 10px; border-radius: 50%; background: var(--ff-yellow); box-shadow: 0 0 6px var(--ff-yellow); }
 
 #audioVisualizerCanvas { width: 100%; height: 130px; background: #040406; border-radius: 8px; border: 1px solid #111116; }
 .pixelated-render { image-rendering: pixelated; max-height: 100%; max-width: 100%; object-fit: contain; }
@@ -150,17 +149,17 @@ body::before { content: ""; position: fixed; inset: 0; background: rgba(0, 0, 0,
         </div>
     </div>
 
-    <div id="listWindowPanel" class="uniform-panel panel-2 initial-low-bounds">
+    <div id="listWindowPanel" class="uniform-panel panel-2 fit-content-exact">
         <div class="panel-body">
             <div class="flex items-center justify-between mb-4 border-b border-zinc-900 pb-3 flex-shrink-0 min-w-0">
-                <div class="min-w-0 text-left">
+                <div class="min-w-0 text-left mr-2">
                     <h2 class="text-xs font-black text-white uppercase tracking-wider gff">Extracted</h2>
                     <p id="cacheCounterText" class="text-[10px] text-zinc-500 truncate">0 Items Found</p>
                 </div>
                 <div class="flex items-center gap-2 hidden" id="listActions">
-                    <div class="custom-dropdown w-32" id="filterDropdown">
+                    <div class="custom-dropdown" id="filterDropdown">
                         <div class="dropdown-trigger" id="filterTrigger">
-                            <span class="truncate">All Categories</span> <i class="fa-solid fa-sliders text-[9px] ml-1 flex-shrink-0 text-zinc-400"></i>
+                            <span class="truncate">All Categories</span> <i class="fa-solid fa-sliders text-[9px] flex-shrink-0 text-zinc-400"></i>
                         </div>
                         <div class="dropdown-menu custom-scrollbar" id="filterMenu"></div>
                     </div>
@@ -213,10 +212,10 @@ let selectedFilters = new Set();
 let activeExtractionMode = "bundle";
 let isFilteringActive = false;
 
-// Web Audio Signal Data Array References
+// Audio Node Stream Global Arrays
 let audioCtx, audioSource, audioAnalyser, audioAnimationId;
 
-// Babylon.js Engine Global Instantiations Reference Mapping
+// Babylon.js Rendering Engine Scope Instances
 let babylonEngine, babylonScene;
 
 const fileInput = document.getElementById("fileInput");
@@ -275,6 +274,7 @@ document.getElementById('extractorForm').onsubmit = async (e) => {
         selectedFilters.clear();
         isFilteringActive = false;
         
+        // Render output directory schema list
         renderList(true); 
         updateFilterMenu();
         
@@ -285,6 +285,12 @@ document.getElementById('extractorForm').onsubmit = async (e) => {
         document.getElementById('statusBadge').innerText = "SUCCESS";
         document.getElementById('statusBadge').style.color = "var(--ff-emerald)";
         document.getElementById('statusDescText').innerText = `Successfully parsed ${activeCache.length} individual items.`;
+
+        // Direct automated viewport pipeline trigger rule for individual single items
+        if(activeCache.length === 1) {
+            const initialRowNode = fileList.firstElementChild;
+            selectFile(activeCache[0], initialRowNode);
+        }
     } catch (err) {
         document.getElementById('statusBadge').innerText = "FAILED";
         document.getElementById('statusBadge').style.color = "var(--ff-red)";
@@ -326,7 +332,7 @@ function toggleFilter(label) {
         document.getElementById('filterTrigger').querySelector('span').innerText = label;
     }
     updateFilterMenu();
-    renderList(false); 
+    renderList(false); // Preserve exact scale sizes during filter updates
 }
 
 function renderList(isInitialPayloadLoad = false) {
@@ -334,18 +340,28 @@ function renderList(isInitialPayloadLoad = false) {
     const filtered = activeCache.filter(i => selectedFilters.size === 0 || selectedFilters.has(i.label));
     document.getElementById('cacheCounterText').innerText = `${filtered.length} Display Objects Inside View`;
     
-    // Exact sizing layout control rules to prevent unneeded black gaps
+    // Core Layout Control Size Matrices Rules
     if (isInitialPayloadLoad) {
         if(filtered.length > 0 && filtered.length <= 3) {
-            listWindowPanel.classList.add('initial-low-bounds');
+            listWindowPanel.classList.add('fit-content-exact');
         } else {
-            listWindowPanel.classList.remove('initial-low-bounds');
+            listWindowPanel.classList.remove('fit-content-exact');
         }
     } else {
-        if (!isFilteringActive && activeCache.length <= 3) {
-            listWindowPanel.classList.add('initial-low-bounds');
+        // Prevent layout expansions or changes when sorting/filtering fields
+        if (isFilteringActive) {
+            // Keep panel size locked to the layout scale set by initial payload
+            if (activeCache.length <= 3) {
+                listWindowPanel.classList.add('fit-content-exact');
+            } else {
+                listWindowPanel.classList.remove('fit-content-exact');
+            }
         } else {
-            listWindowPanel.classList.remove('initial-low-bounds');
+            if (activeCache.length <= 3) {
+                listWindowPanel.classList.add('fit-content-exact');
+            } else {
+                listWindowPanel.classList.remove('fit-content-exact');
+            }
         }
     }
     
@@ -405,13 +421,13 @@ async function selectFile(item, element) {
     const ext = item.name.split('.').pop().toLowerCase();
     const isMesh = item.label.toLowerCase().includes('mesh') || item.label.toLowerCase().includes('3d') || ['obj','gltf','glb'].includes(ext);
 
-    // Smooth scroll focus trigger directly onto preview module layout
+    // Smooth focal adjustment scroll down immediately into viewport block space
     document.getElementById('previewTargetWorkspace').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
     if (isMesh) {
         const id = "babylon_canvas_" + Math.random().toString(36).substr(2, 9);
         mediaBox.innerHTML = `<canvas id="${id}" class="babylon-canvas-viewport"></canvas>`;
-        initBabylonMeshScene(id, url);
+        initBabylonMeshScene(id, url, item.name);
     } else if(['png','jpg','jpeg','webp'].includes(ext)) {
         mediaBox.innerHTML = `<div class="w-full h-full flex items-center justify-center p-2"><img src="${url}" class="pixelated-render"></div>`;
     } else if(['mp4','mkv','webm','mov'].includes(ext) || item.label.toLowerCase().includes('video')) {
@@ -456,14 +472,14 @@ function cleanPreviousMediaTracks() {
     if (audioAnimationId) cancelAnimationFrame(audioAnimationId);
     if (audioCtx) { audioCtx.close(); audioCtx = null; }
     if (babylonEngine) {
-        window.removeEventListener("resize", resizeBabylonEngineViewport);
+        window.removeEventListener("resize", resizeBabylonViewportMatrix);
         babylonEngine.dispose();
         babylonEngine = null;
     }
 }
 
-// True Babylon.js 3D Mesh Parsing Pipeline Engine Setup
-function initBabylonMeshScene(canvasId, modelUrl) {
+// Fixed Babylon.js Scene Setup Protocol with Explicit Extension Overrides
+function initBabylonMeshScene(canvasId, modelUrl, filename) {
     const canvas = document.getElementById(canvasId);
     if (!canvas) return;
 
@@ -471,45 +487,44 @@ function initBabylonMeshScene(canvasId, modelUrl) {
     babylonScene = new BABYLON.Scene(babylonEngine);
     babylonScene.clearColor = new BABYLON.Color4(0.05, 0.05, 0.07, 1);
 
-    // Cinematic workspace orbital view drivers
     const camera = new BABYLON.ArcRotateCamera("TacticalCamera", Math.PI / 2, Math.PI / 2.5, 4, BABYLON.Vector3.Zero(), babylonScene);
     camera.attachControl(canvas, true);
     camera.wheelPrecision = 45;
-    camera.lowerRadiusLimit = 1.5;
-    camera.upperRadiusLimit = 15;
+    camera.lowerRadiusLimit = 1.2;
+    camera.upperRadiusLimit = 20;
 
-    // Tactical dual lighting systems array mapping
     const atmosphericLight = new BABYLON.HemisphericLight("ambientAtmosphere", new BABYLON.Vector3(0, 1, 0), babylonScene);
-    atmosphericLight.intensity = 0.45;
-    atmosphericLight.groundColor = new BABYLON.Color3(0.1, 0.1, 0.15);
+    atmosphericLight.intensity = 0.5;
+    atmosphericLight.groundColor = new BABYLON.Color3(0.12, 0.12, 0.16);
 
-    const highKeyLight = new THREE || new BABYLON.DirectionalLight("studioKeyLight", new BABYLON.Vector3(5, 12, 6), babylonScene);
-    highKeyLight.intensity = 0.85;
+    const keyDirectionalLight = new BABYLON.DirectionalLight("studioKeyLight", new BABYLON.Vector3(6, 12, 5), babylonScene);
+    keyDirectionalLight.intensity = 0.9;
 
-    // Base structural matrix coordinate mesh platform grid
-    const structuralGrid = BABYLON.MeshBuilder.CreateGround("workspaceGrid", { width: 12, height: 12, subdivisions: 24 }, babylonScene);
+    // Coordinate floor mesh grid helper alignment
+    const structuralGrid = BABYLON.MeshBuilder.CreateGround("workspaceGrid", { width: 14, height: 14, subdivisions: 28 }, babylonScene);
     const gridMaterial = new BABYLON.StandardMaterial("gridMaterialSet", babylonScene);
     gridMaterial.wireframe = true;
-    gridMaterial.diffuseColor = new BABYLON.Color3(0.12, 0.12, 0.18);
+    gridMaterial.diffuseColor = new BABYLON.Color3(0.15, 0.15, 0.22);
     structuralGrid.material = gridMaterial;
     structuralGrid.position.y = -1.2;
 
-    // Load actual .obj stream array via standard Babylon parsing logic
+    // Fixed Engine Implementation: Direct raw string file injection or override standard parser rules safely
+    const explicitExt = filename.toLowerCase().endsWith('.obj') ? ".obj" : ".obj";
+
     BABYLON.SceneLoader.ImportMesh("", "", modelUrl, babylonScene, function (meshes) {
         if (!meshes || meshes.length === 0) return;
 
-        // Custom premium material texture styling for raw engine models
-        const eliteMaterial = new BABYLON.StandardMaterial("eliteModelMat", babylonScene);
-        eliteMaterial.diffuseColor = new BABYLON.Color3(0.85, 0.1, 0.25); 
-        eliteMaterial.specularColor = new BABYLON.Color3(0.98, 0.87, 0.0); 
-        eliteMaterial.specularPower = 24;
-        eliteMaterial.backFaceCulling = false;
+        const premiumMaterial = new BABYLON.StandardMaterial("eliteModelMat", babylonScene);
+        premiumMaterial.diffuseColor = new BABYLON.Color3(0.8, 0.12, 0.22); 
+        premiumMaterial.specularColor = new BABYLON.Color3(1.0, 0.85, 0.0); 
+        premiumMaterial.specularPower = 32;
+        premiumMaterial.backFaceCulling = false;
 
         meshes.forEach(mesh => {
-            if(!mesh.material) mesh.material = eliteMaterial;
+            if(!mesh.material) mesh.material = premiumMaterial;
         });
 
-        // Exact bound alignment calculation rules inside viewer schema logic
+        // Compute exact center and dimensions to prevent tracking offset clipping
         let min = meshes[0].getBoundingInfo().boundingBox.minimumWorld;
         let max = meshes[0].getBoundingInfo().boundingBox.maximumWorld;
         
@@ -521,36 +536,32 @@ function initBabylonMeshScene(canvasId, modelUrl) {
 
         const computedCenter = min.add(max).scale(0.5);
         const dimensionsSize = max.subtract(min);
-        const targetScaleFactor = 2.4 / Math.max(dimensionsSize.x, dimensionsSize.y, dimensionsSize.z);
+        const targetScaleFactor = 2.5 / Math.max(dimensionsSize.x, dimensionsSize.y, dimensionsSize.z);
 
         meshes.forEach(mesh => {
             mesh.position.subtractInPlace(computedCenter);
             mesh.scaling = new BABYLON.Vector3(targetScaleFactor, targetScaleFactor, targetScaleFactor);
         });
 
-        document.getElementById('statusDescText').innerText = "Real 3D mesh elements loaded and centered via Babylon.js.";
-    }, function() {}, function(scene, message, exception) {
-        // Fallback placeholder wireframe if model stream parsing reports error sequences
-        const errorFallbackCube = BABYLON.MeshBuilder.CreateBox("errorBoxProxy", { size: 1.2 }, babylonScene);
-        const errMat = new BABYLON.StandardMaterial("errMat", babylonScene);
-        errMat.wireframe = true;
-        errMat.diffuseColor = new BABYLON.Color3(0.4, 0.1, 0.6);
-        errorFallbackCube.material = errMat;
-    }, ".obj");
+        document.getElementById('statusDescText').innerText = "3D asset parsed and centered cleanly inside viewport mesh container.";
+    }, function() {}, function(scene, msg, ex) {
+        // Build fallback visual display object layout frame if object text stream fails to pass parse maps
+        const proxyCube = BABYLON.MeshBuilder.CreateBox("fallbackBoxProxy", { size: 1.3 }, babylonScene);
+        const errorMat = new BABYLON.StandardMaterial("errMat", babylonScene);
+        errorMat.wireframe = true;
+        errorMat.diffuseColor = new BABYLON.Color3(0.5, 0.1, 0.7);
+        proxyCube.material = errorMat;
+    }, explicitExt);
 
     babylonEngine.runRenderLoop(() => {
-        if (babylonScene) {
-            babylonScene.render();
-        }
+        if (babylonScene) babylonScene.render();
     });
 
-    window.addEventListener("resize", resizeBabylonEngineViewport, false);
+    window.addEventListener("resize", resizeBabylonViewportMatrix, false);
 }
 
-function resizeBabylonEngineViewport() {
-    if (babylonEngine) {
-        babylonEngine.resize();
-    }
+function resizeBabylonViewportMatrix() {
+    if (babylonEngine) babylonEngine.resize();
 }
 
 function initCustomVideoController() {
@@ -599,7 +610,6 @@ function initCustomAudioController() {
         audio.currentTime = (timeline.value / 100) * audio.duration;
     };
     
-    // Draw initial baseline empty tracker
     ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
     ctx.strokeStyle = '#1f1f2e'; ctx.lineWidth = 2; ctx.beginPath();
     ctx.moveTo(0, canvas.clientHeight/2); ctx.lineTo(canvas.clientWidth, canvas.clientHeight/2); ctx.stroke();
@@ -619,8 +629,8 @@ function initAudioContextEngine(audioElement, canvas, ctx) {
     const w = canvas.clientWidth;
     const h = canvas.clientHeight;
 
-    function drawGlowSymmetricWaves() {
-        audioAnimationId = requestAnimationFrame(drawGlowSymmetricWaves);
+    function drawSymmetricGlowWaves() {
+        audioAnimationId = requestAnimationFrame(drawSymmetricGlowWaves);
         audioAnalyser.getByteFrequencyData(dataArray);
 
         ctx.fillStyle = '#040406';
@@ -633,11 +643,9 @@ function initAudioContextEngine(audioElement, canvas, ctx) {
             const normalizedVal = dataArray[i] / 255;
             const barHeight = normalizedVal * h * 0.75;
             
-            // Symmetric glowing center-outward frequency waves mapping layout
             ctx.fillStyle = `rgba(56, 189, 248, ${0.4 + normalizedVal})`;
             ctx.fillRect(x, (h / 2) - (barHeight / 2), barWidth - 1.5, barHeight);
             
-            // Glowing neon tracking dots
             ctx.fillStyle = 'var(--ff-cyan)';
             ctx.fillRect(x, (h / 2) - (barHeight / 2) - 1, barWidth - 1.5, 2);
             ctx.fillRect(x, (h / 2) + (barHeight / 2) - 1, barWidth - 1.5, 2);
@@ -645,7 +653,7 @@ function initAudioContextEngine(audioElement, canvas, ctx) {
             x += barWidth;
         }
     }
-    drawGlowSymmetricWaves();
+    drawSymmetricGlowWaves();
 }
 
 function formatTimeMetrics(secs) {
