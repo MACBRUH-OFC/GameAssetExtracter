@@ -3,10 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Assets Extractor | ELITE Pro Ultimate</title>
+<title>Assets Extractor</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+<!-- Production Babylon.js Structural Loader Packages Engine -->
 <script src="https://cdn.babylonjs.com/babylon.js"></script>
 <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
 
@@ -123,6 +124,7 @@ body { background: #030305; color: #fff; min-height: 100vh; font-family: 'Inter'
 </div>
 
 <div class="main-grid-container">
+    <!-- Column 1: Config & Drag Upload Deck -->
     <div class="uniform-panel panel-1">
         <div class="panel-body justify-between space-y-4">
             <div>
@@ -148,6 +150,7 @@ body { background: #030305; color: #fff; min-height: 100vh; font-family: 'Inter'
                     <input type="file" id="fileInput" class="hidden">
                 </div>
                 
+                <!-- Ergonomic Separation Buffer Padding -->
                 <div class="h-5 flex-shrink-0"></div>
                 
                 <button type="submit" id="extractBtn" class="btn-mechanical w-full h-12 text-sm font-bold italic flex-shrink-0">
@@ -166,6 +169,7 @@ body { background: #030305; color: #fff; min-height: 100vh; font-family: 'Inter'
         </div>
     </div>
 
+    <!-- Column 2: Extracted Asset Array Register List -->
     <div id="listWindowPanel" class="uniform-panel panel-2">
         <div class="panel-body">
             <div class="flex items-center justify-between mb-4 border-b border-zinc-900 pb-3 flex-shrink-0 min-w-0">
@@ -201,6 +205,7 @@ body { background: #030305; color: #fff; min-height: 100vh; font-family: 'Inter'
         </div>
     </div>
 
+    <!-- Column 3: Fixed Live Preview Frame Space Workspace -->
     <div id="previewTargetWorkspace" class="uniform-panel panel-3 fixed-preview-panel">
         <div class="panel-body">
             <div class="mb-4 border-b border-zinc-900 pb-3 flex-shrink-0">
@@ -484,7 +489,7 @@ async function selectFile(item, element) {
             <div class="custom-player-wrapper relative">
                 <div class="aspect-16-9-viewport relative">
                     <div id="videoCenterOverlay" class="center-play-overlay">
-                        <div class="center-play-btn-circle"><i class="fa-solid fa-rotate-right text-lg"></i></div>
+                        <div class="center-play-btn-circle"><i class="fa-solid fa-play text-lg"></i></div>
                     </div>
                     <video id="customVideoPlayer" src="${url}" class="w-full h-full object-contain"></video>
                 </div>
@@ -492,6 +497,7 @@ async function selectFile(item, element) {
                     <input type="range" id="videoTimeline" class="player-progress-slider" value="0" min="0" max="100">
                     <span id="videoTimeLabel" class="text-[9px] font-mono text-zinc-500 select-none pr-2 flex-shrink-0">00:00</span>
                     
+                    <!-- Verified Right Corner Action Block Matrix -->
                     <div class="flex items-center gap-2 flex-shrink-0">
                         <button id="videoLoopBtn" class="w-7 h-7 rounded-md bg-zinc-900 border border-zinc-800 text-zinc-500 hover:text-[#00ffa3] transition-all text-[11px] flex items-center justify-center" title="Toggle Loop">
                             <i class="fa-solid fa-rotate-right"></i>
@@ -508,7 +514,7 @@ async function selectFile(item, element) {
             <div class="custom-player-wrapper relative">
                 <div class="aspect-16-9-viewport relative">
                     <div id="audioCenterOverlay" class="center-play-overlay">
-                        <div class="center-play-btn-circle"><i class="fa-solid fa-rotate-right text-lg"></i></div>
+                        <div class="center-play-btn-circle"><i class="fa-solid fa-play text-lg"></i></div>
                     </div>
                     <canvas id="audioVisualizerCanvas"></canvas>
                     <audio id="customAudioPlayer" src="${url}" crossorigin="anonymous" class="hidden"></audio>
@@ -517,6 +523,7 @@ async function selectFile(item, element) {
                     <input type="range" id="audioTimeline" class="player-progress-slider" value="0" min="0" max="100">
                     <span id="audioTimeLabel" class="text-[9px] font-mono text-zinc-500 select-none pr-2 flex-shrink-0">00:00</span>
                     
+                    <!-- Verified Right Corner Action Block Matrix -->
                     <div class="flex items-center gap-2 flex-shrink-0">
                         <button id="audioLoopBtn" class="w-7 h-7 rounded-md bg-zinc-900 border border-zinc-800 text-zinc-500 hover:text-[#00ffa3] transition-all text-[11px] flex items-center justify-center" title="Toggle Loop">
                             <i class="fa-solid fa-rotate-right"></i>
@@ -628,7 +635,7 @@ function initCustomVideoController() {
         } else { 
             video.pause(); 
             playBtn.innerHTML = `<i class="fa-solid fa-play"></i>`;
-            centerOverlay.querySelector('.center-play-btn-circle').innerHTML = `<i class="fa-solid fa-rotate-right text-lg"></i>`;
+            centerOverlay.querySelector('.center-play-btn-circle').innerHTML = `<i class="fa-solid fa-play text-lg"></i>`;
             centerOverlay.classList.remove('playing-hide');
         }
     }
@@ -684,7 +691,7 @@ function initCustomAudioController() {
         } else { 
             audio.pause(); 
             playBtn.innerHTML = `<i class="fa-solid fa-play"></i>`;
-            centerOverlay.querySelector('.center-play-btn-circle').innerHTML = `<i class="fa-solid fa-rotate-right text-lg"></i>`;
+            centerOverlay.querySelector('.center-play-btn-circle').innerHTML = `<i class="fa-solid fa-play text-lg"></i>`;
             centerOverlay.classList.remove('playing-hide');
         }
     }
