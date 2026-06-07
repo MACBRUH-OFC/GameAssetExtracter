@@ -16,22 +16,23 @@
         body::before { content: ""; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.96); z-index: -1; }
         .gff { font-family: 'GFF-Bold', sans-serif; }
         
-        header { width: 100%; border-bottom: 2px solid var(--ff-yellow); padding: 30px 0; display: flex; justify-content: center; background: rgba(0,0,0,0.8); margin-bottom: 50px; }
+        header { width: 100%; padding: 40px 0; display: flex; flex-direction: column; align-items: center; background: rgba(0,0,0,0.8); }
+        .header-line { width: 100%; height: 2px; background: var(--ff-yellow); box-shadow: 0 0 15px var(--ff-yellow); }
         
-        .uniform-panel { background: #0a0a0a; border: 1px solid #1f1f1f; border-radius: 0 24px 24px 0; position: relative; box-shadow: 0 30px 80px rgba(0, 0, 0, 1); height: 450px; display: flex; flex-direction: column; transition: 0.3s; }
+        .uniform-panel { background: #0a0a0a; border: 1px solid #1f1f1f; border-radius: 0 24px 24px 0; position: relative; box-shadow: 0 30px 80px rgba(0, 0, 0, 1); height: 460px; display: flex; flex-direction: column; transition: 0.3s; }
         .uniform-panel::before { content: ""; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--ff-yellow); }
         .panel-body { padding: 25px; flex: 1; display: flex; flex-direction: column; overflow: hidden; }
         
         .scroll-box { flex: 1; background: #060608; border: 1px solid #1a1a1f; border-radius: 16px; overflow: hidden; position: relative; }
         
-        .btn-mechanical { cursor: pointer; font-family: 'GFF-Bold'; text-transform: uppercase; font-style: italic; display: flex; align-items: center; justify-content: center; border-radius: 14px; background: var(--ff-yellow); color: #000; box-shadow: 0 4px 0 #c2a900; transition: 0.1s; border: none; }
+        .btn-mechanical { cursor: pointer; font-family: 'GFF-Bold'; text-transform: uppercase; font-style: italic; display: flex; align-items: center; justify-content: center; border-radius: 14px; background: var(--ff-yellow); color: #000; box-shadow: 0 4px 0 #c2a900; transition: 0.1s; border: none; font-size: 14px; height: 64px; width: 100%; }
         .btn-mechanical:active { transform: translateY(2px); box-shadow: 0 2px 0 #c2a900; }
         
-        .upload-deck { background: #121212; border: 2px dashed #2a2a2a; border-radius: 20px; height: 100px; display: flex; align-items: center; cursor: pointer; transition: 0.2s; min-width: 0; }
+        .upload-deck { background: #121212; border: 2px dashed #2a2a2a; border-radius: 20px; height: 100px; display: flex; align-items: center; cursor: pointer; transition: 0.2s; min-width: 0; padding: 0 20px; }
         .upload-deck:hover { border-color: var(--ff-yellow); background: #161612; }
         
         .custom-dropdown { position: relative; width: 150px; }
-        .dropdown-trigger { background: #121216; border: 1px solid #272732; border-radius: 10px; padding: 10px 15px; cursor: pointer; font-size: 11px; font-weight: 800; color: #fff; display: flex; justify-content: space-between; align-items: center; white-space: nowrap; }
+        .dropdown-trigger { background: #121216; border: 1px solid #272732; border-radius: 10px; padding: 10px 15px; cursor: pointer; font-size: 11px; font-weight: 800; color: #fff; display: flex; justify-content: space-between; align-items: center; }
         .dropdown-menu { position: absolute; top: 115%; right: 0; width: 220px; background: #0f0f12; border: 1px solid #272732; border-radius: 12px; z-index: 100; display: none; max-height: 300px; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,1); }
         .dropdown-item { padding: 12px 18px; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #1a1a20; color: #a1a1aa; transition: 0.2s; }
         .dropdown-item:hover { background: #1a1a22; color: #fff; }
@@ -46,63 +47,56 @@
 
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #27272a; border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--ff-yellow); }
 
         @media (max-width: 1023px) {
             .uniform-panel { border-radius: 0 16px 16px 0; height: auto; min-height: 200px; }
-            .mobile-list-height { height: 400px; }
+            .mobile-list-h { height: 420px; }
         }
     </style>
 </head>
 <body>
     <header>
-        <img src="https://dl.dir.freefiremobile.com/common/web_event/official2/dist/client/img/full_logo.969f536.png" class="h-10" alt="Logo">
+        <img src="https://dl.dir.freefiremobile.com/common/web_event/official2/dist/client/img/full_logo.969f536.png" class="h-10 mb-6" alt="Logo">
+        <div class="header-line"></div>
     </header>
 
     <div class="max-w-7xl mx-auto px-6">
-        <div class="text-center mb-16 gff">
+        <div class="text-center my-14 gff">
             <h1 class="text-6xl md:text-8xl font-black italic tracking-tighter leading-[0.85]">ASSETS<br><span class="text-[#ffde00]">EXTRACTOR</span></h1>
             <div class="flex items-center justify-center gap-4 mt-8 text-zinc-500 font-bold text-xs md:text-sm uppercase tracking-[0.25em]">
-                <i class="fa-solid fa-cube text-[#ffde00] text-sm"></i>
+                <i class="fa-solid fa-cube text-[#ffde00]"></i>
                 <span>AssetBundle • KTX • ASTC • Assets Extractor</span>
-                <i class="fa-solid fa-cube text-[#ffde00] text-sm"></i>
+                <i class="fa-solid fa-cube text-[#ffde00]"></i>
             </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-10 items-stretch mb-20">
-            <!-- 1: Upload -->
             <div class="uniform-panel">
                 <div class="panel-body">
-                    <h2 class="text-xs font-black uppercase tracking-widest mb-5 gff text-zinc-500">Input Module</h2>
+                    <h2 class="text-xs font-black uppercase tracking-widest mb-5 gff text-zinc-500">Source</h2>
                     <form id="upForm" class="space-y-6 flex-1">
                         <div class="upload-deck" onclick="document.getElementById('fileIn').click()">
-                            <div class="w-24 h-full flex items-center justify-center border-r border-zinc-800 flex-shrink-0">
+                            <div class="w-16 h-full flex items-center justify-center border-r border-zinc-800 mr-4">
                                 <i id="upIco" class="fa-solid fa-folder-open text-zinc-700 text-3xl"></i>
                             </div>
-                            <div class="px-6 overflow-hidden flex-1">
-                                <span class="block text-[10px] font-bold text-zinc-500 uppercase gff mb-1">Source Stream</span>
+                            <div class="overflow-hidden flex-1">
+                                <span class="block text-[10px] font-bold text-zinc-500 uppercase gff mb-1">Initialization</span>
                                 <p id="fileLab" class="text-xs text-zinc-400 truncate font-bold uppercase">Load Map Data</p>
                             </div>
                         </div>
                         <input type="file" id="fileIn" class="hidden" multiple>
-                        <button type="submit" class="btn-mechanical w-full h-16 text-sm gap-4">
-                            <i class="fa-solid fa-bolt-lightning"></i> Initialize Extract
+                        <button type="submit" class="btn-mechanical gap-4">
+                            <i class="fa-solid fa-bolt-lightning"></i> Extract Files
                         </button>
                     </form>
                     <div class="mt-5 p-4 bg-zinc-900/40 border border-zinc-800 rounded-2xl flex items-center gap-4">
-                        <div id="statIco" class="w-10 h-10 rounded-lg bg-black border border-zinc-800 flex items-center justify-center text-zinc-600">
-                            <i class="fa-solid fa-terminal text-sm"></i>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <span class="block text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Process Log</span>
-                            <p id="statMsg" class="text-[11px] text-zinc-400 truncate font-medium">System Idle...</p>
-                        </div>
+                        <div id="statIco" class="text-zinc-600"><i class="fa-solid fa-terminal text-sm"></i></div>
+                        <p id="statMsg" class="text-[11px] text-zinc-400 truncate font-medium flex-1">Awaiting stream input...</p>
                     </div>
                 </div>
             </div>
 
-            <!-- 2: List -->
-            <div class="uniform-panel mobile-list-height">
+            <div class="uniform-panel mobile-list-h">
                 <div class="panel-body">
                     <div class="flex items-center justify-between mb-6">
                         <div class="gff">
@@ -122,8 +116,8 @@
                                     <i class="fa-solid fa-file-zipper text-lg"></i>
                                 </div>
                                 <div class="dropdown-menu" id="zipM">
-                                    <div class="dropdown-item" onclick="zipDl('zip')"><i class="fa-solid fa-box-archive"></i> Download All (Grouped)</div>
-                                    <div id="zipFilt" class="dropdown-item hidden" onclick="zipDl('zip_filtered')"><i class="fa-solid fa-filter-circle-dollar"></i> Download Filtered</div>
+                                    <div class="dropdown-item" onclick="zipDl('zip')"><i class="fa-solid fa-box-archive"></i> Download All</div>
+                                    <div id="zipFilt" class="dropdown-item hidden" onclick="zipDl('zip_filtered')"><i class="fa-solid fa-filter"></i> Download Filtered</div>
                                 </div>
                             </div>
                         </div>
@@ -131,17 +125,15 @@
                     <div class="scroll-box">
                         <div id="listLoader" class="absolute inset-0 bg-black/95 z-50 hidden flex-col items-center justify-center">
                             <i class="fa-solid fa-circle-notch loader-spin text-yellow-500 text-4xl"></i>
-                            <span class="text-[10px] font-bold text-zinc-600 mt-5 uppercase tracking-[0.4em]">Decoding Nodes</span>
                         </div>
                         <div id="fileList" class="h-full overflow-y-auto custom-scrollbar p-3 space-y-2"></div>
                     </div>
                 </div>
             </div>
 
-            <!-- 3: Preview -->
             <div class="uniform-panel">
                 <div class="panel-body">
-                    <h2 class="text-xs font-black uppercase tracking-widest text-zinc-500 mb-5 gff">Visual Output</h2>
+                    <h2 class="text-xs font-black uppercase tracking-widest text-zinc-500 mb-5 gff">Output</h2>
                     <div class="scroll-box bg-black/60">
                         <div id="preLoader" class="absolute inset-0 bg-black/80 z-30 hidden items-center justify-center">
                             <i class="fa-solid fa-spinner loader-spin text-yellow-500 text-3xl"></i>
@@ -152,13 +144,10 @@
                         </div>
                         <div id="preMain" class="hidden h-full flex flex-col p-4">
                             <div id="preDisp" class="flex-1 rounded-2xl overflow-hidden flex items-center justify-center relative bg-zinc-950 border border-zinc-900"></div>
-                            <div class="mt-4 p-4 bg-zinc-900 border border-zinc-800 rounded-2xl flex items-center justify-between shadow-2xl">
-                                <div class="truncate mr-4">
-                                    <p id="mName" class="text-[11px] font-bold text-zinc-400 truncate"></p>
-                                    <span id="mSub" class="text-[9px] text-zinc-600 uppercase font-black">Ready</span>
-                                </div>
-                                <a id="dlIcon" href="#" class="h-12 w-12 bg-zinc-800 rounded-xl flex items-center justify-center text-zinc-500 hover:text-yellow-400 hover:bg-zinc-700 transition-all">
-                                    <i class="fa-solid fa-download text-lg"></i>
+                            <div class="mt-4 p-4 bg-zinc-900 border border-zinc-800 rounded-2xl flex items-center justify-between">
+                                <p id="mName" class="text-[11px] font-bold text-zinc-400 truncate pr-4"></p>
+                                <a id="dlIcon" href="#" class="h-10 w-10 bg-zinc-800 rounded-xl flex items-center justify-center text-zinc-500 hover:text-yellow-400 transition-all">
+                                    <i class="fa-solid fa-download"></i>
                                 </a>
                             </div>
                         </div>
@@ -176,8 +165,7 @@
         const fIn = document.getElementById('fileIn');
         fIn.onchange = () => {
             if(fIn.files.length) {
-                const label = fIn.files.length > 1 ? `${fIn.files.length} Files Selected` : fIn.files[0].name;
-                document.getElementById('fileLab').innerText = label;
+                document.getElementById('fileLab').innerText = fIn.files.length > 1 ? `${fIn.files.length} Files Selected` : fIn.files[0].name;
                 document.getElementById('fileLab').classList.add('text-yellow-400');
                 document.getElementById('upIco').className = "fa-solid fa-circle-check text-yellow-500 text-3xl";
             }
@@ -198,28 +186,22 @@
             e.preventDefault();
             if(!fIn.files.length) return;
             document.getElementById('listLoader').style.display = 'flex';
-            document.getElementById('statMsg').innerText = "Processing Data...";
-            
+            document.getElementById('statMsg').innerText = "Processing...";
             const fd = new FormData();
             for(let f of fIn.files) fd.append('asset_bundle', f);
-
             try {
                 const resp = await fetch('/api/extract', { method: 'POST', body: fd });
                 const data = await resp.json();
-                if(data.error) throw new Error(data.error);
-                
                 registry = data.files;
                 filters.clear();
                 buildFilters();
                 drawList();
-                
                 document.getElementById('filterBox').classList.remove('hidden');
                 document.getElementById('zipBox').classList.remove('hidden');
-                document.getElementById('statMsg').innerText = `Sync: ${registry.length} assets loaded.`;
+                document.getElementById('statMsg').innerText = `Loaded ${registry.length} assets.`;
                 document.getElementById('statIco').innerHTML = `<i class="fa-solid fa-check text-emerald-500"></i>`;
             } catch(err) {
-                document.getElementById('statMsg').innerText = err.message;
-                document.getElementById('statIco').innerHTML = `<i class="fa-solid fa-xmark text-red-500"></i>`;
+                document.getElementById('statMsg').innerText = "Error encountered.";
             }
             document.getElementById('listLoader').style.display = 'none';
         };
@@ -249,7 +231,6 @@
             list.innerHTML = '';
             const filtered = registry.filter(f => filters.size === 0 || filters.has(f.label));
             document.getElementById('fileCount').innerText = `${filtered.length} Objects Mapped`;
-            
             filtered.forEach(item => {
                 const row = document.createElement('div');
                 row.className = "flex items-center justify-between p-3.5 bg-zinc-900/40 border border-zinc-800/80 rounded-xl cursor-pointer hover:border-zinc-500 group";
@@ -271,10 +252,9 @@
 
         function getIco(l) {
             const t = l.toLowerCase();
-            if(t.includes('texture') || t.includes('sprite')) return 'fa-image text-yellow-500';
+            if(t.includes('texture')) return 'fa-image text-yellow-500';
             if(t.includes('audio')) return 'fa-waveform-lines text-cyan-400';
             if(t.includes('mesh')) return 'fa-shapes text-purple-400';
-            if(t.includes('video')) return 'fa-film text-red-500';
             return 'fa-file-lines text-zinc-600';
         }
 
@@ -283,33 +263,22 @@
             document.getElementById('preMain').classList.remove('hidden');
             document.getElementById('preLoader').style.display = 'flex';
             if(audio) { audio.pause(); audio = null; }
-            
             const area = document.getElementById('preDisp');
             area.innerHTML = '';
             document.getElementById('mName').innerText = item.name;
-            document.getElementById('mSub').innerText = item.label;
             const url = `/api/extract?download_type=single&file_index=${item.index}`;
             document.getElementById('dlIcon').href = url;
-
             const ext = item.name.split('.').pop().toLowerCase();
             if(['png','jpg','webp'].includes(ext)) {
                 area.innerHTML = `<img src="${url}" class="max-h-full max-w-full object-contain p-2">`;
             } else if(['mp3','wav','ogg'].includes(ext)) {
-                area.innerHTML = `
-                    <div class="flex flex-col items-center gap-8 w-full p-6">
-                        <div class="flex gap-1.5 h-10 items-center" id="wave">
-                            ${Array(25).fill('<div class="wave-bar"></div>').join('')}
-                        </div>
-                        <button onclick="playAud('${url}', this)" class="w-16 h-16 rounded-full bg-cyan-400 text-black flex items-center justify-center"><i class="fa-solid fa-play text-2xl ml-1"></i></button>
-                    </div>`;
-            } else if(ext === 'mp4') {
-                area.innerHTML = `<video src="${url}" controls class="w-full h-full p-1 rounded-xl"></video>`;
+                area.innerHTML = `<div class="flex flex-col items-center gap-8 w-full p-6"><div class="flex gap-1.5 h-10 items-center" id="wave">${Array(25).fill('<div class="wave-bar"></div>').join('')}</div><button onclick="playAud('${url}', this)" class="w-16 h-16 rounded-full bg-cyan-400 text-black flex items-center justify-center"><i class="fa-solid fa-play text-2xl ml-1"></i></button></div>`;
             } else {
                 try {
                     const r = await fetch(url);
                     const t = await r.text();
-                    area.innerHTML = `<pre class="text-[10px] text-zinc-500 p-6 w-full h-full overflow-auto text-left font-mono">${t.slice(0, 5000)}</pre>`;
-                } catch(e) { area.innerHTML = '<span class="text-xs text-zinc-700">Preview Error</span>'; }
+                    area.innerHTML = `<pre class="text-[10px] text-zinc-500 p-6 w-full h-full overflow-auto text-left font-mono">${t.slice(0, 3000)}</pre>`;
+                } catch(e) { area.innerHTML = 'Preview Error'; }
             }
             document.getElementById('preLoader').style.display = 'none';
         }
