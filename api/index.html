@@ -9,6 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
 <script src="https://cdn.babylonjs.com/babylon.js"></script>
 <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
 <style>
 @font-face { font-family: 'GFF-Bold'; src: url('https://dl.dir.freefiremobile.com/common/web_event/common/fonts/website/GFFLatinW05-Bold.woff') format('woff'); }
@@ -19,18 +20,15 @@ body { background: #030305; color: #fff; min-height: 100vh; font-family: 'Inter'
 .brand-strip { width: 100%; height: 60px; background: #000; border-b: 1px solid #111; display: flex; align-items: center; justify-content: center; position: relative; }
 .brand-line { width: 100%; height: 3px; background: var(--ff-yellow); box-shadow: 0 2px 10px rgba(255, 222, 0, 0.3); }
 
-/* Master Grid Layout Workspace */
 .main-grid-container { display: grid; grid-template-columns: repeat(1, 1fr); gap: 24px; max-width: 1400px; margin: 0 auto; padding: 0 20px 40px 20px; }
 @media (min-width: 1024px) { .main-grid-container { grid-template-columns: repeat(3, 1fr); } }
 
-/* Rigid Uniform Layout Sizing Panel Rules */
 .uniform-panel { 
     background: #09090d; border: 1px solid #181822; position: relative; 
     box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8); height: 490px; display: flex; 
     flex-direction: column; transition: height 0.25s cubic-bezier(0.4, 0, 0.2, 1); min-width: 0; 
 }
 
-/* Precise Dynamic Adaptive Expansion for Low File Quantities to Prevent Cropping */
 .uniform-panel.fit-content-low { height: auto !important; min-height: 200px; }
 .uniform-panel.fit-content-low .scrollable-content-box { flex: none; height: auto; overflow: visible !important; }
 .fixed-preview-panel { height: 490px !important; }
@@ -49,28 +47,23 @@ body { background: #030305; color: #fff; min-height: 100vh; font-family: 'Inter'
 .panel-body { padding: 22px; flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
 .scrollable-content-box { flex: 1; background: #040406; border: 1px solid #13131a; border-radius: 14px; overflow: hidden; position: relative; }
 
-/* Switchable Mode Header Row Tabs */
 .tab-row { display: flex; background: #0f0f14; padding: 4px; border-radius: 10px; border: 1px solid #1b1b24; margin-bottom: 14px; gap: 4px; }
 .tab-btn { flex: 1; text-align: center; padding: 7px 4px; font-size: 11px; font-weight: 700; color: #8e8e93; border-radius: 6px; cursor: pointer; transition: all 0.2s; text-transform: uppercase; }
 .tab-btn:hover { color: #fff; background: #14141c; }
 .tab-btn.active { background: #1a1a26; color: var(--ff-yellow); box-shadow: inset 0 1px 2px rgba(0,0,0,0.5); }
 
-/* Environment Segment Switch Controls */
 .env-row { display: flex; background: #07070a; padding: 3px; border-radius: 8px; border: 1px solid #1e1e2b; gap: 3px; }
 .env-btn { flex: 1; text-align: center; padding: 6px 2px; font-size: 10px; font-weight: 800; color: #66666e; border-radius: 5px; cursor: pointer; transition: all 0.15s; text-transform: uppercase; }
 .env-btn:hover { color: #aaa; }
 .env-btn.active { background: var(--ff-yellow); color: #000; font-weight: 900; }
 
-/* Extract Buttons Configurations */
 .btn-mechanical { cursor: pointer; font-family: 'GFF-Bold'; text-transform: uppercase; font-style: italic; display: flex; align-items: center; justify-content: center; border-radius: 14px; gap: 12px; background: var(--ff-yellow); color: #000; box-shadow: 0 5px 0 #bfa600; transition: all 0.1s; user-select: none; }
 .btn-mechanical:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 2px 0 #bfa600; }
 .btn-mechanical:disabled { background: #222226 !important; color: #55555c !important; box-shadow: 0 5px 0 #141416 !important; cursor: not-allowed; transform: none !important; opacity: 0.8; }
 
-/* Desktop Interactive Drag Deck Area Frame */
 .upload-deck { background: #07070a; border: 2px dashed #1e1e2b; border-radius: 14px; display: flex; align-items: center; height: 96px; cursor: pointer; transition: all 0.2s ease-in-out; min-width: 0; position: relative; }
 .upload-deck.dragover-active { border-color: var(--ff-yellow); background: #0f0f12; box-shadow: inset 0 0 12px rgba(255, 222, 0, 0.08); }
 
-/* Multi-Select Wide Filter Custom Dropdown Layout */
 .custom-dropdown { position: relative; width: auto; min-width: 130px; }
 .dropdown-trigger { background: #0e0e14; border: 1px solid #1e1e2b; padding: 8px 12px; border-radius: 8px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 11px; font-weight: 700; color: #e4e4e7; transition: all 0.2s; gap: 8px; }
 .dropdown-trigger:hover { border-color: #3f3f46; background: #14141c; }
@@ -80,25 +73,20 @@ body { background: #030305; color: #fff; min-height: 100vh; font-family: 'Inter'
 .dropdown-item:hover { background: #12121c; color: #fff; }
 .dropdown-item.selected { color: var(--ff-yellow); background: #0d0d14; font-weight: 600; }
 
-/* Cinematic Proportional Aspect Windows Viewports */
 .aspect-16-9-viewport { width: 100%; height: 100%; background: #020203; border-radius: 10px; border: 1px solid #101016; overflow: hidden; display: flex; align-items: center; justify-content: center; position: relative; flex: 1; }
 @media (min-width: 400px) { .aspect-16-9-viewport { aspect-ratio: 16 / 9; height: auto; } }
 
-/* Full Frame Viewport Expansion Framework for Meshes, JSON, and Text Objects */
 .full-viewport-mesh { height: 100% !important; aspect-ratio: auto !important; }
 
-/* Custom Premium Player Isolated Layout Mechanics Module */
 .custom-player-wrapper { display: flex; flex-direction: column; width: 100%; height: 100%; justify-content: space-between; padding: 2px; background: transparent; position: relative; }
 .custom-control-bar { height: 44px; background: #0c0c12; border: 1px solid #1b1b26; border-radius: 10px; display: flex; align-items: center; padding: 0 12px; gap: 14px; margin-top: 8px; flex-shrink: 0; }
 .player-progress-slider { flex: 1; -webkit-appearance: none; appearance: none; height: 4px; background: #1c1c28; border-radius: 2px; outline: none; cursor: pointer; }
 .player-progress-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 10px; height: 10px; border-radius: 50%; background: var(--ff-yellow); box-shadow: 0 0 6px var(--ff-yellow); }
 
-/* Premium Non-Destructive Vector Render Architecture */
 .pixelated-render { max-width: 100%; max-height: 100%; object-fit: contain; width: auto; height: auto; padding: 8px; image-rendering: pixelated; background-image: linear-gradient(45deg, #050508 25%, transparent 25%), linear-gradient(-45deg, #050508 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #050508 75%), linear-gradient(-45deg, transparent 75%, #050508 75%); background-size: 16px 16px; background-position: 0 0, 0 8px, 8px -8px, -8px 0; }
 #audioVisualizerCanvas { width: 100%; height: 100%; background: #020204; display: block; }
 .babylon-canvas-viewport { width: 100%; height: 100%; display: block; outline: none; background: #060609; }
 
-/* Cinematic Overlaid Center-Deck Play Buttons */
 .center-play-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.25); border-radius: 10px; transition: all 0.25s ease; z-index: 20; cursor: pointer; }
 .center-play-overlay.playing-hide { opacity: 0; pointer-events: none; transform: scale(1.15); }
 .center-play-btn-circle { width: 48px; height: 48px; background: rgba(255, 222, 0, 0.9); border: 2px solid #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #000; box-shadow: 0 0 20px rgba(255, 222, 0, 0.4); font-size: 14px; transition: transform 0.2s; }
@@ -261,9 +249,10 @@ let activeCache = [];
 let selectedFilters = new Set();
 let activeExtractionMode = "bundle";
 let activeAstcEnvironment = "live";
+let globalZipBlobInstance = null; // Holds the processed payload archive
 
 const FILTER_ORDER = ["2D Texture", "Mesh", "Audio", "Video", "Text", "JSON"];
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 Megabytes Strict Cap Limit
+const MAX_FILE_SIZE = 5 * 1024 * 1024; 
 
 let audioCtx, audioSource, audioAnalyser, audioAnimationId;
 let babylonEngine, babylonScene;
@@ -299,7 +288,6 @@ fileInput.onchange = () => {
 
 function validateAndRegisterFile(file) {
     if(!file) return;
-    
     if (file.size > MAX_FILE_SIZE) {
         fileInput.value = "";
         fileLabel.innerText = "Tap to upload / Drag & Drop file";
@@ -307,21 +295,18 @@ function validateAndRegisterFile(file) {
         document.getElementById('uploadIcon').className = "fa-solid fa-box-open text-zinc-600 text-lg";
         document.getElementById('fileStatusText').innerText = "LIMIT EXCEEDED";
         document.getElementById('fileStatusText').className = "text-[9px] font-black text-red-500 block gff uppercase tracking-tighter";
-        
         document.getElementById('statusBadge').innerText = "REJECTED";
         document.getElementById('statusBadge').style.color = "var(--ff-red)";
         document.getElementById('statusText').innerText = "SIZE ERROR";
         document.getElementById('statusDescText').innerText = `File is too large (${(file.size / 1024 / 1024).toFixed(2)}MB). Maximum allowed size is 5MB.`;
         return;
     }
-
     fileLabel.innerText = file.name;
     fileLabel.classList.remove('text-zinc-400');
     fileLabel.classList.add('text-[#ffde00]');
     document.getElementById('uploadIcon').className = "fa-solid fa-file-import text-[#ffde00] text-lg";
     document.getElementById('fileStatusText').innerText = "FILE ATTACHED";
     document.getElementById('fileStatusText').className = "text-[9px] font-black text-[#ffde00] block gff uppercase tracking-tighter";
-    
     document.getElementById('statusBadge').innerText = "READY";
     document.getElementById('statusBadge').style.color = "var(--ff-cyan)";
     document.getElementById('statusText').innerText = "LOADED";
@@ -392,7 +377,6 @@ document.getElementById('extractorForm').onsubmit = async (e) => {
         extractBtn.disabled = true;
         btnIcon.className = "fa-solid fa-sync fa-spin text-black";
         btnText.innerText = "Reconstructing...";
-
         document.getElementById('statusBadge').innerText = "NET LOCK";
         document.getElementById('statusBadge').style.color = "var(--ff-yellow)";
         document.getElementById('statusText').innerText = "FETCHING";
@@ -403,13 +387,8 @@ document.getElementById('extractorForm').onsubmit = async (e) => {
         try {
             const remoteFetchUrl = `/api/fetch_astc?id=${idValue}&env=${activeAstcEnvironment}`;
             const response = await fetch(remoteFetchUrl);
-            
-            if (response.status === 404) {
-                throw new Error("Asset structural configuration target maps not found on server cluster (404).");
-            }
-            if (!response.ok) {
-                throw new Error("An error occurred during server reconstruction processing.");
-            }
+            if (response.status === 404) throw new Error("Asset configuration maps not found on server (404).");
+            if (!response.ok) throw new Error("An error occurred during server reconstruction processing.");
 
             const imageBlob = await response.blob();
             const localVirtualUrl = URL.createObjectURL(imageBlob);
@@ -418,9 +397,11 @@ document.getElementById('extractorForm').onsubmit = async (e) => {
                 index: 0,
                 name: `${idValue}.png`,
                 label: "2D Texture",
-                localUrl: localVirtualUrl
+                localUrl: localVirtualUrl,
+                blobData: imageBlob
             }];
             
+            globalZipBlobInstance = null; 
             selectedFilters.clear();
             document.getElementById('listLoadingState').classList.add('hidden');
             renderList(true);
@@ -455,34 +436,62 @@ document.getElementById('extractorForm').onsubmit = async (e) => {
         document.getElementById('statusDescText').innerText = "Please select a file first.";
         return;
     }
-    if(file.size > MAX_FILE_SIZE) {
-        document.getElementById('statusDescText').innerText = "Cannot extract files larger than 5MB.";
-        return;
-    }
 
     extractBtn.disabled = true;
-    btnIcon.className = "fa-solid fa-ellipsis-stroke fa-bounce text-black";
-    btnText.innerText = "Extracting...";
-
+    btnIcon.className = "fa-solid fa-circle-notch fa-spin text-black";
+    btnText.innerText = "Streaming Archive...";
     document.getElementById('statusBadge').innerText = "WORKING";
     document.getElementById('statusBadge').style.color = "var(--ff-yellow)";
     document.getElementById('statusText').innerText = "PROCESSING";
-    document.getElementById('statusDescText').innerText = `Unpacking contents...`;
+    document.getElementById('statusDescText').innerText = `Decompressing raw streams on backend layer...`;
     
     resetAssetWorkspaceToEmpty();
 
     const formData = new FormData();
     formData.append("asset_bundle", file);
-    formData.append("extraction_mode", activeExtractionMode);
 
     try {
         const res = await fetch("/api/extract", { method: "POST", body: formData });
-        const data = await res.json();
-        if(data.error) throw new Error(data.error);
+        if(!res.ok) {
+            const errorData = await res.json().catch(() => ({}));
+            throw new Error(errorData.error || `Server communication exception status standard code: ${res.status}`);
+        }
 
-        activeCache = data.files || [];
+        // Capture complete binary file zip data direct stream
+        const archiveBlob = await res.blob();
+        globalZipBlobInstance = archiveBlob;
+
+        // Unpack layout schema manifest client-side instantly
+        const zipInstance = await JSZip.loadAsync(archiveBlob);
+        const manifestFile = zipInstance.file("manifest.json");
+        if(!manifestFile) throw new Error("Structural payload bundle execution broken: Missing mapping index tracker.");
+
+        const manifestRawText = await manifestFile.async("string");
+        const parsedManifest = JSON.parse(manifestRawText);
+
+        activeCache = [];
+        let counter = 0;
+
+        for(const item of parsedManifest) {
+            const nestedArchivedFile = zipInstance.file(item.path);
+            if(nestedArchivedFile) {
+                const innerBuffer = await nestedArchivedFile.async("arraybuffer");
+                const matchedMime = item.label.toLowerCase().includes('audio') ? 'audio/wav' : item.label.toLowerCase().includes('video') ? 'video/mp4' : 'application/octet-stream';
+                const fileBlob = new Blob([innerBuffer], { type: matchedMime });
+                const virtualLocalUrl = URL.createObjectURL(fileBlob);
+
+                activeCache.push({
+                    index: counter++,
+                    name: item.name,
+                    label: item.label,
+                    zip_path: item.path,
+                    localUrl: virtualLocalUrl,
+                    blobData: fileBlob
+                });
+            }
+        }
+
         selectedFilters.clear();
-        
         document.getElementById('listLoadingState').classList.add('hidden');
         renderList(true); 
         updateFilterMenu();
@@ -492,11 +501,10 @@ document.getElementById('extractorForm').onsubmit = async (e) => {
         
         document.getElementById('statusBadge').innerText = "SUCCESS";
         document.getElementById('statusBadge').style.color = "var(--ff-emerald)";
-        document.getElementById('statusDescText').innerText = `Successfully found ${activeCache.length} items.`;
-
+        document.getElementById('statusDescText').innerText = `Successfully unpacked ${activeCache.length} elements.`;
         document.getElementById('listWindowPanel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
-        if(activeCache.length === 1) {
+        if(activeCache.length > 0) {
             selectFile(activeCache[0], fileList.firstElementChild);
         }
     } catch (err) {
@@ -627,8 +635,7 @@ async function selectFile(item, element) {
     document.getElementById('mediaTitle').innerText = item.name;
     document.getElementById('mediaTypeLabel').innerText = item.label;
     
-    const url = item.localUrl ? item.localUrl : `/api/extract?download_type=single&file_index=${item.index}`;
-    document.getElementById('singleSaveBtn').href = url;
+    document.getElementById('singleSaveBtn').href = item.localUrl;
     document.getElementById('singleSaveBtn').setAttribute('download', item.name);
     
     mediaBox.innerHTML = `
@@ -646,26 +653,17 @@ async function selectFile(item, element) {
                     <canvas id="babylonAssetCanvas" class="babylon-canvas-viewport"></canvas>
                 </div>
             </div>`;
-        initBabylonMeshScene("babylonAssetCanvas", url);
+        initBabylonMeshScene("babylonAssetCanvas", item.localUrl);
         return;
     }
 
     try {
-        let rawBufferBytes;
-        if (item.localUrl) {
-            const fetchResponse = await fetch(item.localUrl);
-            rawBufferBytes = await fetchResponse.arrayBuffer();
-        } else {
-            const fetchResponse = await fetch(url);
-            rawBufferBytes = await fetchResponse.arrayBuffer();
-        }
-
+        const fetchResponse = await fetch(item.localUrl);
+        const rawBufferBytes = await fetchResponse.arrayBuffer();
         const labelNormalized = item.label.toLowerCase();
         
         if (labelNormalized.includes('texture') || labelNormalized.includes('image')) {
-            const imgBlob = new Blob([rawBufferBytes], { type: 'image/png' });
-            const previewImgUrl = URL.createObjectURL(imgBlob);
-            mediaBox.innerHTML = `<div class="aspect-16-9-viewport"><img src="${previewImgUrl}" class="pixelated-render" alt="Texture Preview"></div>`;
+            mediaBox.innerHTML = `<div class="aspect-16-9-viewport"><img src="${item.localUrl}" class="pixelated-render" alt="Texture Preview"></div>`;
         } 
         else if (labelNormalized.includes('audio')) {
             mediaBox.innerHTML = `
@@ -686,12 +684,10 @@ async function selectFile(item, element) {
             setupAudioEngineContext(rawBufferBytes);
         }
         else if (labelNormalized.includes('video')) {
-            const videoBlob = new Blob([rawBufferBytes], { type: 'video/mp4' });
-            const previewVideoUrl = URL.createObjectURL(videoBlob);
             mediaBox.innerHTML = `
                 <div class="custom-player-wrapper">
                     <div class="aspect-16-9-viewport">
-                        <video id="customVideoPlayerElement" src="${previewVideoUrl}" class="w-full h-full object-contain"></video>
+                        <video id="customVideoPlayerElement" src="${item.localUrl}" class="w-full h-full object-contain"></video>
                         <div class="center-play-overlay" id="videoCenterPlayOverlay">
                             <div class="center-play-btn-circle"><i class="fa-solid fa-play ml-0.5"></i></div>
                         </div>
@@ -722,7 +718,6 @@ async function selectFile(item, element) {
 function initBabylonMeshScene(canvasId, modelUrl) {
     const canvas = document.getElementById(canvasId);
     babylonEngine = new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true });
-    
     babylonScene = new BABYLON.Scene(babylonEngine);
     babylonScene.clearColor = new BABYLON.Color4(0.024, 0.024, 0.035, 1.0);
     
@@ -738,38 +733,27 @@ function initBabylonMeshScene(canvasId, modelUrl) {
     BABYLON.SceneLoader.Append("", modelUrl, babylonScene, function (scene) {
         scene.executeWhenReady(() => {
             if (scene.meshes.length === 0) return;
-            
-            let min = null;
-            let max = null;
-            
+            let min = null; let max = null;
             scene.meshes.forEach(mesh => {
                 if (!mesh.getBoundingInfo()) return;
                 const boundingInfo = mesh.getBoundingInfo();
                 const vectors = boundingInfo.boundingBox.vectorsWorld;
-                
                 vectors.forEach(v => {
                     if (!min) { min = v.clone(); max = v.clone(); return; }
                     min.x = Math.min(min.x, v.x); min.y = Math.min(min.y, v.y); min.z = Math.min(min.z, v.z);
                     max.x = Math.max(max.x, v.x); max.y = Math.max(max.y, v.y); max.z = Math.max(max.z, v.z);
                 });
-                
                 if (mesh.material) {
                     mesh.material.backFaceCulling = false;
                     if (mesh.material.pbr) {
-                        mesh.material.metallic = 0.1;
-                        mesh.material.roughness = 0.6;
+                        mesh.material.metallic = 0.1; mesh.material.roughness = 0.6;
                     }
                 }
             });
-
             if (min && max) {
                 const center = BABYLON.Vector3.Center(min, max);
                 const distance = BABYLON.Vector3.Distance(min, max);
-                
-                scene.meshes.forEach(m => {
-                    if (!m.parent) { m.position.subtractInPlace(center); }
-                });
-                
+                scene.meshes.forEach(m => { if (!m.parent) { m.position.subtractInPlace(center); } });
                 camera.target = BABYLON.Vector3.Zero();
                 camera.radius = distance * 1.15;
             }
@@ -793,10 +777,7 @@ function setupAudioEngineContext(arrayBuffer) {
     const canvas = document.getElementById('audioVisualizerCanvas');
     const ctx = canvas.getContext('2d');
 
-    let audioBuffer = null;
-    let startTime = 0;
-    let elapsedPauseTime = 0;
-    let isPlaying = false;
+    let audioBuffer = null; let startTime = 0; let elapsedPauseTime = 0; let isPlaying = false;
 
     canvas.width = canvas.offsetWidth;
     canvas.height = canvas.offsetHeight;
@@ -809,9 +790,7 @@ function setupAudioEngineContext(arrayBuffer) {
     audioCtx.decodeAudioData(arrayBuffer.slice(0), (buffer) => {
         audioBuffer = buffer;
         timeTotal.innerText = formatTimeLayout(buffer.duration);
-    }, () => {
-        document.getElementById('statusDescText').innerText = "Audio decryption node processing aborted.";
-    });
+    }, () => {});
 
     function createAudioSourceNode() {
         playbackNode = audioCtx.createBufferSource();
@@ -819,12 +798,10 @@ function setupAudioEngineContext(arrayBuffer) {
         playbackNode.connect(audioAnalyser);
         playbackNode.onended = () => {
             if (audioCtx.currentTime - startTime >= audioBuffer.duration) {
-                isPlaying = false;
-                elapsedPauseTime = 0;
+                isPlaying = false; elapsedPauseTime = 0;
                 playBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
                 centerOverlay.classList.remove('playing-hide');
-                progressBar.value = 0;
-                timeCurrent.innerText = "00:00";
+                progressBar.value = 0; timeCurrent.innerText = "00:00";
             }
         };
     }
@@ -832,12 +809,10 @@ function setupAudioEngineContext(arrayBuffer) {
     function playTrack() {
         if (!audioBuffer) return;
         if (audioCtx.state === 'suspended') audioCtx.resume();
-        
         createAudioSourceNode();
         startTime = audioCtx.currentTime - elapsedPauseTime;
         playbackNode.start(0, elapsedPauseTime);
         isPlaying = true;
-        
         playBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
         centerOverlay.classList.add('playing-hide');
         updateAudioProgressBarLoop();
@@ -932,8 +907,7 @@ function setupVideoEngineLayout() {
     v.onended = () => {
         playBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
         centerOverlay.classList.remove('playing-hide');
-        progressBar.value = 0;
-        timeCurrent.innerText = "00:00";
+        progressBar.value = 0; timeCurrent.innerText = "00:00";
     };
 }
 
@@ -941,10 +915,8 @@ function cleanPreviousMediaTracks() {
     if (audioAnimationId) cancelAnimationFrame(audioAnimationId);
     if (playbackNode) { try { playbackNode.stop(); } catch(e){} }
     if (audioCtx) { audioCtx.close(); audioCtx = null; }
-    
     const oldVideo = document.getElementById('customVideoPlayerElement');
     if (oldVideo) { oldVideo.pause(); oldVideo.src = ""; oldVideo.load(); }
-
     window.removeEventListener("resize", onWindowResizeBabylonHook);
     if (babylonEngine) { babylonEngine.dispose(); babylonEngine = null; }
     if (babylonScene) { babylonScene.dispose(); babylonScene = null; }
@@ -959,8 +931,9 @@ function formatTimeLayout(secs) {
 
 async function downloadGroupedZip() {
     if(activeCache.length === 0) return;
-    
-    if(activeCache[0].localUrl) {
+
+    // Local ASTC single download framework block handler
+    if(activeExtractionMode === "astc" && activeCache[0].localUrl) {
         const linkElement = document.createElement("a");
         linkElement.href = activeCache[0].localUrl;
         linkElement.download = activeCache[0].name;
@@ -970,14 +943,33 @@ async function downloadGroupedZip() {
         return;
     }
 
-    const triggerSpan = document.getElementById('filterTrigger').querySelector('span').innerText;
-    let indicesParam = "";
-    if (selectedFilters.size > 0) {
-        const filteredItems = activeCache.filter(i => selectedFilters.has(i.label));
-        indicesParam = "&indices=" + filteredItems.map(item => item.index).join(',');
+    if(!globalZipBlobInstance) return;
+
+    // Filter validation layer
+    if (selectedFilters.size === 0) {
+        const linkElement = document.createElement("a");
+        linkElement.href = URL.createObjectURL(globalZipBlobInstance);
+        linkElement.download = "extracted_assets.zip";
+        document.body.appendChild(linkElement);
+        linkElement.click();
+        document.body.removeChild(linkElement);
+    } else {
+        // Fast dynamic sub-archive reconstruction inside user client memory
+        const subZip = new JSZip();
+        const filteredFiles = activeCache.filter(i => selectedFilters.has(i.label));
+        
+        for(const item of filteredFiles) {
+            subZip.file(item.zip_path, item.blobData);
+        }
+        
+        const partialArchiveBlob = await subZip.generateAsync({ type: "blob" });
+        const linkElement = document.createElement("a");
+        linkElement.href = URL.createObjectURL(partialArchiveBlob);
+        linkElement.download = "filtered_assets.zip";
+        document.body.appendChild(linkElement);
+        linkElement.click();
+        document.body.removeChild(linkElement);
     }
-    
-    window.location.href = `/api/extract?download_type=zip&mode=grouped${indicesParam}`;
 }
 </script>
 </body>
