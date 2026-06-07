@@ -7,7 +7,6 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
-<!-- Production Babylon.js Structural Loader Packages Engine -->
 <script src="https://cdn.babylonjs.com/babylon.js"></script>
 <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
 
@@ -59,7 +58,7 @@ body { background: #030305; color: #fff; min-height: 100vh; font-family: 'Inter'
 /* Extract Buttons Configurations */
 .btn-mechanical { cursor: pointer; font-family: 'GFF-Bold'; text-transform: uppercase; font-style: italic; display: flex; align-items: center; justify-content: center; border-radius: 14px; gap: 12px; background: var(--ff-yellow); color: #000; box-shadow: 0 5px 0 #bfa600; transition: all 0.1s; user-select: none; }
 .btn-mechanical:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 2px 0 #bfa600; }
-.btn-mechanical:disabled { background: #222226 !important; color: #55555c !important; box-shadow: 0 5px 0 #141416 !important; cursor: not-allowed !important; transform: none !important; opacity: 0.8; }
+.btn-mechanical:disabled { background: #222226 !important; color: #55555c !important; box-shadow: 0 5px 0 #141416 !important; cursor: not-allowed !allowed; transform: none !important; opacity: 0.8; }
 
 /* Desktop Interactive Drag Deck Area Frame */
 .upload-deck { background: #07070a; border: 2px dashed #1e1e2b; border-radius: 14px; display: flex; align-items: center; height: 96px; cursor: pointer; transition: all 0.2s ease-in-out; min-width: 0; position: relative; }
@@ -124,7 +123,6 @@ body { background: #030305; color: #fff; min-height: 100vh; font-family: 'Inter'
 </div>
 
 <div class="main-grid-container">
-    <!-- Column 1: Config & Drag Upload Deck -->
     <div class="uniform-panel panel-1">
         <div class="panel-body justify-between space-y-4">
             <div>
@@ -150,7 +148,6 @@ body { background: #030305; color: #fff; min-height: 100vh; font-family: 'Inter'
                     <input type="file" id="fileInput" class="hidden">
                 </div>
                 
-                <!-- Refined Ergonomic Separation Buffer Padding -->
                 <div class="h-5 flex-shrink-0"></div>
                 
                 <button type="submit" id="extractBtn" class="btn-mechanical w-full h-12 text-sm font-bold italic flex-shrink-0">
@@ -169,7 +166,6 @@ body { background: #030305; color: #fff; min-height: 100vh; font-family: 'Inter'
         </div>
     </div>
 
-    <!-- Column 2: Extracted Asset Array Register List -->
     <div id="listWindowPanel" class="uniform-panel panel-2">
         <div class="panel-body">
             <div class="flex items-center justify-between mb-4 border-b border-zinc-900 pb-3 flex-shrink-0 min-w-0">
@@ -205,7 +201,6 @@ body { background: #030305; color: #fff; min-height: 100vh; font-family: 'Inter'
         </div>
     </div>
 
-    <!-- Column 3: Fixed Live Preview Frame Space Workspace -->
     <div id="previewTargetWorkspace" class="uniform-panel panel-3 fixed-preview-panel">
         <div class="panel-body">
             <div class="mb-4 border-b border-zinc-900 pb-3 flex-shrink-0">
@@ -478,7 +473,6 @@ async function selectFile(item, element) {
             </div>`;
         initBabylonMeshScene("babylonAssetCanvas", url, item.name);
     } else if(['png','jpg','jpeg','webp'].includes(ext) || item.label.toLowerCase().includes('texture')) {
-        // Render 100% full, structural texture architecture (No cropping, completely unzoomed)
         mediaBox.innerHTML = `
             <div class="custom-player-wrapper h-full">
                 <div class="aspect-16-9-viewport full-viewport-mesh">
@@ -497,9 +491,15 @@ async function selectFile(item, element) {
                 <div class="custom-control-bar">
                     <input type="range" id="videoTimeline" class="player-progress-slider" value="0" min="0" max="100">
                     <span id="videoTimeLabel" class="text-[9px] font-mono text-zinc-500 select-none flex-shrink-0">00:00</span>
-                    <button id="videoLoopBtn" class="text-zinc-600 hover:text-zinc-400 transition-all text-[11px] flex-shrink-0" title="Toggle Loop"><i class="fa-solid fa-rotate-right"></i></button>
-                    <!-- Play trigger fixed seamlessly over on the right hand side -->
-                    <button id="videoPlayBtn" class="text-zinc-400 hover:text-[#ffde00] transition-all text-xs flex-shrink-0 bg-zinc-900 border border-zinc-800 w-7 h-7 rounded-md flex items-center justify-center shadow-inner"><i class="fa-solid fa-play"></i></button>
+                    
+                    <div class="flex items-center gap-2 flex-shrink-0">
+                        <button id="videoLoopBtn" class="w-7 h-7 rounded-md bg-zinc-900 border border-zinc-800 text-zinc-500 hover:text-[#00ffa3] transition-all text-[11px] flex items-center justify-center" title="Toggle Loop">
+                            <i class="fa-solid fa-rotate-right"></i>
+                        </button>
+                        <button id="videoPlayBtn" class="text-zinc-400 hover:text-[#ffde00] transition-all text-xs bg-zinc-900 border border-zinc-800 w-7 h-7 rounded-md flex items-center justify-center shadow-inner">
+                            <i class="fa-solid fa-play"></i>
+                        </button>
+                    </div>
                 </div>
             </div>`;
         initCustomVideoController();
@@ -516,9 +516,15 @@ async function selectFile(item, element) {
                 <div class="custom-control-bar">
                     <input type="range" id="audioTimeline" class="player-progress-slider" value="0" min="0" max="100">
                     <span id="audioTimeLabel" class="text-[9px] font-mono text-zinc-500 select-none flex-shrink-0">00:00</span>
-                    <button id="audioLoopBtn" class="text-zinc-600 hover:text-zinc-400 transition-all text-[11px] flex-shrink-0" title="Toggle Loop"><i class="fa-solid fa-rotate-right"></i></button>
-                    <!-- Play trigger fixed seamlessly over on the right hand side -->
-                    <button id="audioPlayBtn" class="text-zinc-400 hover:text-[#ffde00] transition-all text-xs flex-shrink-0 bg-zinc-900 border border-zinc-800 w-7 h-7 rounded-md flex items-center justify-center shadow-inner"><i class="fa-solid fa-play"></i></button>
+                    
+                    <div class="flex items-center gap-2 flex-shrink-0">
+                        <button id="audioLoopBtn" class="w-7 h-7 rounded-md bg-zinc-900 border border-zinc-800 text-zinc-500 hover:text-[#00ffa3] transition-all text-[11px] flex items-center justify-center" title="Toggle Loop">
+                            <i class="fa-solid fa-rotate-right"></i>
+                        </button>
+                        <button id="audioPlayBtn" class="text-zinc-400 hover:text-[#ffde00] transition-all text-xs bg-zinc-900 border border-zinc-800 w-7 h-7 rounded-md flex items-center justify-center shadow-inner">
+                            <i class="fa-solid fa-play"></i>
+                        </button>
+                    </div>
                 </div>
             </div>`;
         initCustomAudioController();
@@ -634,7 +640,9 @@ function initCustomVideoController() {
         e.stopPropagation();
         video.loop = !video.loop;
         loopBtn.classList.toggle('text-[#00ffa3]', video.loop);
-        loopBtn.classList.toggle('text-zinc-600', !video.loop);
+        loopBtn.classList.toggle('border-[#00ffa3]', video.loop);
+        loopBtn.classList.toggle('text-zinc-500', !video.loop);
+        loopBtn.classList.toggle('border-zinc-800', !video.loop);
     };
 
     video.ontimeupdate = () => {
@@ -688,7 +696,9 @@ function initCustomAudioController() {
         e.stopPropagation();
         audio.loop = !audio.loop;
         loopBtn.classList.toggle('text-[#00ffa3]', audio.loop);
-        loopBtn.classList.toggle('text-zinc-600', !audio.loop);
+        loopBtn.classList.toggle('border-[#00ffa3]', audio.loop);
+        loopBtn.classList.toggle('text-zinc-500', !audio.loop);
+        loopBtn.classList.toggle('border-zinc-800', !audio.loop);
     };
 
     audio.ontimeupdate = () => {
