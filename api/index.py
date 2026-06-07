@@ -20,7 +20,6 @@ import UnityPy
 app = Flask(__name__)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 HTML_PATH = os.path.join(BASE_DIR, 'index.html')
-GLOBAL_CACHE_REGISTRY = {}
 
 # Strict 5MB file cap matching deployment platform limits
 MAX_FILE_SIZE = 5 * 1024 * 1024 
@@ -230,23 +229,18 @@ def handle_remote_astc_reconstruction():
         return jsonify({"error": f"Asset target ID {asset_id} not found on server storage partition"}), 404
 
     try:
-        # Extract headers structural sizes
         w, h, bw, bh = parse_raw_astc_header(rgb_bytes)
         sa_w, sa_h, sa_bw, sa_bh = parse_raw_astc_header(sa_bytes)
 
-        # Decode compressed channels into pure RGBA byte-streams
         decoded_rgb = texture2ddecoder.decode_astc(rgb_bytes[16:], w, h, bw, bh)
         decoded_sa = texture2ddecoder.decode_astc(sa_bytes[16:], sa_w, sa_h, sa_bw, sa_bh)
 
-        # Instantiating pure images from decoders
         img_rgb = Image.frombytes("RGBA", (w, h), decoded_rgb)
         img_sa = Image.frombytes("RGBA", (sa_w, sa_h), decoded_sa)
 
-        # Isolate individual color components 
         r, g, b, _ = img_rgb.split()
         alpha_channel, _, _, _ = img_sa.split()
         
-        # Merge explicitly and handle transpositions to keep previews completely clear
         final_transparent_image = Image.merge("RGBA", (r, g, b, alpha_channel))
 
         output_buffer = io.BytesIO()
@@ -262,67 +256,42 @@ def handle_remote_astc_reconstruction():
     except Exception as error_log:
         return jsonify({"error": f"Decoding runtime malfunction: {str(error_log)}"}), 500
 
-@app.route('/api/extract', methods=['GET', 'POST'])
+@app.route('/api/extract', methods=['POST'])
 def handle_extraction():
-    global GLOBAL_CACHE_REGISTRY
-    download_type = request.args.get('download_type', '')
-
-    if download_type == 'zip':
-        if not GLOBAL_CACHE_REGISTRY.get('extracted'): return jsonify({"error": "No cache"}), 400
-        mode = request.args.get('mode', 'normal')
-        filter_indices = request.args.get('indices', '')
-        target_list = GLOBAL_CACHE_REGISTRY['extracted']
-        
-        if filter_indices:
-            idx_list = [int(i) for i in filter_indices.split(',') if i.isdigit()]
-            target_list = [item for item in target_list if item['index'] in idx_list]
-
-        zip_io = io.BytesIO()
-        with zipfile.ZipFile(zip_io, "w", zipfile.ZIP_DEFLATED) as zf:
-            for item in target_list:
-                path = item['zip_path'] if mode == 'grouped' else item['name']
-                zf.writestr(path, item['bytes'])
-        zip_io.seek(0)
-        
-        orig_filename = GLOBAL_CACHE_REGISTRY.get('original_name', 'assets')
-        clean_name = re.split(r'[-.]', orig_filename)[0]
-        return send_file(zip_io, mimetype='application/zip', as_attachment=True, download_name=f"{clean_name}[Extracted].zip")
-
-    elif download_type == 'single':
-        file_idx = int(request.args.get('file_index', -1))
-        if not GLOBAL_CACHE_REGISTRY.get('extracted') or file_idx < 0 or file_idx >= len(GLOBAL_CACHE_REGISTRY['extracted']):
-            return jsonify({"error": "Index error"}), 400
-        item = GLOBAL_CACHE_REGISTRY['extracted'][file_idx]
-        return send_file(io.BytesIO(item['bytes']), mimetype='application/octet-stream', as_attachment=True, download_name=item['name'])
-
-    if 'asset_bundle' not in request.files: return jsonify({"error": "No file"}), 400
+    # This route is now completely stateless. 
+    # It takes the input bundle, parses it in memory, and passes everything right back to the browser.
+    if 'asset_bundle' not in request.files: return jsonify({"error": "No file payload found"}), 400
     
     try:
         uploaded_file = request.files['asset_bundle']
-        
         uploaded_file.seek(0, os.SEEK_END)
         file_length = uploaded_file.tell()
         uploaded_file.seek(0)
 
         if file_length > MAX_FILE_SIZE:
-            return jsonify({"error": f"File too large. Maximum size is 5MB. Submitted: {(file_length/1024/1024):.2f}MB"}), 400
+            return jsonify({"error": f"File exceeds 5MB platform limits."}), 400
 
-        GLOBAL_CACHE_REGISTRY['original_name'] = uploaded_file.filename
         raw_bytes = uploaded_file.read()
         decompressed_data = decompress_stream(raw_bytes)
-        extracted_list = []
         json_manifest = []
         
+        # Unpack KTX formats directly
         if decompressed_data.startswith(b'\xABKTX 11\xBB\r\n\x1A\n'):
             try:
-                png = convert_ktx_to_png_fallback(decompressed_data)
+                png_bytes = convert_ktx_to_png_fallback(decompressed_data)
                 name = os.path.splitext(uploaded_file.filename)[0] + ".png"
-                extracted_list.append({'index': 0, 'name': name, 'zip_path': f"Textures/{name}", 'bytes': png, 'label': "KTX Image"})
-                json_manifest.append({'index': 0, 'name': name, 'path': f"Textures/{name}", 'label': "KTX Image"})
-                GLOBAL_CACHE_REGISTRY['extracted'] = extracted_list
+                # Send back the actual file content encoded as hex/base64 so the server doesn't need to save a cache!
+                json_manifest.append({
+                    'index': 0, 
+                    'name': name, 
+                    'path': f"Textures/{name}", 
+                    'label': "KTX Image",
+                    'hex_data': png_bytes.hex()
+                })
                 return jsonify({"files": json_manifest})
             except: pass
 
+        # Unpack AssetBundles in memory
         env = UnityPy.load(decompressed_data)
         counter = 0
         seen_md5 = set()
@@ -333,14 +302,18 @@ def handle_extraction():
                 h = hashlib.md5(fbytes).hexdigest()
                 if h not in seen_md5:
                     seen_md5.add(h)
-                    extracted_list.append({'index': counter, 'name': fname, 'zip_path': zpath, 'bytes': fbytes, 'label': tlabel})
-                    json_manifest.append({'index': counter, 'name': fname, 'path': zpath, 'label': tlabel})
+                    json_manifest.append({
+                        'index': counter, 
+                        'name': fname, 
+                        'path': zpath, 
+                        'label': tlabel,
+                        'hex_data': fbytes.hex()
+                    })
                     counter += 1
         
         del env
         gc.collect()
-        if not extracted_list: return jsonify({"error": "No assets found"}), 400
-        GLOBAL_CACHE_REGISTRY['extracted'] = extracted_list
+        if not json_manifest: return jsonify({"error": "No valid assets found in payload"}), 400
         return jsonify({"files": json_manifest})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
