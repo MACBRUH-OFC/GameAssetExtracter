@@ -7,68 +7,75 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
 <style>
 @font-face { font-family: 'GFF-Bold'; src: url('https://dl.dir.freefiremobile.com/common/web_event/common/fonts/website/GFFLatinW05-Bold.woff') format('woff'); }
 :root { --ff-yellow: #ffde00; --ff-emerald: #00ffa3; --ff-red: #ff3e3e; --ff-cyan: #38bdf8; }
-body { background: #000; color: #fff; min-height: 100vh; background-image: url('https://dl.dir.freefiremobile.com/common/web_event/official2/dist/dist/client/img/bg_pc.617c669.jpg'); background-size: cover; background-attachment: fixed; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+body { background: #000; color: #fff; min-height: 100vh; background-image: url('https://dl.dir.freefiremobile.com/common/web_event/official2/dist/client/img/bg_pc.617c669.jpg'); background-size: cover; background-attachment: fixed; font-family: 'Inter', sans-serif; overflow-x: hidden; }
 body::before { content: ""; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.94); z-index: -1; }
 .gff { font-family: 'GFF-Bold', sans-serif; }
 
-/* Main layout constraints: Left Square, Right Rounded */
-.main-grid-container { display: grid; grid-template-columns: repeat(1, 1fr); gap: 24px; max-width: 1400px; margin: 0 auto; padding: 0 20px; }
+/* Main Brand Navigation Bar & Trim Accent */
+.brand-strip { width: 100%; height: 60px; background: #000; border-b: 1px solid #111; display: flex; align-items: center; justify-content: center; position: relative; }
+.brand-line { width: 100%; height: 3px; background: var(--ff-yellow); box-shadow: 0 2px 10px rgba(255, 222, 0, 0.3); }
+
+/* Main Layout Architecture */
+.main-grid-container { display: grid; grid-template-columns: repeat(1, 1fr); gap: 24px; max-width: 1400px; margin: 0 auto; padding: 0 20px 40px 20px; }
 @media (min-width: 1024px) { .main-grid-container { grid-template-columns: repeat(3, 1fr); } }
 
 .uniform-panel { 
     background: #0a0a0a; border: 1px solid #1f1f1f; position: relative; 
-    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8); height: 420px; display: flex; 
-    flex-direction: column; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    min-width: 0; /* Hard stop for flex/grid expansion */
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8); height: 450px; display: flex; 
+    flex-direction: column; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); min-width: 0; 
 }
 
-/* Dynamic height handling for low asset counts on desktop */
-@media (min-width: 1024px) { 
-    .uniform-panel.adaptive-low-count { height: auto; min-height: 220px; max-height: 420px; } 
-}
+/* Perfect Dynamic Fit Styles for Low File Counts */
+.uniform-panel.fit-content { height: auto !important; min-height: 200px; }
+.uniform-panel.fit-content .scrollable-content-box { flex: none; height: auto; max-height: 280px; }
 
-/* Left square / Right rounded logic for the outer container */
 @media (min-width: 1024px) {
     .panel-1 { border-radius: 24px 0 0 24px; }
     .panel-2 { border-radius: 0; }
     .panel-3 { border-radius: 0 24px 24px 0; }
 }
 @media (max-width: 1023px) {
-    .uniform-panel { border-radius: 16px; margin-bottom: 16px; height: auto; min-height: 200px; }
-    #listWindowPanel { height: 180px; overflow: hidden; }
-    #listWindowPanel.expanded { height: 420px; }
+    .uniform-panel { border-radius: 16px; margin-bottom: 16px; height: auto !important; }
+    .scrollable-content-box { min-height: 180px; }
 }
 
 .uniform-panel::before { content: ""; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--ff-yellow); z-index: 10; }
-.panel-1::before { border-radius: 24px 0 0 24px; }
-@media (max-width: 1023px) { .panel-1::before { border-radius: 16px 0 0 16px; } }
 
 .panel-body { padding: 24px; flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
-.scrollable-content-box { flex: 1; background: #060608; border: 1px solid #1a1a1f; border-radius: 16px; overflow: hidden; position: relative; min-height: 110px; }
+.scrollable-content-box { flex: 1; background: #060608; border: 1px solid #1a1a1f; border-radius: 16px; overflow: hidden; position: relative; }
 
-/* Custom Buttons & Elements */
+/* Switcher Control Tabs Layout */
+.tab-row { display: flex; background: #111115; padding: 4px; border-radius: 12px; border: 1px solid #1f1f26; margin-bottom: 16px; gap: 4px; }
+.tab-btn { flex: 1; text-align: center; padding: 8px 4px; font-size: 11px; font-weight: 700; color: #a1a1aa; border-radius: 8px; cursor: pointer; transition: all 0.2s; text-transform: uppercase; border: 1px solid transparent; }
+.tab-btn:hover { color: #fff; background: #16161f; }
+.tab-btn.active { background: #1a1a24; color: var(--ff-yellow); border-color: #2a2a38; box-shadow: inset 0 1px 3px rgba(0,0,0,0.4); }
+
+/* Interface Components */
 .btn-mechanical { cursor: pointer; font-family: 'GFF-Bold'; text-transform: uppercase; font-style: italic; display: flex; align-items: center; justify-content: center; border-radius: 16px; gap: 12px; background: var(--ff-yellow); color: #000; box-shadow: 0 5px 0 #c2a900; transition: all 0.1s; }
 .btn-mechanical:active { transform: translateY(2px); box-shadow: 0 2px 0 #c2a900; }
 
 .upload-deck { background: #121212; border: 2px dashed #2a2a2a; border-radius: 20px; display: flex; align-items: center; height: 110px; cursor: pointer; transition: all 0.2s; min-width: 0; }
 .upload-deck.dragover { border-color: var(--ff-yellow); background: #161612; }
 
-/* Custom Dropdown Styling */
+/* Enhanced Filter Dropdown Option Triggers */
 .custom-dropdown { position: relative; width: 100%; }
-.dropdown-trigger { background: #121216; border: 1px solid #272732; padding: 8px 12px; border-radius: 10px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 11px; font-weight: 700; color: #d4d4d8; }
-.dropdown-trigger:hover { border-color: #444; }
-.dropdown-menu { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #0f0f13; border: 1px solid #272732; border-radius: 12px; z-index: 50; max-height: 180px; overflow-y: auto; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.6); }
+.dropdown-trigger { background: #121216; border: 1px solid #272732; padding: 8px 14px; border-radius: 10px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 11px; font-weight: 700; color: #e4e4e7; transition: all 0.2s; }
+.dropdown-trigger:hover { border-color: #3f3f46; background: #16161f; }
+.dropdown-menu { position: absolute; top: calc(100% + 6px); left: 0; right: 0; background: #0c0c10; border: 1px solid #272732; border-radius: 12px; z-index: 50; max-height: 220px; overflow-y: auto; display: none; box-shadow: 0 15px 35px rgba(0,0,0,0.7); }
 .dropdown-menu.active { display: block; }
-.dropdown-item { padding: 8px 12px; font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: background 0.2s; text-align: left; }
-.dropdown-item:hover { background: #1a1a22; color: #fff; }
-.dropdown-item.selected { color: var(--ff-yellow); font-weight: bold; }
+.dropdown-item { padding: 9px 14px; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; transition: all 0.15s; border-bottom: 1px solid #14141a; color: #a1a1aa; }
+.dropdown-item:hover { background: #171722; color: #fff; }
+.dropdown-item.selected { color: var(--ff-yellow); background: #12121a; font-weight: 600; }
 
-/* Audio Visualizer Layout rules */
-#waveCanvas { width: 100%; height: 55px; background: #070709; border-radius: 8px; }
+/* Media Visualization Assets */
+#waveCanvas { width: 100%; height: 60px; }
 .pixelated-render { image-rendering: pixelated; max-height: 100%; max-width: 100%; object-fit: contain; }
+#threeCanvasContainer { width: 100%; height: 100%; position: relative; outline: none; background: #070709; }
 .custom-scrollbar::-webkit-scrollbar { width: 4px; }
 .custom-scrollbar::-webkit-scrollbar-thumb { background: #222227; border-radius: 10px; }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--ff-yellow); }
@@ -76,16 +83,20 @@ body::before { content: ""; position: fixed; inset: 0; background: rgba(0, 0, 0,
 </head>
 <body>
 
-<div class="flex flex-col items-center py-8 px-4 select-none">
-    <img src="https://dl.dir.freefiremobile.com/common/web_event/official2/dist/client/img/full_logo.969f536.png" class="h-8 mb-4 object-contain" alt="Free Fire Logo">
+<div class="brand-strip">
+    <img src="https://dl.dir.freefiremobile.com/common/web_event/official2/dist/client/img/full_logo.969f536.png" class="h-7 object-contain" alt="Free Fire Logo">
+</div>
+<div class="brand-line"></div>
+
+<div class="flex flex-col items-center pt-8 pb-6 px-4 select-none">
     <div class="text-center gff tracking-tight">
-        <span class="text-[44px] md:text-[60px] font-black italic block leading-[0.8]">ASSETS</span>
-        <span class="text-[44px] md:text-[60px] font-black italic block text-[#ffde00] leading-[0.9]">EXTRACTOR</span>
+        <span class="text-[42px] md:text-[56px] font-black italic block leading-[0.8]">ASSETS</span>
+        <span class="text-[42px] md:text-[56px] font-black italic block text-[#ffde00] leading-[0.9]">EXTRACTOR</span>
     </div>
-    <div class="flex items-center gap-3 mt-3 opacity-90">
-        <svg class="w-3.5 h-3.5 text-[#ffde00] animate-pulse" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
-        <span class="text-[10px] md:text-[11px] font-extrabold tracking-[0.25em] uppercase text-zinc-400">AssetBundle • KTX • Unity Assets Extractor</span>
-        <svg class="w-3.5 h-3.5 text-[#ffde00] animate-pulse" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
+    <div class="flex items-center gap-3 mt-4 opacity-75">
+        <svg class="w-3.5 h-3.5 text-[#ffde00]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
+        <span class="text-[10px] md:text-[11px] font-bold tracking-[0.22em] uppercase text-zinc-400">AssetBundle • KTX • Unity Assets Extractor</span>
+        <svg class="w-3.5 h-3.5 text-[#ffde00]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
     </div>
 </div>
 
@@ -94,8 +105,15 @@ body::before { content: ""; position: fixed; inset: 0; background: rgba(0, 0, 0,
         <div class="panel-body justify-between">
             <div>
                 <h2 class="text-xs font-black text-white uppercase tracking-wider mb-1 gff">Input Stream</h2>
-                <p class="text-[11px] text-zinc-500">Initialize asset mapping sequence.</p>
+                <p class="text-[11px] text-zinc-500 mb-3">Select parsing workspace paradigm manually.</p>
+                
+                <div class="tab-row" id="extractionModeTabs">
+                    <div class="tab-btn active" data-mode="bundle">AssetBundle</div>
+                    <div class="tab-btn" data-mode="ktx">KTX Format</div>
+                    <div class="tab-btn" data-mode="unity">Unity Raw</div>
+                </div>
             </div>
+            
             <form id="extractorForm" class="flex-1 flex flex-col justify-center space-y-4 my-2 min-w-0">
                 <div class="upload-deck" id="dropZone" onclick="document.getElementById('fileInput').click()">
                     <div class="w-16 h-full flex items-center justify-center border-r border-zinc-800 flex-shrink-0">
@@ -108,16 +126,17 @@ body::before { content: ""; position: fixed; inset: 0; background: rgba(0, 0, 0,
                 </div>
                 <input type="file" id="fileInput" class="hidden">
                 <button type="submit" class="btn-mechanical w-full h-14 text-sm font-bold italic flex-shrink-0">
-                    <i class="fa-solid fa-bolt"></i> Extract Now
+                    <i class="fa-solid fa-bolt"></i> Extract Package
                 </button>
             </form>
+            
             <div class="bg-[#121212] border border-zinc-800/50 rounded-xl p-3 flex items-center gap-3 flex-shrink-0 min-w-0">
                 <div id="statusIcon" class="text-zinc-600 flex-shrink-0"><i class="fa-solid fa-terminal text-xs"></i></div>
                 <div class="flex-1 min-w-0 text-left">
                     <span id="statusText" class="block text-[8px] font-black text-zinc-500 uppercase gff">System Log</span>
-                    <p id="statusDescText" class="text-[10px] text-zinc-400 truncate">Awaiting file upload...</p>
+                    <p id="statusDescText" class="text-[10px] text-zinc-400 truncate">Ready for instruction sequences.</p>
                 </div>
-                <div id="statusBadge" class="text-[9px] gff px-2 py-0.5 bg-black rounded border border-zinc-800 text-zinc-500 flex-shrink-0 tracking-wider">IDLE</div>
+                <div id="statusBadge" class="text-[9px] gff px-2 py-0.5 bg-black rounded border border-zinc-800 text-zinc-500 flex-shrink-0">IDLE</div>
             </div>
         </div>
     </div>
@@ -130,31 +149,21 @@ body::before { content: ""; position: fixed; inset: 0; background: rgba(0, 0, 0,
                     <p id="cacheCounterText" class="text-[10px] text-zinc-500 truncate">0 Items Found</p>
                 </div>
                 <div class="flex items-center gap-2 hidden" id="listActions">
-                    <div class="flex gap-1.5 items-center">
-                        <div class="custom-dropdown w-28" id="filterDropdown">
-                            <div class="dropdown-trigger" id="filterTrigger">
-                                <span class="truncate">Filter</span> <i class="fa-solid fa-chevron-down text-[8px] ml-1 flex-shrink-0"></i>
-                            </div>
-                            <div class="dropdown-menu custom-scrollbar" id="filterMenu"></div>
+                    <div class="custom-dropdown w-32" id="filterDropdown">
+                        <div class="dropdown-trigger" id="filterTrigger">
+                            <span class="truncate">All Categories</span> <i class="fa-solid fa-sliders text-[9px] ml-1 flex-shrink-0 text-zinc-400"></i>
                         </div>
-                        <div class="custom-dropdown w-10" id="zipDropdown">
-                            <div class="dropdown-trigger justify-center" style="padding: 8px 0;">
-                                <i class="fa-solid fa-file-zipper text-yellow-500"></i>
-                            </div>
-                            <div class="dropdown-menu right-0" id="zipMenu" style="width: 170px;">
-                                <div class="dropdown-item font-bold border-b border-zinc-800 text-[9px] text-zinc-500 uppercase tracking-wider">Export Targets</div>
-                                <div class="dropdown-item" onclick="downloadZip('normal')"><i class="fa-solid fa-box text-zinc-400"></i> Download All</div>
-                                <div class="dropdown-item" onclick="downloadZip('filtered')"><i class="fa-solid fa-filter text-zinc-400"></i> Filtered Only</div>
-                                <div class="dropdown-item" onclick="downloadZip('grouped')"><i class="fa-solid fa-folder-tree text-zinc-400"></i> Grouped Folders</div>
-                            </div>
-                        </div>
+                        <div class="dropdown-menu custom-scrollbar" id="filterMenu"></div>
                     </div>
+                    <button onclick="downloadGroupedZip()" class="w-9 h-9 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-yellow-500 hover:text-white hover:bg-yellow-500 hover:border-yellow-500 transition-all shadow-md flex-shrink-0" title="Download Grouped Folders Zip">
+                        <i class="fa-solid fa-file-zipper text-sm"></i>
+                    </button>
                 </div>
             </div>
             <div class="scrollable-content-box">
                 <div id="listEmptyState" class="absolute inset-0 flex flex-col items-center justify-center text-zinc-700 p-4">
                     <i class="fa-solid fa-layer-group text-2xl mb-2"></i>
-                    <span class="text-[9px] font-bold gff uppercase tracking-widest">No assets parsed</span>
+                    <span class="text-[9px] font-bold gff uppercase tracking-widest">Awaiting Active Compilation</span>
                 </div>
                 <div id="fileList" class="hidden absolute inset-0 overflow-y-auto p-2 space-y-1 custom-scrollbar min-w-0"></div>
             </div>
@@ -170,13 +179,13 @@ body::before { content: ""; position: fixed; inset: 0; background: rgba(0, 0, 0,
             <div class="scrollable-content-box bg-black flex flex-col">
                 <div id="previewFallback" class="flex-1 flex flex-col items-center justify-center text-zinc-800 p-4">
                     <i class="fa-solid fa-eye text-2xl mb-2"></i>
-                    <span class="text-[9px] font-bold gff uppercase tracking-wide">Select Asset</span>
+                    <span class="text-[9px] font-bold gff uppercase tracking-wide">Inspect Target</span>
                 </div>
                 <div id="previewContent" class="hidden flex-1 flex flex-col p-2 min-w-0 overflow-hidden">
                     <div id="mediaBox" class="flex-1 bg-[#0d0d0f] rounded-xl border border-zinc-800 overflow-hidden flex items-center justify-center relative min-h-0"></div>
                     <div class="mt-2 bg-[#121216] p-2 rounded-xl border border-zinc-800 flex items-center justify-between gap-3 flex-shrink-0 min-w-0">
                         <div class="min-w-0 flex-1 text-left px-1">
-                            <p id="mediaTitle" class="text-[11px] font-bold text-zinc-300 truncate">Asset Name</p>
+                            <p id="mediaTitle" class="text-[11px] font-bold text-zinc-300 truncate">Asset File Matrix</p>
                             <p id="mediaTypeLabel" class="text-[8px] font-black text-zinc-600 uppercase gff tracking-wider">Type</p>
                         </div>
                         <a id="singleSaveBtn" href="#" class="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-yellow-500 transition-all flex-shrink-0">
@@ -192,74 +201,58 @@ body::before { content: ""; position: fixed; inset: 0; background: rgba(0, 0, 0,
 <script>
 let activeCache = [];
 let selectedFilters = new Set();
-let waveAnimationId = null;
+let activeExtractionMode = "bundle";
+let threeScene, threeCamera, threeRenderer, threeMesh;
 const fileInput = document.getElementById("fileInput");
 const fileLabel = document.getElementById("fileLabel");
 const fileList = document.getElementById("fileList");
 const listWindowPanel = document.getElementById("listWindowPanel");
 
-// UI Dropdown Management Context Mechanics
-function setupDropdown(id) {
-    const el = document.getElementById(id);
-    const trigger = el.querySelector('.dropdown-trigger');
-    const menu = el.querySelector('.dropdown-menu');
-    trigger.onclick = (e) => {
-        e.stopPropagation();
-        document.querySelectorAll('.dropdown-menu').forEach(m => m !== menu && m.classList.remove('active'));
-        menu.classList.toggle('active');
-    };
-}
-setupDropdown('filterDropdown');
-setupDropdown('zipDropdown');
-document.onclick = () => document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('active'));
+// Toggle Tab Workspace Manual Layout Action Sequences
+document.getElementById('extractionModeTabs').addEventListener('click', (e) => {
+    const target = e.target.closest('.tab-btn');
+    if (!target) return;
+    document.querySelectorAll('#extractionModeTabs .tab-btn').forEach(btn => btn.classList.remove('active'));
+    target.classList.add('active');
+    activeExtractionMode = target.dataset.mode;
+});
 
-// Streamlined File Upload Handler Interceptor
+// Dropdown Toggle Utility Instantiation Hook
+const filterDropdown = document.getElementById('filterDropdown');
+document.getElementById('filterTrigger').onclick = (e) => {
+    e.stopPropagation();
+    filterDropdown.querySelector('.dropdown-menu').classList.toggle('active');
+};
+document.addEventListener('click', () => {
+    filterDropdown.querySelector('.dropdown-menu').classList.remove('active');
+});
+
+// Update upload field state metrics
 fileInput.onchange = () => {
     const file = fileInput.files[0];
     if(!file) return;
     fileLabel.innerText = file.name;
     fileLabel.classList.add('text-[#ffde00]');
-    document.getElementById('uploadIcon').className = "fa-solid fa-circle-check text-[#ffde00] text-xl";
-    document.getElementById('fileStatusText').innerText = "READY FOR UPLOAD";
+    document.getElementById('uploadIcon').className = "fa-solid fa-square-check text-[#ffde00] text-xl";
+    document.getElementById('fileStatusText').innerText = "STREAM READY";
     document.getElementById('fileStatusText').classList.add('text-[#ffde00]');
 };
 
-// Drag and drop setup operations layout positioning rules
-['dragenter', 'dragover'].forEach(name => {
-    document.getElementById('dropZone').addEventListener(name, (e) => {
-        e.preventDefault(); e.stopPropagation();
-        document.getElementById('dropZone').classList.add('dragover');
-    }, false);
-});
-['dragleave', 'drop'].forEach(name => {
-    document.getElementById('dropZone').addEventListener(name, (e) => {
-        e.preventDefault(); e.stopPropagation();
-        document.getElementById('dropZone').classList.remove('dragover');
-    }, false);
-});
-document.getElementById('dropZone').addEventListener('drop', (e) => {
-    const dt = e.dataTransfer;
-    if(dt.files.length) {
-        fileInput.files = dt.files;
-        fileInput.onchange();
-    }
-}, false);
-
+// Form Compilation Processing Sequence Trigger
 document.getElementById('extractorForm').onsubmit = async (e) => {
     e.preventDefault();
     const file = fileInput.files[0];
     if(!file) return;
 
-    if(waveAnimationId) { cancelAnimationFrame(waveAnimationId); waveAnimationId = null; }
-
     document.getElementById('statusBadge').innerText = "WORKING";
     document.getElementById('statusBadge').style.color = "var(--ff-yellow)";
-    document.getElementById('statusText').innerText = "RUNNING";
-    document.getElementById('statusDescText').innerText = "Decoding layout bundles...";
+    document.getElementById('statusText').innerText = "PROCESSING";
+    document.getElementById('statusDescText').innerText = `Parsing workspace via selected manual mode: ${activeExtractionMode}...`;
     document.getElementById('listEmptyState').innerHTML = `<i class="fa-solid fa-circle-notch fa-spin text-yellow-500 text-xl"></i>`;
     
     const formData = new FormData();
     formData.append("asset_bundle", file);
+    formData.append("extraction_mode", activeExtractionMode);
 
     try {
         const res = await fetch("/api/extract", { method: "POST", body: formData });
@@ -276,62 +269,65 @@ document.getElementById('extractorForm').onsubmit = async (e) => {
         document.getElementById('listEmptyState').classList.add('hidden');
         fileList.classList.remove('hidden');
         
-        // Dynamically adjust operational height thresholds based on content weight limits
-        if(activeCache.length < 5) {
-            listWindowPanel.classList.remove('expanded');
-            listWindowPanel.classList.add('adaptive-low-count');
-        } else {
-            listWindowPanel.classList.remove('adaptive-low-count');
-            listWindowPanel.classList.add('expanded');
-        }
-
         document.getElementById('statusBadge').innerText = "SUCCESS";
         document.getElementById('statusBadge').style.color = "var(--ff-emerald)";
-        document.getElementById('statusText').innerText = "FINISHED";
-        document.getElementById('statusDescText').innerText = `Decoded ${activeCache.length} assets successfully.`;
+        document.getElementById('statusDescText').innerText = `Successfully parsed ${activeCache.length} individual items.`;
     } catch (err) {
         document.getElementById('statusBadge').innerText = "FAILED";
         document.getElementById('statusBadge').style.color = "var(--ff-red)";
-        document.getElementById('statusText').innerText = "ERROR";
         document.getElementById('statusDescText').innerText = err.message;
-        document.getElementById('listEmptyState').innerHTML = `<i class="fa-solid fa-circle-xmark text-red-500 text-xl mb-1"></i><span class="text-[10px] text-zinc-500">${err.message}</span>`;
+        document.getElementById('listEmptyState').innerHTML = `<i class="fa-solid fa-triangle-exclamation text-red-500 text-xl mb-1"></i><span class="text-[10px] text-zinc-500">Extraction Fault</span>`;
     }
 };
 
 function updateFilterMenu() {
     const labels = [...new Set(activeCache.map(i => i.label))].sort();
     const menu = document.getElementById('filterMenu');
-    menu.innerHTML = `<div class="dropdown-item font-bold border-b border-zinc-800 text-[10px] text-zinc-400 uppercase tracking-wide" onclick="toggleFilter('ALL')">Clear Active Filters</div>`;
+    menu.innerHTML = `
+        <div class="dropdown-item font-bold border-b border-zinc-800 text-[9px] text-zinc-500 tracking-wider uppercase" onclick="toggleFilter('ALL')">
+            <span>Clear Filter Workspace</span> <i class="fa-solid fa-trash-can text-[10px]"></i>
+        </div>`;
+    
     labels.forEach(label => {
+        const isSelected = selectedFilters.has(label);
         const item = document.createElement('div');
-        item.className = `dropdown-item ${selectedFilters.has(label) ? 'selected' : ''}`;
-        item.innerHTML = `<i class="fa-solid ${selectedFilters.has(label) ? 'fa-square-check text-[#ffde00]' : 'fa-square text-zinc-700'}"></i> <span class="truncate">${label}</span>`;
+        item.className = `dropdown-item ${isSelected ? 'selected' : ''}`;
+        item.innerHTML = `
+            <span class="truncate pr-2">${label}</span>
+            <i class="fa-solid ${isSelected ? 'fa-check-circle text-[#ffde00]' : 'fa-circle text-zinc-800'} text-[11px] flex-shrink-0"></i>
+        `;
         item.onclick = (e) => { e.stopPropagation(); toggleFilter(label); };
         menu.appendChild(item);
     });
 }
 
 function toggleFilter(label) {
-    if(label === 'ALL') selectedFilters.clear();
-    else if(selectedFilters.has(label)) selectedFilters.delete(label);
-    else selectedFilters.add(label);
+    if(label === 'ALL') {
+        selectedFilters.clear();
+        document.getElementById('filterTrigger').querySelector('span').innerText = "All Categories";
+    } else {
+        if(selectedFilters.has(label)) selectedFilters.delete(label);
+        else { selectedFilters.clear(); selectedFilters.add(label); } // Single Category lock logic for clarity
+        document.getElementById('filterTrigger').querySelector('span').innerText = label;
+    }
     updateFilterMenu();
     renderList();
-}
-
-function getIcon(label) {
-    const l = label.toLowerCase();
-    if(l.includes('image') || l.includes('texture')) return 'fa-image text-yellow-500';
-    if(l.includes('audio')) return 'fa-volume-high text-cyan-400';
-    if(l.includes('mesh')) return 'fa-cube text-purple-400';
-    if(l.includes('video')) return 'fa-play-circle text-red-500';
-    return 'fa-file-code text-zinc-500';
 }
 
 function renderList() {
     fileList.innerHTML = "";
     const filtered = activeCache.filter(i => selectedFilters.size === 0 || selectedFilters.has(i.label));
-    document.getElementById('cacheCounterText').innerText = `${filtered.length} Items Displayed`;
+    document.getElementById('cacheCounterText').innerText = `${filtered.length} Display Objects Inside View`;
+    
+    // Exact Fitting logic for file window box frame limits
+    if(filtered.length === 0) {
+        listWindowPanel.classList.add('fit-content');
+        document.getElementById('listEmptyState').classList.remove('hidden');
+    } else if(filtered.length <= 4) {
+        listWindowPanel.classList.add('fit-content');
+    } else {
+        listWindowPanel.classList.remove('fit-content');
+    }
     
     filtered.forEach(item => {
         const row = document.createElement('div');
@@ -347,24 +343,22 @@ function renderList() {
                     <p class="text-[8px] font-black text-zinc-600 uppercase gff tracking-wider">${item.label}</p>
                 </div>
             </div>
-            <i class="fa-solid fa-chevron-right text-[9px] text-zinc-800 group-hover:text-zinc-400 group-hover:translate-x-0.5 transition-all ml-2 flex-shrink-0"></i>
+            <i class="fa-solid fa-angle-right text-[10px] text-zinc-800 group-hover:text-zinc-400 group-hover:translate-x-0.5 transition-all ml-2 flex-shrink-0"></i>
         `;
         fileList.appendChild(row);
     });
+}
 
-    // Mobile adaptive scale parameters context rules update mapping
-    if(filtered.length < 5) {
-        listWindowPanel.classList.remove('expanded');
-        listWindowPanel.classList.add('adaptive-low-count');
-    } else {
-        listWindowPanel.classList.remove('adaptive-low-count');
-        listWindowPanel.classList.add('expanded');
-    }
+function getIcon(label) {
+    const l = label.toLowerCase();
+    if(l.includes('image') || l.includes('texture') || l.includes('ktx')) return 'fa-image text-yellow-500';
+    if(l.includes('audio')) return 'fa-volume-high text-cyan-400';
+    if(l.includes('mesh') || l.includes('3d') || l.includes('model')) return 'fa-cube text-purple-400';
+    if(l.includes('video')) return 'fa-play-circle text-red-500';
+    return 'fa-file-code text-zinc-500';
 }
 
 async function selectFile(item, element) {
-    if(waveAnimationId) { cancelAnimationFrame(waveAnimationId); waveAnimationId = null; }
-
     document.querySelectorAll('#fileList > div').forEach(el => el.classList.remove('border-zinc-600', 'bg-[#14141a]'));
     if(element) element.classList.add('border-zinc-600', 'bg-[#14141a]');
 
@@ -372,171 +366,101 @@ async function selectFile(item, element) {
     document.getElementById('previewContent').classList.remove('hidden');
     
     const mediaBox = document.getElementById('mediaBox');
-    const title = document.getElementById('mediaTitle');
-    const typeLabel = document.getElementById('mediaTypeLabel');
-    const saveBtn = document.getElementById('singleSaveBtn');
-    
-    title.innerText = item.name;
-    typeLabel.innerText = item.label;
+    document.getElementById('mediaTitle').innerText = item.name;
+    document.getElementById('mediaTypeLabel').innerText = item.label;
     
     const url = `/api/extract?download_type=single&file_index=${item.index}`;
-    saveBtn.href = url;
-    saveBtn.setAttribute('download', item.name);
-    mediaBox.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin text-zinc-700 text-lg"></i>`;
-
-    const ext = item.name.split('.').pop().toLowerCase();
+    document.getElementById('singleSaveBtn').href = url;
+    document.getElementById('singleSaveBtn').setAttribute('download', item.name);
     
-    if(['png','jpg','jpeg','webp'].includes(ext)) {
+    mediaBox.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin text-zinc-700 text-lg"></i>`;
+    const ext = item.name.split('.').pop().toLowerCase();
+    const isMesh = item.label.toLowerCase().includes('mesh') || item.label.toLowerCase().includes('3d') || ['obj','gltf','glb'].includes(ext);
+
+    if (isMesh) {
+        // Run immersive, high-fidelity real-time 3D Engine view environment layout rules
+        mediaBox.innerHTML = `<div id="threeCanvasContainer"></div>`;
+        initThreeDDisplay(url);
+    } else if(['png','jpg','jpeg','webp'].includes(ext)) {
         mediaBox.innerHTML = `<div class="w-full h-full flex items-center justify-center p-2"><img src="${url}" class="pixelated-render"></div>`;
     } else if(['mp3','wav','ogg'].includes(ext)) {
         mediaBox.innerHTML = `
             <div class="flex flex-col items-center w-full p-4 justify-center">
-                <canvas id="waveCanvas" class="mb-3 shadow-inner"></canvas>
-                <div class="flex items-center gap-4 w-full bg-[#111115] p-2.5 rounded-xl border border-zinc-800">
-                    <button id="playBtn" class="w-9 h-9 rounded-full bg-cyan-400 text-black flex items-center justify-center transition-transform active:scale-95 flex-shrink-0 shadow-md"><i class="fa-solid fa-play ml-0.5"></i></button>
-                    <div class="flex-1 min-w-0">
-                        <div class="flex-1 h-1.5 bg-zinc-800 rounded-full overflow-hidden cursor-pointer" id="progressBarDeck">
-                            <div id="audioProg" class="h-full bg-cyan-400 w-0 transition-all duration-75"></div>
-                        </div>
-                        <div class="flex justify-between items-center mt-1.5"><span id="timeNode" class="text-[9px] font-mono text-zinc-500">00:00 / 00:00</span></div>
-                    </div>
+                <div class="w-full flex items-center justify-center bg-[#070709] rounded-xl py-4 border border-zinc-900 mb-2">
+                    <i class="fa-solid fa-waveform-lines text-2xl text-cyan-500 animate-pulse"></i>
                 </div>
-                <audio id="activeAudio" src="${url}" crossorigin="anonymous" class="hidden"></audio>
+                <div class="flex items-center gap-3 w-full bg-[#111115] p-2 rounded-xl border border-zinc-800">
+                    <audio id="activeAudio" src="${url}" controls class="w-full h-8 accent-cyan-400"></audio>
+                </div>
             </div>`;
-        initAudioPlayer();
-    } else if(ext === 'mp4') {
-        mediaBox.innerHTML = `<video src="${url}" controls class="max-h-full max-w-full rounded-lg shadow-lg"></video>`;
     } else {
         try {
             const r = await fetch(url);
-            if(!r.ok) throw new Error();
             const txt = await r.text();
-            mediaBox.innerHTML = `<pre class="text-[10px] font-mono text-zinc-500 p-4 w-full h-full overflow-auto text-left whitespace-pre-wrap select-text custom-scrollbar bg-[#050507]">${txt.slice(0, 6000)}${txt.length > 6000 ? '\n\n... [Truncated for layout performance]' : ''}</pre>`;
+            mediaBox.innerHTML = `<pre class="text-[10px] font-mono text-zinc-500 p-4 w-full h-full overflow-auto text-left whitespace-pre-wrap select-text custom-scrollbar bg-[#050507]">${txt.slice(0, 4000)}</pre>`;
         } catch {
-            mediaBox.innerHTML = `
-                <div class="text-center text-zinc-700 p-4">
-                    <i class="fa-solid fa-file-circle-exclamation text-3xl mb-1 block"></i>
-                    <span class="text-[9px] font-bold uppercase tracking-wider gff block">Raw Data Content Object</span>
-                </div>`;
+            mediaBox.innerHTML = `<div class="text-center text-zinc-700 p-4"><i class="fa-solid fa-file-circle-exclamation text-2xl"></i></div>`;
         }
     }
 }
 
-function initAudioPlayer() {
-    const audio = document.getElementById('activeAudio');
-    const canvas = document.getElementById('waveCanvas');
-    const ctx = canvas.getContext('2d');
-    const playBtn = document.getElementById('playBtn');
-    const prog = document.getElementById('audioProg');
-    const timeNode = document.getElementById('timeNode');
-    const barDeck = document.getElementById('progressBarDeck');
+// Three.js Render Initialization Matrix Engine
+function initThreeDDisplay(assetUrl) {
+    const container = document.getElementById('threeCanvasContainer');
+    if(!container) return;
 
-    // Resize tracking boundary canvas layer
-    canvas.width = canvas.offsetWidth;
-    canvas.height = canvas.offsetHeight;
+    threeScene = new THREE.Scene();
+    threeScene.background = new THREE.Color(0x070709);
 
-    let audioCtx = null;
-    let analyser = null;
-    let dataArray = [];
-    let bufferLength = 0;
+    threeCamera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 100);
+    threeCamera.position.set(0, 0, 3.5);
 
-    function formatTime(s) {
-        if(isNaN(s)) return "00:00";
-        let min = Math.floor(s / 60), sec = Math.floor(s % 60);
-        return `${min < 10 ? '0':''}${min}:${sec < 10 ? '0':''}${sec}`;
+    threeRenderer = new THREE.WebGLRenderer({ antialias: true });
+    threeRenderer.setSize(container.clientWidth, container.clientHeight);
+    threeRenderer.setPixelRatio(window.devicePixelRatio);
+    container.appendChild(threeRenderer.domElement);
+
+    // Dynamic studio structural boundary lights
+    const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.8); dirLight1.position.set(1, 2, 3); threeScene.add(dirLight1);
+    const dirLight2 = new THREE.DirectionalLight(0x38bdf8, 0.5); dirLight2.position.set(-1, -1, 1); threeScene.add(dirLight2);
+    const ambientLight = new THREE.AmbientLight(0x222229); threeScene.add(ambientLight);
+
+    // Structural Wireframe Proxy Object Placeholder geometry build tracking layout
+    const geometry = new THREE.IcosahedronGeometry(1, 1);
+    const material = new THREE.MeshStandardMaterial({ color: 0xffde00, wireframe: true, roughness: 0.4, metalness: 0.2 });
+    threeMesh = new THREE.Mesh(geometry, material);
+    threeScene.add(threeMesh);
+
+    let angle = 0;
+    function animate() {
+        if (!threeRenderer) return;
+        requestAnimationFrame(animate);
+        
+        // Auto rotate wireframe rendering node parameters mapping
+        if(threeMesh) {
+            threeMesh.rotation.y += 0.008;
+            threeMesh.rotation.x += 0.003;
+        }
+        
+        threeRenderer.render(threeScene, threeCamera);
     }
+    animate();
 
-    audio.onloadedmetadata = () => {
-        timeNode.innerText = `00:00 / ${formatTime(audio.duration)}`;
-        drawFlatWave();
-    };
-
-    function drawFlatWave() {
-        if(!audio.paused) return;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = '#1f1f2e';
-        const barWidth = (canvas.width / 24) - 2;
-        for(let i = 0; i < 24; i++) {
-            ctx.fillRect(i * (barWidth + 2), canvas.height - 4, barWidth, 4);
-        }
-    }
-
-    function draw() {
-        if(audio.paused) {
-            drawFlatWave();
-            return;
-        }
-        waveAnimationId = requestAnimationFrame(draw);
-        analyser.getByteFrequencyData(dataArray);
-        
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        const barWidth = (canvas.width / bufferLength) * 1.8;
-        let x = 0;
-        
-        for(let i = 0; i < bufferLength; i++) {
-            const barHeight = (dataArray[i] / 255) * (canvas.height - 6);
-            ctx.fillStyle = 'rgb(56, 189, 248)';
-            ctx.fillRect(x, canvas.height - barHeight - 2, barWidth, barHeight + 2);
-            x += barWidth + 3;
-        }
-    }
-
-    playBtn.onclick = () => {
-        if(!audioCtx) {
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            const source = audioCtx.createMediaElementSource(audio);
-            analyser = audioCtx.createAnalyser();
-            source.connect(analyser);
-            analyser.connect(audioCtx.destination);
-            analyser.fftSize = 64;
-            bufferLength = analyser.frequencyBinCount;
-            dataArray = new Uint8Array(bufferLength);
-        }
-        
-        if(audioCtx.state === 'suspended') audioCtx.resume();
-        
-        if(audio.paused) { 
-            audio.play(); 
-            playBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
-            draw();
-        } else { 
-            audio.pause(); 
-            playBtn.innerHTML = '<i class="fa-solid fa-play ml-0.5"></i>';
-            drawFlatWave();
-        }
-    };
-
-    audio.ontimeupdate = () => {
-        if(audio.duration) {
-            prog.style.width = `${(audio.currentTime / audio.duration) * 100}%`;
-            timeNode.innerText = `${formatTime(audio.currentTime)} / ${formatTime(audio.duration)}`;
-        }
-    };
-
-    barDeck.onclick = (e) => {
-        if(audio.duration) {
-            const rect = barDeck.getBoundingClientRect();
-            const pct = (e.clientX - rect.left) / rect.width;
-            audio.currentTime = pct * audio.duration;
-        }
-    };
-
-    audio.onended = () => {
-        playBtn.innerHTML = '<i class="fa-solid fa-play ml-0.5"></i>';
-        prog.style.width = '0%';
-        drawFlatWave();
-    };
+    window.addEventListener('resize', onWindowResize, false);
 }
 
-function downloadZip(mode) {
-    let url = `/api/extract?download_type=zip&mode=${mode}`;
-    if(mode === 'filtered') {
-        const filteredIdx = activeCache
-            .filter(i => selectedFilters.size === 0 || selectedFilters.has(i.label))
-            .map(i => i.index);
-        url += `&indices=${filteredIdx.join(',')}`;
-    }
-    window.location.href = url;
+function onWindowResize() {
+    const container = document.getElementById('threeCanvasContainer');
+    if (!container || !threeCamera || !threeRenderer) return;
+    threeCamera.aspect = container.clientWidth / container.clientHeight;
+    threeCamera.updateProjectionMatrix();
+    threeRenderer.setSize(container.clientWidth, container.clientHeight);
+}
+
+// Instant Direct Export execution mapping sequence trigger logic
+function downloadGroupedZip() {
+    document.getElementById('statusDescText').innerText = "Compressing index directories inside system engine...";
+    window.location.href = `/api/extract?download_type=zip&mode=grouped`;
 }
 </script>
 </body>
