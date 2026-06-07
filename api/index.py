@@ -1,406 +1,267 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Assets Extractor | ELITE</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
-<style>
-@font-face { font-family: 'GFF-Bold'; src: url('https://dl.dir.freefiremobile.com/common/web_event/common/fonts/website/GFFLatinW05-Bold.woff') format('woff'); }
-:root { --ff-yellow: #ffde00; --ff-emerald: #00ffa3; --ff-red: #ff3e3e; --ff-cyan: #38bdf8; }
-body { background: #000; color: #fff; min-height: 100vh; background-image: url('https://dl.dir.freefiremobile.com/common/web_event/official2/dist/client/img/bg_pc.617c669.jpg'); background-size: cover; background-attachment: fixed; font-family: 'Inter', sans-serif; overflow-x: hidden; }
-body::before { content: ""; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.94); z-index: -1; }
-.gff { font-family: 'GFF-Bold', sans-serif; }
+import os
+import io
+import json
+import gzip
+import zlib
+import zipfile
+import re
+import gc
+import hashlib
+import struct
+from flask import Flask, request, send_file, jsonify
+from PIL import Image
+import texture2ddecoder
+os.environ["UNITYPY_NO_GUI"] = "1"
+import UnityPy
 
-/* Main layout constraints: Left Square, Right Rounded */
-.main-grid-container { display: grid; grid-template-columns: repeat(1, 1fr); gap: 24px; max-width: 1400px; margin: 0 auto; padding: 0 20px; }
-@media (min-width: 1024px) { .main-grid-container { grid-template-columns: repeat(3, 1fr); } }
+app = Flask(__name__)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+HTML_PATH = os.path.join(BASE_DIR, 'index.html')
+GLOBAL_CACHE_REGISTRY = {}
 
-.uniform-panel { 
-    background: #0a0a0a; border: 1px solid #1f1f1f; position: relative; 
-    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8); height: 420px; display: flex; 
-    flex-direction: column; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-/* Left square / Right rounded logic for the outer container */
-@media (min-width: 1024px) {
-    .panel-1 { border-radius: 0; }
-    .panel-2 { border-radius: 0; }
-    .panel-3 { border-radius: 0 24px 24px 0; }
-}
-@media (max-width: 1023px) {
-    .uniform-panel { border-radius: 16px; margin-bottom: 16px; height: auto; min-height: 200px; }
-    #listWindowPanel { height: 160px; overflow: hidden; }
-    #listWindowPanel.expanded { height: 420px; }
-}
+def decompress_stream(data: bytes) -> bytes:
+    try:
+        if data.startswith(b'\x1f\x8b'):
+            return decompress_stream(gzip.decompress(data))
+        if data.startswith((b'\x78\x9c', b'\x78\x01', b'\x78\xda')):
+            return decompress_stream(zlib.decompress(data))
+    except:
+        pass
+    return data
 
-.uniform-panel::before { content: ""; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--ff-yellow); z-index: 10; }
+def extract_clean_name(obj, data, default_type: str) -> str:
+    if hasattr(obj, 'container') and obj.container:
+        base_mapped_path = os.path.basename(obj.container)
+        if base_mapped_path:
+            return os.path.splitext(base_mapped_path)[0]
+    for attr in ["name", "m_Name", "m_name"]:
+        val = getattr(data, attr, "")
+        if isinstance(val, str) and val.strip():
+            return val.strip()
+    return f"{default_type}_{obj.path_id}"
 
-.panel-body { padding: 24px; flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-.scrollable-content-box { flex: 1; background: #060608; border: 1px solid #1a1a1f; border-radius: 16px; overflow: hidden; position: relative; }
+def dump_obj_to_dict(obj_data) -> dict:
+    out = {}
+    try:
+        if hasattr(obj_data, "read_typetree"):
+            return obj_data.read_typetree()
+    except:
+        pass
+    for attr in dir(obj_data):
+        if attr.startswith('_') or attr in ['read', 'assets_file', 'reader', 'image', 'samples']:
+            continue
+        try:
+            val = getattr(obj_data, attr)
+            if isinstance(val, (int, float, str, bool)):
+                out[attr] = val
+            elif isinstance(val, bytes):
+                out[attr] = val.hex()[:500] + "..." if len(val) > 500 else val.hex()
+        except:
+            pass
+    return out
 
-/* Custom Buttons & Elements */
-.btn-mechanical { cursor: pointer; font-family: 'GFF-Bold'; text-transform: uppercase; font-style: italic; display: flex; align-items: center; justify-content: center; border-radius: 16px; gap: 12px; background: var(--ff-yellow); color: #000; box-shadow: 0 5px 0 #c2a900; transition: all 0.1s; }
-.btn-mechanical:active { transform: translateY(2px); box-shadow: 0 2px 0 #c2a900; }
+def process_object_unrestricted(obj, raw_env_data: bytes):
+    try:
+        t = obj.type.name
+        data = obj.read()
+        pristine_name = extract_clean_name(obj, data, t)
+        safe_name = re.sub(r'[<>:"/\|?*\x00-\x1f]', "", pristine_name)
 
-.upload-deck { background: #121212; border: 2px dashed #2a2a2a; border-radius: 20px; display: flex; align-items: center; height: 110px; cursor: pointer; transition: all 0.2s; }
-.upload-deck.dragover { border-color: var(--ff-yellow); background: #161612; }
+        if t == "TextAsset":
+            raw = getattr(data, "m_Script", b"")
+            if isinstance(raw, str): raw = raw.encode('utf-8', errors='replace')
+            ext = ".txt"
+            label = "Text File"
+            if safe_name.lower().endswith('.atlas') or raw.startswith(b"\n") or b"size:" in raw:
+                if not safe_name.lower().endswith('.atlas'): ext = ".atlas.txt"
+                label = "Atlas Sheet"
+            elif raw.startswith((b"{", b"[")):
+                ext = ".json"
+                label = "Data Config"
+            return f"{safe_name}{ext}", raw, f"Text/{safe_name}{ext}", label
 
-/* Custom Dropdown Styling */
-.custom-dropdown { position: relative; width: 100%; }
-.dropdown-trigger { background: #121216; border: 1px solid #272732; padding: 8px 12px; border-radius: 10px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 11px; font-weight: 700; color: #d4d4d8; }
-.dropdown-menu { position: absolute; top: calc(100% + 8px); left: 0; right: 0; background: #0f0f13; border: 1px solid #272732; border-radius: 12px; z-index: 50; max-height: 200px; overflow-y: auto; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-.dropdown-menu.active { display: block; }
-.dropdown-item { padding: 8px 12px; font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: background 0.2s; }
-.dropdown-item:hover { background: #1a1a22; }
-.dropdown-item.selected { color: var(--ff-yellow); }
+        elif t in ["Texture2D", "Sprite"] and hasattr(data, 'image'):
+            buf = io.BytesIO()
+            data.image.save(buf, format="PNG", optimize=False)
+            return f"{safe_name}.png", buf.getvalue(), f"Textures/{safe_name}.png", f"{t} Asset"
 
-/* Audio Visualizer */
-#waveCanvas { width: 100%; height: 60px; }
-.pixelated-render { image-rendering: pixelated; max-height: 100%; max-width: 100%; object-fit: contain; }
-.custom-scrollbar::-webkit-scrollbar { width: 4px; }
-.custom-scrollbar::-webkit-scrollbar-thumb { background: #222227; border-radius: 10px; }
-</style>
-</head>
-<body>
+        elif t == "SpriteAtlas":
+            tree_data = dump_obj_to_dict(data)
+            js_bytes = json.dumps(tree_data, indent=2, ensure_ascii=False).encode('utf-8')
+            return f"{safe_name}_atlas.json", js_bytes, f"Mapping/{safe_name}_atlas.json", "SpriteAtlas Map"
 
-<div class="flex flex-col items-center py-8">
-    <img src="https://dl.dir.freefiremobile.com/common/web_event/official2/dist/client/img/full_logo.969f536.png" class="h-8 mb-4" alt="Free Fire Logo">
-    <div class="text-center gff">
-        <span class="text-[44px] md:text-[60px] font-black italic block leading-[0.8]">ASSETS</span>
-        <span class="text-[44px] md:text-[60px] font-black italic block text-[#ffde00] leading-[0.9]">EXTRACTOR</span>
-    </div>
-    <div class="flex items-center gap-3 mt-2 opacity-80">
-        <svg class="w-4 h-4 text-[#ffde00]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
-        <span class="text-[10px] md:text-[12px] font-bold tracking-[0.2em] uppercase text-zinc-400">AssetBundle • KTX • Unity Assets Extractor</span>
-        <svg class="w-4 h-4 text-[#ffde00]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
-    </div>
-</div>
+        elif t == "AudioClip":
+            samples = getattr(data, "samples", None)
+            if samples and list(samples.keys()):
+                audio_filename = list(samples.keys())[0]
+                return audio_filename, samples[audio_filename], f"Audio/{audio_filename}", "Audio Track"
+            raw = obj.get_raw_data()
+            ext = ".ogg" if raw.startswith(b'OggS') else ".wav"
+            return f"{safe_name}{ext}", raw, f"Audio/{safe_name}{ext}", "Audio Track"
 
-<div class="main-grid-container">
-    <!-- Column 1: Upload -->
-    <div class="uniform-panel panel-1">
-        <div class="panel-body justify-between">
-            <div>
-                <h2 class="text-xs font-black text-white uppercase tracking-wider mb-1 gff">Input Stream</h2>
-                <p class="text-[11px] text-zinc-500">Initialize asset mapping sequence.</p>
-            </div>
-            <form id="extractorForm" class="flex-1 flex flex-col justify-center space-y-4 my-2">
-                <div class="upload-deck" id="dropZone" onclick="document.getElementById('fileInput').click()">
-                    <div class="w-16 h-full flex items-center justify-center border-r border-zinc-800">
-                        <i id="uploadIcon" class="fa-solid fa-box-open text-xl text-zinc-600"></i>
-                    </div>
-                    <div class="flex-1 px-4 truncate">
-                        <span id="fileStatusText" class="text-[9px] font-black text-zinc-500 block gff uppercase tracking-tighter">Standby</span>
-                        <p id="fileLabel" class="gff text-[13px] text-zinc-300 truncate">Drop package here</p>
-                    </div>
-                </div>
-                <input type="file" id="fileInput" class="hidden">
-                <button type="submit" class="btn-mechanical w-full h-14 text-sm font-bold italic">
-                    <i class="fa-solid fa-bolt"></i> Extract Now
-                </button>
-            </form>
-            <div class="bg-[#121212] border border-zinc-800/50 rounded-xl p-3 flex items-center gap-3">
-                <div id="statusIcon" class="text-zinc-600"><i class="fa-solid fa-terminal text-xs"></i></div>
-                <div class="flex-1 min-w-0">
-                    <span id="statusText" class="block text-[8px] font-black text-zinc-500 uppercase gff">System Log</span>
-                    <p id="statusDescText" class="text-[10px] text-zinc-400 truncate">Awaiting file upload...</p>
-                </div>
-                <div id="statusBadge" class="text-[9px] gff px-2 py-0.5 bg-black rounded border border-zinc-800 text-zinc-500">IDLE</div>
-            </div>
-        </div>
-    </div>
+        elif t == "VideoClip":
+            raw = obj.get_raw_data()
+            if len(raw) < 1024:
+                match = raw_env_data.find(b'ftyp')
+                if match != -1:
+                    start_pos = max(0, match - 4)
+                    raw = raw_env_data[start_pos:start_pos + 15_000_000]
+            return f"{safe_name}.mp4", raw, f"Video/{safe_name}.mp4", "Video Clip"
 
-    <!-- Column 2: List -->
-    <div id="listWindowPanel" class="uniform-panel panel-2">
-        <div class="panel-body">
-            <div class="flex items-center justify-between mb-4 border-b border-zinc-900 pb-3">
-                <div class="min-w-0">
-                    <h2 class="text-xs font-black text-white uppercase tracking-wider gff">Extracted</h2>
-                    <p id="cacheCounterText" class="text-[10px] text-zinc-500 truncate">0 Items Found</p>
-                </div>
-                <div class="flex items-center gap-2 hidden" id="listActions">
-                    <!-- Multi-Select Filter -->
-                    <div class="custom-dropdown w-28" id="filterDropdown">
-                        <div class="dropdown-trigger" id="filterTrigger">
-                            <span>Filter</span> <i class="fa-solid fa-chevron-down text-[8px]"></i>
-                        </div>
-                        <div class="dropdown-menu custom-scrollbar" id="filterMenu"></div>
-                    </div>
-                    <!-- Zip Options -->
-                    <div class="custom-dropdown w-10" id="zipDropdown">
-                        <div class="dropdown-trigger justify-center" style="padding: 8px 0;">
-                            <i class="fa-solid fa-file-zipper text-yellow-500"></i>
-                        </div>
-                        <div class="dropdown-menu right-0" id="zipMenu" style="width: 180px;">
-                            <div class="dropdown-item" onclick="downloadZip('normal')"><i class="fa-solid fa-box"></i> Download All</div>
-                            <div class="dropdown-item" onclick="downloadZip('filtered')"><i class="fa-solid fa-filter"></i> Filtered Only</div>
-                            <div class="dropdown-item" onclick="downloadZip('grouped')"><i class="fa-solid fa-folder-tree"></i> Grouped Folders</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="scrollable-content-box">
-                <div id="listEmptyState" class="absolute inset-0 flex flex-col items-center justify-center text-zinc-700">
-                    <i class="fa-solid fa-layer-group text-2xl mb-2"></i>
-                    <span class="text-[9px] font-bold gff uppercase tracking-widest">No assets parsed</span>
-                </div>
-                <div id="fileList" class="hidden absolute inset-0 overflow-y-auto p-2 space-y-1 custom-scrollbar"></div>
-            </div>
-        </div>
-    </div>
+        elif t == "Mesh":
+            try:
+                mesh_data = data.export().encode('utf-8')
+                return f"{safe_name}.obj", mesh_data, f"Meshes/{safe_name}.obj", "3D Mesh"
+            except:
+                tree_data = dump_obj_to_dict(data)
+                js_bytes = json.dumps(tree_data, indent=2, ensure_ascii=False).encode('utf-8')
+                return f"{safe_name}_mesh.json", js_bytes, f"Geometry/Mesh/{safe_name}.json", "Mesh Schema"
 
-    <!-- Column 3: Preview -->
-    <div class="uniform-panel panel-3">
-        <div class="panel-body">
-            <div class="mb-4 border-b border-zinc-900 pb-3">
-                <h2 class="text-xs font-black text-white uppercase tracking-wider gff">Live Preview</h2>
-                <p class="text-[10px] text-zinc-500">Visualizing data stream.</p>
-            </div>
-            <div class="scrollable-content-box bg-black flex flex-col">
-                <div id="previewFallback" class="flex-1 flex flex-col items-center justify-center text-zinc-800">
-                    <i class="fa-solid fa-eye text-2xl mb-2"></i>
-                    <span class="text-[9px] font-bold gff uppercase">Select Asset</span>
-                </div>
-                <div id="previewContent" class="hidden flex-1 flex flex-col p-2">
-                    <div id="mediaBox" class="flex-1 bg-[#0d0d0f] rounded-xl border border-zinc-800 overflow-hidden flex items-center justify-center relative"></div>
-                    <div class="mt-2 bg-[#121216] p-2 rounded-xl border border-zinc-800 flex items-center gap-3">
-                        <div class="flex-1 min-w-0 px-1">
-                            <p id="mediaTitle" class="text-[11px] font-bold text-zinc-300 truncate">Asset Name</p>
-                            <p id="mediaTypeLabel" class="text-[8px] font-black text-zinc-600 uppercase gff">Type</p>
-                        </div>
-                        <a id="singleSaveBtn" href="#" class="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-yellow-500 transition-all">
-                            <i class="fa-solid fa-download text-xs"></i>
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+        elif t in ["GameObject", "MonoBehaviour", "ScriptableObject", "SkinnedMeshRenderer", "MeshRenderer"]:
+            tree_data = dump_obj_to_dict(data)
+            js_bytes = json.dumps(tree_data, indent=2, ensure_ascii=False).encode('utf-8')
+            folder = "Hierarchy" if t == "GameObject" else "Scripts" if "Script" in t else "Geometry"
+            return f"{safe_name}_{t}.json", js_bytes, f"{folder}/{t}/{safe_name}.json", f"{t} Schema"
 
-<script>
-let activeCache = [];
-let selectedFilters = new Set();
-const fileInput = document.getElementById("fileInput");
-const fileLabel = document.getElementById("fileLabel");
-const fileList = document.getElementById("fileList");
-const listWindowPanel = document.getElementById("listWindowPanel");
+        elif t in ["Material", "Shader"]:
+            tree_data = dump_obj_to_dict(data)
+            js_bytes = json.dumps(tree_data, indent=2, ensure_ascii=False).encode('utf-8')
+            return f"{safe_name}_{t}.json", js_bytes, f"Shaders_Materials/{t}/{safe_name}.json", f"{t} Config"
 
-// UI Interactions
-function setupDropdown(id) {
-    const el = document.getElementById(id);
-    const trigger = el.querySelector('.dropdown-trigger');
-    const menu = el.querySelector('.dropdown-menu');
-    trigger.onclick = (e) => {
-        e.stopPropagation();
-        document.querySelectorAll('.dropdown-menu').forEach(m => m !== menu && m.classList.remove('active'));
-        menu.classList.toggle('active');
-    };
-}
-setupDropdown('filterDropdown');
-setupDropdown('zipDropdown');
-document.onclick = () => document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('active'));
+        elif t in ["AnimationClip", "AnimatorController", "Animator"]:
+            tree_data = dump_obj_to_dict(data)
+            js_bytes = json.dumps(tree_data, indent=2, ensure_ascii=False).encode('utf-8')
+            return f"{safe_name}_{t}.json", js_bytes, f"Animations/{t}/{safe_name}.json", "Animation Map"
 
-// File Handling
-fileInput.onchange = () => {
-    const file = fileInput.files[0];
-    if(!file) return;
-    fileLabel.innerText = file.name;
-    fileLabel.classList.add('text-[#ffde00]');
-    document.getElementById('uploadIcon').className = "fa-solid fa-circle-check text-[#ffde00] text-xl";
-    document.getElementById('fileStatusText').innerText = "READY FOR UPLOAD";
-};
+        elif t == "Font":
+            raw_font_data = getattr(data, "m_FontData", b"")
+            if raw_font_data and len(raw_font_data) > 10:
+                ext = ".otf" if raw_font_data.startswith(b'OTTO') else ".ttf"
+                return f"{safe_name}{ext}", raw_font_data, f"Fonts/{safe_name}{ext}", "Font File"
+            return f"{safe_name}_font.json", json.dumps(dump_obj_to_dict(data)).encode('utf-8'), f"Fonts/{safe_name}.json", "Font Metadata"
 
-document.getElementById('extractorForm').onsubmit = async (e) => {
-    e.preventDefault();
-    const file = fileInput.files[0];
-    if(!file) return;
+        elif t == "AssetBundle":
+            tree_data = dump_obj_to_dict(data)
+            js_bytes = json.dumps(tree_data, indent=2, ensure_ascii=False).encode('utf-8')
+            return f"{safe_name}_manifest.json", js_bytes, f"Containers/{safe_name}.json", "Bundle Manifest"
 
-    // Reset UI
-    document.getElementById('statusBadge').innerText = "WORKING";
-    document.getElementById('statusBadge').style.color = "var(--ff-yellow)";
-    document.getElementById('listEmptyState').innerHTML = `<i class="fa-solid fa-circle-notch fa-spin text-yellow-500 text-xl"></i>`;
-    
-    const formData = new FormData();
-    formData.append("asset_bundle", file);
+        else:
+            try:
+                tree_data = dump_obj_to_dict(data)
+                if tree_data:
+                    js_bytes = json.dumps(tree_data, indent=2, ensure_ascii=False).encode('utf-8')
+                    return f"{safe_name}_{t}.json", js_bytes, f"Other/{t}/{safe_name}.json", f"Data ({t})"
+            except: pass
+            raw_bytes = obj.get_raw_data()
+            if raw_bytes:
+                return f"{safe_name}_{t}.dat", raw_bytes, f"Other/{t}/{safe_name}.dat", f"Binary ({t})"
+    except: pass
+    return None
 
-    try {
-        const res = await fetch("/api/extract", { method: "POST", body: formData });
-        const data = await res.json();
-        if(data.error) throw new Error(data.error);
+def convert_ktx_to_png_fallback(file_bytes) -> bytes:
+    f = io.BytesIO(file_bytes)
+    header = f.read(64)
+    if len(header) < 64 or header[:12] != b'\xABKTX 11\xBB\r\n\x1A\n': raise Exception("Invalid KTX")
+    gl_internal_format = struct.unpack('<I', header[28:32])[0]
+    width = struct.unpack('<I', header[36:40])[0]
+    height = struct.unpack('<I', header[40:44])[0]
+    bytes_of_kv = struct.unpack('<I', header[60:64])[0]
+    f.seek(64 + bytes_of_kv)
+    image_size = struct.unpack('<I', f.read(4))[0]
+    data = f.read(image_size)
+    if gl_internal_format == 0x8D64: decoded = texture2ddecoder.decode_etc1(data, width, height)
+    elif 0x93B0 <= gl_internal_format <= 0x93BD:
+        astc_formats = {0x93B0:(4,4), 0x93B1:(5,4), 0x93B2:(5,5), 0x93B3:(6,5), 0x93B4:(6,6), 0x93B5:(8,5), 0x93B6:(8,6), 0x93B7:(8,8), 0x93B8:(10,5), 0x93B9:(10,6), 0x93BA:(10,8), 0x93BB:(10,10), 0x93BC:(12,10), 0x93BD:(12,12)}
+        bx, by = astc_formats[gl_internal_format]
+        decoded = texture2ddecoder.decode_astc(data, width, height, bx, by)
+    elif gl_internal_format == 0x8058: decoded = data[:width*height*4]
+    else: raise Exception("Unsupported KTX")
+    img = Image.frombytes("RGBA", (width, height), decoded)
+    img = Image.merge("RGBA", (img.split()[2], img.split()[1], img.split()[0], img.split()[3])).transpose(Image.FLIP_TOP_BOTTOM)
+    output = io.BytesIO()
+    img.save(output, format="PNG")
+    return output.getvalue()
 
-        activeCache = data.files;
-        renderList();
-        updateFilterMenu();
+@app.route('/api/extract', methods=['GET', 'POST'])
+def handle_universal_extraction_pipeline():
+    global GLOBAL_CACHE_REGISTRY
+    download_type = request.args.get('download_type', '')
+
+    if download_type == 'zip':
+        if not GLOBAL_CACHE_REGISTRY.get('extracted'): return jsonify({"error": "No cache"}), 400
+        mode = request.args.get('mode', 'normal')
+        filter_indices = request.args.get('indices', '')
+        target_list = GLOBAL_CACHE_REGISTRY['extracted']
         
-        document.getElementById('listActions').classList.remove('hidden');
-        document.getElementById('listEmptyState').classList.add('hidden');
-        fileList.classList.remove('hidden');
+        if filter_indices:
+            idx_list = [int(i) for i in filter_indices.split(',') if i.isdigit()]
+            target_list = [item for item in target_list if item['index'] in idx_list]
+
+        zip_io = io.BytesIO()
+        with zipfile.ZipFile(zip_io, "w", zipfile.ZIP_DEFLATED) as zf:
+            for item in target_list:
+                path = item['zip_path'] if mode == 'grouped' else item['name']
+                zf.writestr(path, item['bytes'])
+        zip_io.seek(0)
         
-        // Dynamic Resize
-        if(activeCache.length < 5) {
-            listWindowPanel.classList.remove('expanded');
-        } else {
-            listWindowPanel.classList.add('expanded');
-        }
+        orig_filename = GLOBAL_CACHE_REGISTRY.get('original_name', 'assets')
+        clean_name = re.split(r'[-.]', orig_filename)[0]
+        return send_file(zip_io, mimetype='application/zip', as_attachment=True, download_name=f"{clean_name}[Extracted].zip")
 
-        document.getElementById('statusBadge').innerText = "SUCCESS";
-        document.getElementById('statusBadge').style.color = "var(--ff-emerald)";
-        document.getElementById('statusDescText').innerText = `Decoded ${activeCache.length} assets.`;
-    } catch (err) {
-        document.getElementById('statusBadge').innerText = "FAILED";
-        document.getElementById('statusBadge').style.color = "var(--ff-red)";
-        document.getElementById('statusDescText').innerText = err.message;
-    }
-};
+    elif download_type == 'single':
+        file_idx = int(request.args.get('file_index', -1))
+        if not GLOBAL_CACHE_REGISTRY.get('extracted') or file_idx < 0 or file_idx >= len(GLOBAL_CACHE_REGISTRY['extracted']):
+            return jsonify({"error": "Index error"}), 400
+        item = GLOBAL_CACHE_REGISTRY['extracted'][file_idx]
+        return send_file(io.BytesIO(item['bytes']), mimetype='application/octet-stream', as_attachment=True, download_name=item['name'])
 
-function updateFilterMenu() {
-    const labels = [...new Set(activeCache.map(i => i.label))].sort();
-    const menu = document.getElementById('filterMenu');
-    menu.innerHTML = `<div class="dropdown-item font-bold border-b border-zinc-800" onclick="toggleFilter('ALL')">Clear Filters</div>`;
-    labels.forEach(label => {
-        const item = document.createElement('div');
-        item.className = `dropdown-item ${selectedFilters.has(label) ? 'selected' : ''}`;
-        item.innerHTML = `<i class="fa-solid ${selectedFilters.has(label) ? 'fa-square-check' : 'fa-square'}"></i> ${label}`;
-        item.onclick = (e) => { e.stopPropagation(); toggleFilter(label); };
-        menu.appendChild(item);
-    });
-}
+    if 'asset_bundle' not in request.files: return jsonify({"error": "No file"}), 400
+    try:
+        uploaded_file = request.files['asset_bundle']
+        GLOBAL_CACHE_REGISTRY['original_name'] = uploaded_file.filename
+        raw_bytes = uploaded_file.read()
+        decompressed_data = decompress_stream(raw_bytes)
+        extracted_list = []
+        json_manifest = []
+        
+        if decompressed_data.startswith(b'\xABKTX 11\xBB\r\n\x1A\n'):
+            try:
+                png = convert_ktx_to_png_fallback(decompressed_data)
+                name = os.path.splitext(uploaded_file.filename)[0] + ".png"
+                extracted_list.append({'index': 0, 'name': name, 'zip_path': f"Textures/{name}", 'bytes': png, 'label': "KTX Image"})
+                json_manifest.append({'index': 0, 'name': name, 'path': f"Textures/{name}", 'label': "KTX Image"})
+                GLOBAL_CACHE_REGISTRY['extracted'] = extracted_list
+                return jsonify({"files": json_manifest})
+            except: pass
 
-function toggleFilter(label) {
-    if(label === 'ALL') selectedFilters.clear();
-    else if(selectedFilters.has(label)) selectedFilters.delete(label);
-    else selectedFilters.add(label);
-    updateFilterMenu();
-    renderList();
-}
+        env = UnityPy.load(decompressed_data)
+        counter = 0
+        seen_md5 = set()
+        for obj in env.objects:
+            res = process_object_unrestricted(obj, decompressed_data)
+            if res:
+                fname, fbytes, zpath, tlabel = res
+                h = hashlib.md5(fbytes).hexdigest()
+                if h not in seen_md5:
+                    seen_md5.add(h)
+                    extracted_list.append({'index': counter, 'name': fname, 'zip_path': zpath, 'bytes': fbytes, 'label': tlabel})
+                    json_manifest.append({'index': counter, 'name': fname, 'path': zpath, 'label': tlabel})
+                    counter += 1
+        
+        del env
+        gc.collect()
+        if not extracted_list: return jsonify({"error": "No assets found"}), 400
+        GLOBAL_CACHE_REGISTRY['extracted'] = extracted_list
+        return jsonify({"files": json_manifest})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
-function getIcon(label) {
-    const l = label.toLowerCase();
-    if(l.includes('image') || l.includes('texture')) return 'fa-image text-yellow-500';
-    if(l.includes('audio')) return 'fa-volume-high text-cyan-400';
-    if(l.includes('mesh')) return 'fa-cube text-purple-400';
-    if(l.includes('video')) return 'fa-play-circle text-red-500';
-    return 'fa-file-code text-zinc-500';
-}
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def serve_ui_layout(path):
+    try:
+        with open(HTML_PATH, 'r', encoding='utf-8') as f: return f.read()
+    except Exception as e: return f"Error: {str(e)}", 500
 
-function renderList() {
-    fileList.innerHTML = "";
-    const filtered = activeCache.filter(i => selectedFilters.size === 0 || selectedFilters.has(i.label));
-    document.getElementById('cacheCounterText').innerText = `${filtered.length} Items Displayed`;
-    
-    filtered.forEach(item => {
-        const row = document.createElement('div');
-        row.className = "flex items-center justify-between p-2 rounded-xl bg-[#0f0f13] border border-zinc-900 hover:border-zinc-700 cursor-pointer group";
-        row.onclick = () => selectFile(item);
-        row.innerHTML = `
-            <div class="flex items-center gap-3 min-w-0">
-                <div class="w-8 h-8 rounded-lg bg-black flex items-center justify-center border border-zinc-800">
-                    <i class="fa-solid ${getIcon(item.label)} text-[10px]"></i>
-                </div>
-                <div class="min-w-0">
-                    <p class="text-[11px] font-bold text-zinc-300 truncate group-hover:text-white">${item.name}</p>
-                    <p class="text-[8px] font-black text-zinc-600 uppercase gff">${item.label}</p>
-                </div>
-            </div>
-        `;
-        fileList.appendChild(row);
-    });
-}
-
-async function selectFile(item) {
-    document.getElementById('previewFallback').classList.add('hidden');
-    document.getElementById('previewContent').classList.remove('hidden');
-    const mediaBox = document.getElementById('mediaBox');
-    const title = document.getElementById('mediaTitle');
-    const typeLabel = document.getElementById('mediaTypeLabel');
-    const saveBtn = document.getElementById('singleSaveBtn');
-    
-    title.innerText = item.name;
-    typeLabel.innerText = item.label;
-    const url = `/api/extract?download_type=single&file_index=${item.index}`;
-    saveBtn.href = url;
-    mediaBox.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin text-zinc-800"></i>`;
-
-    const ext = item.name.split('.').pop().toLowerCase();
-    
-    if(['png','jpg','webp'].includes(ext)) {
-        mediaBox.innerHTML = `<img src="${url}" class="pixelated-render p-4">`;
-    } else if(['mp3','wav','ogg'].includes(ext)) {
-        mediaBox.innerHTML = `
-            <div class="flex flex-col items-center w-full p-4">
-                <canvas id="waveCanvas"></canvas>
-                <div class="flex items-center gap-4 mt-4 w-full">
-                    <button id="playBtn" class="w-10 h-10 rounded-full bg-cyan-500 text-black flex items-center justify-center"><i class="fa-solid fa-play"></i></button>
-                    <div class="flex-1 h-1 bg-zinc-800 rounded-full overflow-hidden"><div id="audioProg" class="h-full bg-cyan-500 w-0"></div></div>
-                </div>
-                <audio id="activeAudio" src="${url}" class="hidden"></audio>
-            </div>`;
-        initAudioPlayer();
-    } else if(ext === 'mp4') {
-        mediaBox.innerHTML = `<video src="${url}" controls class="max-h-full"></video>`;
-    } else {
-        try {
-            const r = await fetch(url);
-            const txt = await r.text();
-            mediaBox.innerHTML = `<pre class="text-[10px] text-zinc-500 p-4 w-full h-full overflow-auto text-left whitespace-pre-wrap">${txt.slice(0, 5000)}</pre>`;
-        } catch {
-            mediaBox.innerHTML = `<i class="fa-solid fa-file-circle-exclamation text-zinc-800 text-3xl"></i>`;
-        }
-    }
-}
-
-function initAudioPlayer() {
-    const audio = document.getElementById('activeAudio');
-    const canvas = document.getElementById('waveCanvas');
-    const ctx = canvas.getContext('2d');
-    const playBtn = document.getElementById('playBtn');
-    const prog = document.getElementById('audioProg');
-
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const source = audioCtx.createMediaElementSource(audio);
-    const analyser = audioCtx.createAnalyser();
-    source.connect(analyser);
-    analyser.connect(audioCtx.destination);
-    analyser.fftSize = 64;
-    const bufferLength = analyser.frequencyBinCount;
-    const dataArray = new Uint8Array(bufferLength);
-
-    function draw() {
-        requestAnimationFrame(draw);
-        analyser.getByteFrequencyData(dataArray);
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        const barWidth = (canvas.width / bufferLength) * 2.5;
-        let x = 0;
-        for(let i = 0; i < bufferLength; i++) {
-            const barHeight = (dataArray[i] / 255) * canvas.height;
-            ctx.fillStyle = audio.paused ? '#1a1a1a' : `rgb(56, 189, 248)`;
-            ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
-            x += barWidth + 2;
-        }
-        prog.style.width = `${(audio.currentTime / audio.duration) * 100}%`;
-    }
-    draw();
-
-    playBtn.onclick = () => {
-        if(audioCtx.state === 'suspended') audioCtx.resume();
-        if(audio.paused) { audio.play(); playBtn.innerHTML = '<i class="fa-solid fa-pause"></i>'; }
-        else { audio.pause(); playBtn.innerHTML = '<i class="fa-solid fa-play"></i>'; }
-    };
-}
-
-function downloadZip(mode) {
-    let url = `/api/extract?download_type=zip&mode=${mode}`;
-    if(mode === 'filtered') {
-        const filteredIdx = activeCache
-            .filter(i => selectedFilters.size === 0 || selectedFilters.has(i.label))
-            .map(i => i.index);
-        url += `&indices=${filteredIdx.join(',')}`;
-    }
-    window.location.href = url;
-}
-</script>
-</body>
-</html>
+if __name__ == '__main__':
+    app.run(host="0.0.0.0", port=10000, debug=True)
