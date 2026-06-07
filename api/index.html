@@ -7,7 +7,6 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
-<!-- Production Babylon.js Structural Loader Packages Engine -->
 <script src="https://cdn.babylonjs.com/babylon.js"></script>
 <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
 
@@ -55,6 +54,12 @@ body { background: #030305; color: #fff; min-height: 100vh; font-family: 'Inter'
 .tab-btn { flex: 1; text-align: center; padding: 7px 4px; font-size: 11px; font-weight: 700; color: #8e8e93; border-radius: 6px; cursor: pointer; transition: all 0.2s; text-transform: uppercase; }
 .tab-btn:hover { color: #fff; background: #14141c; }
 .tab-btn.active { background: #1a1a26; color: var(--ff-yellow); box-shadow: inset 0 1px 2px rgba(0,0,0,0.5); }
+
+/* Environment Segment Switch Controls */
+.env-row { display: flex; background: #07070a; padding: 3px; border-radius: 8px; border: 1px solid #1e1e2b; gap: 3px; }
+.env-btn { flex: 1; text-align: center; padding: 6px 2px; font-size: 10px; font-weight: 800; color: #66666e; border-radius: 5px; cursor: pointer; transition: all 0.15s; text-transform: uppercase; }
+.env-btn:hover { color: #aaa; }
+.env-btn.active { background: var(--ff-yellow); color: #000; font-weight: 900; }
 
 /* Extract Buttons Configurations */
 .btn-mechanical { cursor: pointer; font-family: 'GFF-Bold'; text-transform: uppercase; font-style: italic; display: flex; align-items: center; justify-content: center; border-radius: 14px; gap: 12px; background: var(--ff-yellow); color: #000; box-shadow: 0 5px 0 #bfa600; transition: all 0.1s; user-select: none; }
@@ -124,12 +129,11 @@ body { background: #030305; color: #fff; min-height: 100vh; font-family: 'Inter'
 </div>
 
 <div class="main-grid-container">
-    <!-- Column 1: Config & Drag Upload Deck -->
     <div class="uniform-panel panel-1">
         <div class="panel-body justify-between space-y-4">
             <div>
-                <h2 class="text-xs font-black text-white uppercase tracking-wider mb-1 gff">Input File</h2>
-                <p class="text-[11px] text-zinc-500 mb-3">Select the file type you want to unpack.</p>
+                <h2 class="text-xs font-black text-white uppercase tracking-wider mb-1 gff">Input Asset Source</h2>
+                <p id="extractionSubTitle" class="text-[11px] text-zinc-500 mb-3">Select the asset format payload container type.</p>
                 
                 <div class="tab-row" id="extractionModeTabs">
                     <div class="tab-btn active" data-mode="bundle">AssetBundle</div>
@@ -148,7 +152,27 @@ body { background: #030305; color: #fff; min-height: 100vh; font-family: 'Inter'
                         <p id="fileLabel" class="gff text-[12px] text-zinc-400 truncate pr-16">Tap to upload / Drag & Drop file</p>
                         <span class="absolute right-4 text-[9px] font-bold text-zinc-600 bg-zinc-950 px-1.5 py-0.5 rounded border border-zinc-900 uppercase">Max 5MB</span>
                     </div>
-                    <input type="file" id="fileInput" class="hidden" accept=".unity3d,.bundle,.ktx,.astc">
+                    <input type="file" id="fileInput" class="hidden" accept=".unity3d,.bundle,.ktx">
+                </div>
+
+                <div class="hidden flex-col space-y-2.5 min-w-0" id="astcInputGroup">
+                    <div class="grid grid-cols-3 gap-2.5 items-center">
+                        <div class="col-span-1 flex flex-col space-y-1">
+                            <span class="text-[9px] font-black uppercase text-zinc-500 tracking-wider gff">CDN Cluster</span>
+                            <div class="env-row">
+                                <div class="env-btn active" id="envBtnLive" onclick="setAstcEnvironment('live')">Live</div>
+                                <div class="env-btn" id="envBtnAdvance" onclick="setAstcEnvironment('advance')">Adv</div>
+                            </div>
+                        </div>
+                        <div class="col-span-2 flex flex-col space-y-1">
+                            <span class="text-[9px] font-black uppercase text-zinc-500 tracking-wider gff">Asset Identity Value (ID)</span>
+                            <div class="relative flex items-center">
+                                <span class="absolute left-3 text-zinc-600 text-xs"><i class="fa-solid fa-fingerprint"></i></span>
+                                <input type="text" id="astcAssetIdInput" placeholder="e.g., 1002354" autocomplete="off"
+                                    class="w-full h-[33px] pl-8 pr-3 text-xs font-semibold tracking-wide rounded-lg bg-[#07070a] border border-zinc-800 text-yellow-400 placeholder-zinc-700 focus:outline-none focus:border-zinc-600 transition-all">
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="h-5 flex-shrink-0"></div>
@@ -169,7 +193,6 @@ body { background: #030305; color: #fff; min-height: 100vh; font-family: 'Inter'
         </div>
     </div>
 
-    <!-- Column 2: Extracted Asset List -->
     <div id="listWindowPanel" class="uniform-panel panel-2">
         <div class="panel-body">
             <div class="flex items-center justify-between mb-4 border-b border-zinc-900 pb-3 flex-shrink-0 min-w-0">
@@ -205,7 +228,6 @@ body { background: #030305; color: #fff; min-height: 100vh; font-family: 'Inter'
         </div>
     </div>
 
-    <!-- Column 3: Fixed Live Preview Workspace -->
     <div id="previewTargetWorkspace" class="uniform-panel panel-3 fixed-preview-panel">
         <div class="panel-body">
             <div class="mb-4 border-b border-zinc-900 pb-3 flex-shrink-0">
@@ -238,6 +260,7 @@ body { background: #030305; color: #fff; min-height: 100vh; font-family: 'Inter'
 let activeCache = [];
 let selectedFilters = new Set();
 let activeExtractionMode = "bundle";
+let activeAstcEnvironment = "live";
 
 const FILTER_ORDER = ["2D Texture", "Mesh", "Audio", "Video", "Text", "JSON"];
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 Megabytes Strict Cap Limit
@@ -253,6 +276,8 @@ const extractBtn = document.getElementById("extractBtn");
 const btnIcon = document.getElementById("btnIcon");
 const btnText = document.getElementById("btnText");
 const dropZone = document.getElementById("dropZone");
+const astcInputGroup = document.getElementById("astcInputGroup");
+const astcAssetIdInput = document.getElementById("astcAssetIdInput");
 
 dropZone.onclick = () => fileInput.click();
 dropZone.addEventListener("dragover", (e) => { e.preventDefault(); dropZone.classList.add("dragover-active"); });
@@ -260,6 +285,7 @@ dropZone.addEventListener("dragleave", () => dropZone.classList.remove("dragover
 dropZone.addEventListener("drop", (e) => {
     e.preventDefault();
     dropZone.classList.remove("dragover-active");
+    if (activeExtractionMode === "astc") return;
     if (e.dataTransfer.files.length) { 
         validateAndRegisterFile(e.dataTransfer.files[0]);
     }
@@ -274,7 +300,6 @@ function validateAndRegisterFile(file) {
     if(!file) return;
     
     if (file.size > MAX_FILE_SIZE) {
-        // Reset inputs immediately
         fileInput.value = "";
         fileLabel.innerText = "Tap to upload / Drag & Drop file";
         fileLabel.className = "gff text-[12px] text-zinc-400 truncate pr-16";
@@ -282,7 +307,6 @@ function validateAndRegisterFile(file) {
         document.getElementById('fileStatusText').innerText = "LIMIT EXCEEDED";
         document.getElementById('fileStatusText').className = "text-[9px] font-black text-red-500 block gff uppercase tracking-tighter";
         
-        // Update general logging pane
         document.getElementById('statusBadge').innerText = "REJECTED";
         document.getElementById('statusBadge').style.color = "var(--ff-red)";
         document.getElementById('statusText').innerText = "SIZE ERROR";
@@ -303,12 +327,46 @@ function validateAndRegisterFile(file) {
     document.getElementById('statusDescText').innerText = `Ready to extract ${file.name}.`;
 }
 
+function setAstcEnvironment(env) {
+    activeAstcEnvironment = env;
+    if (env === 'live') {
+        document.getElementById("envBtnLive").classList.add("active");
+        document.getElementById("envBtnAdvance").classList.remove("active");
+    } else {
+        document.getElementById("envBtnAdvance").classList.add("active");
+        document.getElementById("envBtnLive").classList.remove("active");
+    }
+}
+
 document.getElementById('extractionModeTabs').addEventListener('click', (e) => {
     const target = e.target.closest('.tab-btn');
     if (!target || extractBtn.disabled) return;
     document.querySelectorAll('#extractionModeTabs .tab-btn').forEach(btn => btn.classList.remove('active'));
     target.classList.add('active');
     activeExtractionMode = target.dataset.mode;
+
+    // Mutate layouts dynamically based on asset stream pipeline configuration 
+    if (activeExtractionMode === "astc") {
+        dropZone.style.display = "none";
+        astcInputGroup.style.display = "flex";
+        document.getElementById("extractionSubTitle").innerText = "Input asset context markers to query CDN maps.";
+        btnText.innerText = "Fetch Remote ASTC";
+        document.getElementById('statusDescText').innerText = "Enter target structural asset configuration index markers.";
+        document.getElementById('statusBadge').innerText = "CONFIG";
+        document.getElementById('statusBadge').style.color = "var(--ff-yellow)";
+    } else {
+        dropZone.style.display = "flex";
+        astcInputGroup.style.display = "none";
+        document.getElementById("extractionSubTitle").innerText = "Select the file type you want to unpack.";
+        btnText.innerText = "Extract File";
+        if (fileInput.files.length) {
+            validateAndRegisterFile(fileInput.files[0]);
+        } else {
+            document.getElementById('statusDescText').innerText = "Choose a file to begin extraction.";
+            document.getElementById('statusBadge').innerText = "IDLE";
+            document.getElementById('statusBadge').style.color = "text-zinc-500";
+        }
+    }
 });
 
 const filterDropdown = document.getElementById('filterDropdown');
@@ -324,7 +382,76 @@ document.addEventListener('click', () => {
 document.getElementById('extractorForm').onsubmit = async (e) => {
     e.preventDefault();
     
-    // Double check array verification check bounds
+    if (activeExtractionMode === "astc") {
+        const idValue = astcAssetIdInput.value.trim();
+        if (!idValue || !/^\d+$/.test(idValue)) {
+            document.getElementById('statusDescText').innerText = "Identity format error: Value must consist of digits only.";
+            return;
+        }
+
+        extractBtn.disabled = true;
+        btnIcon.className = "fa-solid fa-sync fa-spin text-black";
+        btnText.innerText = "Reconstructing...";
+
+        document.getElementById('statusBadge').innerText = "NET LOCK";
+        document.getElementById('statusBadge').style.color = "var(--ff-yellow)";
+        document.getElementById('statusText').innerText = "FETCHING";
+        document.getElementById('statusDescText').innerText = `Reconstructing remote ASTC streams for index ${idValue}...`;
+
+        resetAssetWorkspaceToEmpty();
+
+        try {
+            const remoteFetchUrl = `/api/fetch_astc?id=${idValue}&env=${activeAstcEnvironment}`;
+            const response = await fetch(remoteFetchUrl);
+            
+            if (response.status === 404) {
+                throw new Error("Asset structural configuration target maps not found on server cluster (404).");
+            }
+            if (!response.ok) {
+                throw new Error("An error occurred during server reconstruction processing.");
+            }
+
+            const imageBlob = await response.blob();
+            const localVirtualUrl = URL.createObjectURL(imageBlob);
+
+            // Construct single file entry schema matching standard layout pipelines
+            activeCache = [{
+                index: 0,
+                name: `${idValue}.png`,
+                label: "2D Texture",
+                localUrl: localVirtualUrl
+            }];
+            
+            selectedFilters.clear();
+            document.getElementById('listLoadingState').classList.add('hidden');
+            renderList(true);
+            updateFilterMenu();
+            
+            document.getElementById('listActions').classList.remove('hidden');
+            fileList.classList.remove('hidden');
+            
+            document.getElementById('statusBadge').innerText = "SUCCESS";
+            document.getElementById('statusBadge').style.color = "var(--ff-emerald)";
+            document.getElementById('statusDescText').innerText = `Decoded transparent asset matrix frame successfully.`;
+
+            document.getElementById('listWindowPanel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            selectFile(activeCache[0], fileList.firstElementChild);
+
+        } catch (err) {
+            document.getElementById('statusBadge').innerText = "404 CAP";
+            document.getElementById('statusBadge').style.color = "var(--ff-red)";
+            document.getElementById('statusDescText').innerText = err.message;
+            document.getElementById('listLoadingState').classList.add('hidden');
+            document.getElementById('listEmptyState').classList.remove('hidden');
+        } finally {
+            extractBtn.disabled = false;
+            btnIcon.className = "fa-solid fa-bolt";
+            btnText.innerText = "Fetch Remote ASTC";
+        }
+        return;
+    }
+
+    // Standard AssetBundle/KTX Local Pipeline Logic Block Execution
     const file = fileInput.files[0];
     if(!file) {
         document.getElementById('statusDescText').innerText = "Please select a file first.";
@@ -344,10 +471,7 @@ document.getElementById('extractorForm').onsubmit = async (e) => {
     document.getElementById('statusText').innerText = "PROCESSING";
     document.getElementById('statusDescText').innerText = `Unpacking contents...`;
     
-    document.getElementById('listEmptyState').classList.add('hidden');
-    document.getElementById('listLoadingState').classList.remove('hidden');
-    fileList.classList.add('hidden');
-    document.getElementById('listActions').classList.add('hidden');
+    resetAssetWorkspaceToEmpty();
 
     const formData = new FormData();
     formData.append("asset_bundle", file);
@@ -389,6 +513,16 @@ document.getElementById('extractorForm').onsubmit = async (e) => {
         btnText.innerText = "Extract File";
     }
 };
+
+function resetAssetWorkspaceToEmpty() {
+    document.getElementById('listEmptyState').classList.add('hidden');
+    document.getElementById('listLoadingState').classList.remove('hidden');
+    fileList.classList.add('hidden');
+    document.getElementById('listActions').classList.add('hidden');
+    document.getElementById('previewContent').classList.add('hidden');
+    document.getElementById('previewFallback').classList.remove('hidden');
+    cleanPreviousMediaTracks();
+}
 
 function updateFilterMenu() {
     const rawLabels = [...new Set(activeCache.map(i => i.label))];
@@ -495,7 +629,8 @@ async function selectFile(item, element) {
     document.getElementById('mediaTitle').innerText = item.name;
     document.getElementById('mediaTypeLabel').innerText = item.label;
     
-    const url = `/api/extract?download_type=single&file_index=${item.index}`;
+    // Check if handling simulated virtual URL blobs (from local stream injection) or backend storage locations
+    const url = item.localUrl ? item.localUrl : `/api/extract?download_type=single&file_index=${item.index}`;
     document.getElementById('singleSaveBtn').href = url;
     document.getElementById('singleSaveBtn').setAttribute('download', item.name);
     
@@ -514,316 +649,341 @@ async function selectFile(item, element) {
                     <canvas id="babylonAssetCanvas" class="babylon-canvas-viewport"></canvas>
                 </div>
             </div>`;
-        initBabylonMeshScene("babylonAssetCanvas", url, item.name);
-    } else if(['png','jpg','jpeg','webp'].includes(ext) || item.label.toLowerCase().includes('texture')) {
-        mediaBox.innerHTML = `
-            <div class="custom-player-wrapper h-full">
-                <div class="aspect-16-9-viewport full-viewport-mesh">
-                    <img src="${url}" class="pixelated-render">
-                </div>
-            </div>`;
-    } else if(['mp4','mkv','webm'].includes(ext) || item.label.toLowerCase().includes('video')) {
-        mediaBox.innerHTML = `
-            <div class="custom-player-wrapper relative">
-                <div class="aspect-16-9-viewport relative">
-                    <div id="videoCenterOverlay" class="center-play-overlay">
-                        <div class="center-play-btn-circle"><i class="fa-solid fa-play text-lg"></i></div>
-                    </div>
-                    <video id="customVideoPlayer" src="${url}" class="w-full h-full object-contain"></video>
-                </div>
-                <div class="custom-control-bar">
-                    <input type="range" id="videoTimeline" class="player-progress-slider" value="0" min="0" max="100">
-                    <span id="videoTimeLabel" class="text-[9px] font-mono text-zinc-500 select-none pr-2 flex-shrink-0">00:00</span>
-                    
-                    <!-- Verified Single Right Corner Control -->
-                    <div class="flex items-center gap-2 flex-shrink-0">
-                        <button id="videoPlayBtn" class="text-zinc-400 hover:text-[#ffde00] transition-all text-xs bg-zinc-900 border border-zinc-800 w-7 h-7 rounded-md flex items-center justify-center shadow-inner">
-                            <i class="fa-solid fa-play"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>`;
-        initCustomVideoController();
-    } else if(['mp3','wav','ogg'].includes(ext) || item.label.toLowerCase().includes('audio')) {
-        mediaBox.innerHTML = `
-            <div class="custom-player-wrapper relative">
-                <div class="aspect-16-9-viewport relative">
-                    <div id="audioCenterOverlay" class="center-play-overlay">
-                        <div class="center-play-btn-circle"><i class="fa-solid fa-play text-lg"></i></div>
-                    </div>
-                    <canvas id="audioVisualizerCanvas"></canvas>
-                    <audio id="customAudioPlayer" src="${url}" crossorigin="anonymous" class="hidden"></audio>
-                </div>
-                <div class="custom-control-bar">
-                    <input type="range" id="audioTimeline" class="player-progress-slider" value="0" min="0" max="100">
-                    <span id="audioTimeLabel" class="text-[9px] font-mono text-zinc-500 select-none pr-2 flex-shrink-0">00:00</span>
-                    
-                    <!-- Verified Single Right Corner Control -->
-                    <div class="flex items-center gap-2 flex-shrink-0">
-                        <button id="audioPlayBtn" class="text-zinc-400 hover:text-[#ffde00] transition-all text-xs bg-zinc-900 border border-zinc-800 w-7 h-7 rounded-md flex items-center justify-center shadow-inner">
-                            <i class="fa-solid fa-play"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>`;
-        initCustomAudioController();
-    } else {
-        try {
-            const r = await fetch(url);
-            const txt = await r.text();
+        initBabylonMeshScene("babylonAssetCanvas", url);
+        return;
+    }
+
+    try {
+        let rawBufferBytes;
+        if (item.localUrl) {
+            const fetchResponse = await fetch(item.localUrl);
+            rawBufferBytes = await fetchResponse.arrayBuffer();
+        } else {
+            const fetchResponse = await fetch(url);
+            rawBufferBytes = await fetchResponse.arrayBuffer();
+        }
+
+        const labelNormalized = item.label.toLowerCase();
+        
+        if (labelNormalized.includes('texture') || labelNormalized.includes('image')) {
+            const imgBlob = new Blob([rawBufferBytes], { type: 'image/png' });
+            const previewImgUrl = URL.createObjectURL(imgBlob);
+            mediaBox.innerHTML = `<div class="aspect-16-9-viewport"><img src="${previewImgUrl}" class="pixelated-render" alt="Texture Preview"></div>`;
+        } 
+        else if (labelNormalized.includes('audio')) {
             mediaBox.innerHTML = `
-                <div class="custom-player-wrapper h-full">
-                    <div class="aspect-16-9-viewport full-viewport-mesh">
-                        <pre class="text-[10px] font-mono text-zinc-500 p-4 w-full h-full overflow-auto text-left whitespace-pre-wrap select-text custom-scrollbar bg-[#030305]">${txt.slice(0, 8000)}</pre>
+                <div class="custom-player-wrapper">
+                    <div class="aspect-16-9-viewport">
+                        <canvas id="audioVisualizerCanvas"></canvas>
+                        <div class="center-play-overlay" id="audioCenterPlayOverlay">
+                            <div class="center-play-btn-circle"><i class="fa-solid fa-play ml-0.5"></i></div>
+                        </div>
+                    </div>
+                    <div class="custom-control-bar">
+                        <button id="audioPlayBtn" class="text-zinc-400 hover:text-white transition-all text-xs"><i class="fa-solid fa-play"></i></button>
+                        <span id="audioTimeCurrent" class="text-[10px] font-mono text-zinc-500 select-none">00:00</span>
+                        <input type="range" id="audioProgressBar" class="player-progress-slider" min="0" max="100" value="0">
+                        <span id="audioTimeTotal" class="text-[10px] font-mono text-zinc-500 select-none">00:00</span>
                     </div>
                 </div>`;
-        } catch {
+            setupAudioEngineContext(rawBufferBytes);
+        }
+        else if (labelNormalized.includes('video')) {
+            const videoBlob = new Blob([rawBufferBytes], { type: 'video/mp4' });
+            const previewVideoUrl = URL.createObjectURL(videoBlob);
             mediaBox.innerHTML = `
-                <div class="custom-player-wrapper h-full"><div class="aspect-16-9-viewport full-viewport-mesh text-zinc-800"><i class="fa-solid fa-file-circle-exclamation text-xl"></i></div></div>`;
+                <div class="custom-player-wrapper">
+                    <div class="aspect-16-9-viewport">
+                        <video id="customVideoPlayerElement" src="${previewVideoUrl}" class="w-full h-full object-contain"></video>
+                        <div class="center-play-overlay" id="videoCenterPlayOverlay">
+                            <div class="center-play-btn-circle"><i class="fa-solid fa-play ml-0.5"></i></div>
+                        </div>
+                    </div>
+                    <div class="custom-control-bar">
+                        <button id="videoPlayBtn" class="text-zinc-400 hover:text-white transition-all text-xs"><i class="fa-solid fa-play"></i></button>
+                        <span id="videoTimeCurrent" class="text-[10px] font-mono text-zinc-500 select-none">00:00</span>
+                        <input type="range" id="videoProgressBar" class="player-progress-slider" min="0" max="100" value="0">
+                        <span id="videoTimeTotal" class="text-[10px] font-mono text-zinc-500 select-none">00:00</span>
+                    </div>
+                </div>`;
+            setupVideoEngineLayout();
+        }
+        else {
+            const decoder = new TextDecoder('utf-8');
+            const plainText = decoder.decode(rawBufferBytes);
+            const safeEscapedText = plainText.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            mediaBox.innerHTML = `
+                <div class="aspect-16-9-viewport full-viewport-mesh">
+                    <pre class="w-full h-full p-3 text-[10px] font-mono text-zinc-400 overflow-auto text-left whitespace-pre-wrap custom-scrollbar select-text bg-[#030305]">${safeEscapedText}</pre>
+                </div>`;
+        }
+    } catch (e) {
+        mediaBox.innerHTML = `<div class="aspect-16-9-viewport text-red-500 text-xs font-semibold">Failed to process visualization data mapping.</div>`;
+    }
+}
+
+function initBabylonMeshScene(canvasId, modelUrl) {
+    const canvas = document.getElementById(canvasId);
+    babylonEngine = new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true });
+    
+    babylonScene = new BABYLON.Scene(babylonEngine);
+    babylonScene.clearColor = new BABYLON.Color4(0.024, 0.024, 0.035, 1.0);
+    
+    const camera = new BABYLON.ArcRotateCamera("camera", -Math.PI / 2, Math.PI / 2.5, 3, BABYLON.Vector3.Zero(), babylonScene);
+    camera.attachControl(canvas, true);
+    camera.wheelPrecision = 50;
+    
+    const light1 = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(1, 1, 0), babylonScene);
+    const light2 = new BABYLON.PointLight("light2", new BABYLON.Vector3(0, 5, -5), babylonScene);
+    light1.intensity = 0.75;
+    light2.intensity = 0.5;
+
+    BABYLON.SceneLoader.Append("", modelUrl, babylonScene, function (scene) {
+        scene.executeWhenReady(() => {
+            if (scene.meshes.length === 0) return;
+            
+            let min = null;
+            let max = null;
+            
+            scene.meshes.forEach(mesh => {
+                if (!mesh.getBoundingInfo()) return;
+                const boundingInfo = mesh.getBoundingInfo();
+                const vectors = boundingInfo.boundingBox.vectorsWorld;
+                
+                vectors.forEach(v => {
+                    if (!min) { min = v.clone(); max = v.clone(); return; }
+                    min.x = Math.min(min.x, v.x); min.y = Math.min(min.y, v.y); min.z = Math.min(min.z, v.z);
+                    max.x = Math.max(max.x, v.x); max.y = Math.max(max.y, v.y); max.z = Math.max(max.z, v.z);
+                });
+                
+                // Set default metallic styling parameters manually
+                if (mesh.material) {
+                    mesh.material.backFaceCulling = false;
+                    if (mesh.material.pbr) {
+                        mesh.material.metallic = 0.1;
+                        mesh.material.roughness = 0.6;
+                    }
+                }
+            });
+
+            if (min && max) {
+                const center = BABYLON.Vector3.Center(min, max);
+                const distance = BABYLON.Vector3.Distance(min, max);
+                
+                scene.meshes.forEach(m => {
+                    if (!m.parent) { m.position.subtractInPlace(center); }
+                });
+                
+                camera.target = BABYLON.Vector3.Zero();
+                camera.radius = distance * 1.15;
+            }
+        });
+    }, null, function (scene, message) {
+        console.error("Babylon engine pipeline error log:", message);
+    }, ".obj");
+
+    babylonEngine.runRenderLoop(() => { if (babylonScene) babylonScene.render(); });
+    window.addEventListener("resize", onWindowResizeBabylonHook);
+}
+
+function onWindowResizeBabylonHook() { if (babylonEngine) babylonEngine.resize(); }
+
+function setupAudioEngineContext(arrayBuffer) {
+    const playBtn = document.getElementById('audioPlayBtn');
+    const progressBar = document.getElementById('audioProgressBar');
+    const timeCurrent = document.getElementById('audioTimeCurrent');
+    const timeTotal = document.getElementById('audioTimeTotal');
+    const centerOverlay = document.getElementById('audioCenterPlayOverlay');
+    const canvas = document.getElementById('audioVisualizerCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let audioBuffer = null;
+    let startTime = 0;
+    let elapsedPauseTime = 0;
+    let isPlaying = false;
+    let playbackNode = null;
+
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    audioAnalyser = audioCtx.createAnalyser();
+    audioAnalyser.fftSize = 64;
+    audioAnalyser.connect(audioCtx.destination);
+
+    audioCtx.decodeAudioData(arrayBuffer.slice(0), (buffer) => {
+        audioBuffer = buffer;
+        timeTotal.innerText = formatTimeLayout(buffer.duration);
+    }, () => {
+        document.getElementById('statusDescText').innerText = "Audio decryption node processing aborted.";
+    });
+
+    function createAudioSourceNode() {
+        playbackNode = audioCtx.createBufferSource();
+        playbackNode.buffer = audioBuffer;
+        playbackNode.connect(audioAnalyser);
+        playbackNode.onended = () => {
+            if (audioCtx.currentTime - startTime >= audioBuffer.duration) {
+                isPlaying = false;
+                elapsedPauseTime = 0;
+                playBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
+                centerOverlay.classList.remove('playing-hide');
+                progressBar.value = 0;
+                timeCurrent.innerText = "00:00";
+            }
+        };
+    }
+
+    function playTrack() {
+        if (!audioBuffer) return;
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        
+        createAudioSourceNode();
+        startTime = audioCtx.currentTime - elapsedPauseTime;
+        playbackNode.start(0, elapsedPauseTime);
+        isPlaying = true;
+        
+        playBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
+        centerOverlay.classList.add('playing-hide');
+        updateAudioProgressBarLoop();
+    }
+
+    function pauseTrack() {
+        if (!isPlaying) return;
+        playbackNode.stop();
+        elapsedPauseTime = audioCtx.currentTime - startTime;
+        isPlaying = false;
+        playBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
+        centerOverlay.classList.remove('playing-hide');
+    }
+
+    function togglePlayback() { if (isPlaying) pauseTrack(); else playTrack(); }
+
+    playBtn.onclick = togglePlayback;
+    centerOverlay.onclick = togglePlayback;
+
+    progressBar.oninput = () => {
+        if (!audioBuffer) return;
+        const wasPlaying = isPlaying;
+        if (isPlaying) pauseTrack();
+        elapsedPauseTime = (progressBar.value / 100) * audioBuffer.duration;
+        timeCurrent.innerText = formatTimeLayout(elapsedPauseTime);
+        if (wasPlaying) playTrack();
+    };
+
+    function updateAudioProgressBarLoop() {
+        if (!isPlaying || !audioBuffer) return;
+        const current = audioCtx.currentTime - startTime;
+        progressBar.value = (current / audioBuffer.duration) * 100;
+        timeCurrent.innerText = formatTimeLayout(current);
+        requestAnimationFrame(updateAudioProgressBarLoop);
+    }
+
+    const bufferLength = audioAnalyser.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+    const barWidth = (canvas.width / bufferLength) * 1.4;
+
+    function renderAudioVisualizerFrame() {
+        audioAnimationId = requestAnimationFrame(renderAudioVisualizerFrame);
+        audioAnalyser.getByteFrequencyData(dataArray);
+        ctx.fillStyle = '#020204';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        let x = 0;
+        for (let i = 0; i < bufferLength; i++) {
+            const h = (dataArray[i] / 255) * (canvas.height * 0.65);
+            ctx.fillStyle = `rgba(255, 222, 0, ${0.15 + (h / canvas.height)})`;
+            ctx.fillRect(x, canvas.height - h, barWidth - 2, h);
+            x += barWidth;
         }
     }
+    renderAudioVisualizerFrame();
+}
+
+function setupVideoEngineLayout() {
+    const v = document.getElementById('customVideoPlayerElement');
+    const playBtn = document.getElementById('videoPlayBtn');
+    const progressBar = document.getElementById('videoProgressBar');
+    const timeCurrent = document.getElementById('videoTimeCurrent');
+    const timeTotal = document.getElementById('videoTimeTotal');
+    const centerOverlay = document.getElementById('videoCenterPlayOverlay');
+
+    v.onloadedmetadata = () => { timeTotal.innerText = formatTimeLayout(v.duration); };
+    
+    function toggleVideo() {
+        if (v.paused) {
+            v.play();
+            playBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
+            centerOverlay.classList.add('playing-hide');
+        } else {
+            v.pause();
+            playBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
+            centerOverlay.classList.remove('playing-hide');
+        }
+    }
+
+    playBtn.onclick = toggleVideo;
+    centerOverlay.onclick = toggleVideo;
+    v.onclick = toggleVideo;
+
+    v.ontimeupdate = () => {
+        if(v.duration) {
+            progressBar.value = (v.currentTime / v.duration) * 100;
+            timeCurrent.innerText = formatTimeLayout(v.currentTime);
+        }
+    };
+
+    progressBar.oninput = () => { if(v.duration) v.currentTime = (progressBar.value / 100) * v.duration; };
+    v.onended = () => {
+        playBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
+        centerOverlay.classList.remove('playing-hide');
+        progressBar.value = 0;
+        timeCurrent.innerText = "00:00";
+    };
 }
 
 function cleanPreviousMediaTracks() {
     if (audioAnimationId) cancelAnimationFrame(audioAnimationId);
+    if (playbackNode) { try { playbackNode.stop(); } catch(e){} }
     if (audioCtx) { audioCtx.close(); audioCtx = null; }
-    if (babylonEngine) { window.removeEventListener("resize", resizeBabylonViewportMatrix); babylonEngine.dispose(); babylonEngine = null; }
-}
-
-function initBabylonMeshScene(canvasId, modelUrl, filename) {
-    const canvas = document.getElementById(canvasId);
-    if (!canvas) return;
-
-    babylonEngine = new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true });
-    babylonScene = new BABYLON.Scene(babylonEngine);
-    babylonScene.clearColor = new BABYLON.Color4(0.04, 0.04, 0.06, 1);
-
-    const camera = new BABYLON.ArcRotateCamera("TacticalCamera", Math.PI / 2, Math.PI / 2.5, 4, BABYLON.Vector3.Zero(), babylonScene);
-    camera.attachControl(canvas, true);
-    camera.wheelPrecision = 45;
-
-    const atmosphericLight = new BABYLON.HemisphericLight("ambientAtmosphere", new BABYLON.Vector3(0, 1, 0), babylonScene);
-    atmosphericLight.intensity = 0.6;
-
-    const keyDirectionalLight = new BABYLON.DirectionalLight("studioKeyLight", new BABYLON.Vector3(6, 12, 5), babylonScene);
-    keyDirectionalLight.intensity = 0.9;
-
-    const structuralGrid = BABYLON.MeshBuilder.CreateGround("workspaceGrid", { width: 14, height: 14, subdivisions: 28 }, babylonScene);
-    const gridMaterial = new BABYLON.StandardMaterial("gridMaterialSet", babylonScene);
-    gridMaterial.wireframe = true;
-    gridMaterial.diffuseColor = new BABYLON.Color3(0.12, 0.12, 0.18);
-    structuralGrid.material = gridMaterial;
-    structuralGrid.position.y = -1.1;
-
-    BABYLON.SceneLoader.ImportMesh("", "", modelUrl, babylonScene, function (meshes) {
-        if (!meshes || meshes.length === 0) return;
-
-        const premiumMaterial = new BABYLON.StandardMaterial("eliteModelMat", babylonScene);
-        premiumMaterial.diffuseColor = new BABYLON.Color3(0.85, 0.15, 0.2); 
-        premiumMaterial.specularColor = new BABYLON.Color3(1.0, 0.85, 0.0); 
-        premiumMaterial.specularPower = 32;
-        premiumMaterial.backFaceCulling = false;
-
-        meshes.forEach(mesh => { if(!mesh.material) mesh.material = premiumMaterial; });
-
-        let min = meshes[0].getBoundingInfo().boundingBox.minimumWorld;
-        let max = meshes[0].getBoundingInfo().boundingBox.maximumWorld;
-        
-        meshes.forEach(mesh => {
-            const bounds = mesh.getBoundingInfo().boundingBox;
-            min = BABYLON.Vector3.Minimize(min, bounds.minimumWorld);
-            max = BABYLON.Vector3.Maximize(max, bounds.maximumWorld);
-        });
-
-        const computedCenter = min.add(max).scale(0.5);
-        const dimensionsSize = max.subtract(min);
-        const targetScaleFactor = 2.4 / Math.max(dimensionsSize.x, dimensionsSize.y, dimensionsSize.z);
-
-        meshes.forEach(mesh => {
-            mesh.position.subtractInPlace(computedCenter);
-            mesh.scaling = new BABYLON.Vector3(targetScaleFactor, targetScaleFactor, targetScaleFactor);
-        });
-    }, function() {}, function() {}, ".obj");
-
-    babylonEngine.runRenderLoop(() => { if (babylonScene) babylonScene.render(); });
-    window.addEventListener("resize", resizeBabylonViewportMatrix, false);
-}
-
-function resizeBabylonViewportMatrix() { if (babylonEngine) babylonEngine.resize(); }
-
-function initCustomVideoController() {
-    const video = document.getElementById('customVideoPlayer');
-    const playBtn = document.getElementById('videoPlayBtn');
-    const centerOverlay = document.getElementById('videoCenterOverlay');
-    const timeline = document.getElementById('videoTimeline');
-    const timeLabel = document.getElementById('videoTimeLabel');
-
-    function executeToggleAction() {
-        if(video.ended) {
-            video.currentTime = 0;
-            video.play();
-            playBtn.innerHTML = `<i class="fa-solid fa-pause"></i>`;
-            centerOverlay.classList.add('playing-hide');
-        } else if(video.paused) { 
-            video.play(); 
-            playBtn.innerHTML = `<i class="fa-solid fa-pause"></i>`;
-            centerOverlay.classList.add('playing-hide');
-        } else { 
-            video.pause(); 
-            playBtn.innerHTML = `<i class="fa-solid fa-play"></i>`;
-            centerOverlay.querySelector('.center-play-btn-circle').innerHTML = `<i class="fa-solid fa-play text-lg"></i>`;
-            centerOverlay.classList.remove('playing-hide');
-        }
-    }
-
-    playBtn.onclick = (e) => { e.stopPropagation(); executeToggleAction(); };
-    centerOverlay.onclick = (e) => { e.stopPropagation(); executeToggleAction(); };
-
-    video.ontimeupdate = () => {
-        if(!video.duration) return;
-        timeline.value = (video.currentTime / video.duration) * 100;
-        timeLabel.innerText = formatTimeMetrics(video.currentTime);
-    };
     
-    video.onended = () => {
-        playBtn.innerHTML = `<i class="fa-solid fa-rotate-right"></i>`;
-        centerOverlay.querySelector('.center-play-btn-circle').innerHTML = `<i class="fa-solid fa-rotate-right text-lg"></i>`;
-        centerOverlay.classList.remove('playing-hide');
-    };
-    timeline.oninput = () => {
-        video.currentTime = (timeline.value / 100) * video.duration;
-        if(video.ended) {
-            playBtn.innerHTML = `<i class="fa-solid fa-rotate-right"></i>`;
-            centerOverlay.querySelector('.center-play-btn-circle').innerHTML = `<i class="fa-solid fa-rotate-right text-lg"></i>`;
-            centerOverlay.classList.remove('playing-hide');
-        } else if(!video.paused) {
-            playBtn.innerHTML = `<i class="fa-solid fa-pause"></i>`;
-            centerOverlay.classList.add('playing-hide');
-        } else {
-            playBtn.innerHTML = `<i class="fa-solid fa-play"></i>`;
-            centerOverlay.querySelector('.center-play-btn-circle').innerHTML = `<i class="fa-solid fa-play text-lg"></i>`;
-            centerOverlay.classList.remove('playing-hide');
-        }
-    };
+    const oldVideo = document.getElementById('customVideoPlayerElement');
+    if (oldVideo) { oldVideo.pause(); oldVideo.src = ""; oldVideo.load(); }
+
+    window.removeEventListener("resize", onWindowResizeBabylonHook);
+    if (babylonEngine) { babylonEngine.dispose(); babylonEngine = null; }
+    if (babylonScene) { babylonScene.dispose(); babylonScene = null; }
 }
 
-function initCustomAudioController() {
-    const audio = document.getElementById('customAudioPlayer');
-    const playBtn = document.getElementById('audioPlayBtn');
-    const centerOverlay = document.getElementById('audioCenterOverlay');
-    const timeline = document.getElementById('audioTimeline');
-    const timeLabel = document.getElementById('audioTimeLabel');
-    const canvas = document.getElementById('audioVisualizerCanvas');
-    const ctx = canvas.getContext('2d');
-
-    canvas.width = canvas.clientWidth * window.devicePixelRatio;
-    canvas.height = canvas.clientHeight * window.devicePixelRatio;
-    ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
-
-    function executeToggleAction() {
-        if(!audioCtx) { initAudioContextEngine(audio, canvas, ctx); }
-        if(audio.ended) {
-            audio.currentTime = 0;
-            audio.play();
-            playBtn.innerHTML = `<i class="fa-solid fa-pause"></i>`;
-            centerOverlay.classList.add('playing-hide');
-        } else if(audio.paused) { 
-            audio.play(); 
-            playBtn.innerHTML = `<i class="fa-solid fa-pause"></i>`;
-            centerOverlay.classList.add('playing-hide');
-        } else { 
-            audio.pause(); 
-            playBtn.innerHTML = `<i class="fa-solid fa-play"></i>`;
-            centerOverlay.querySelector('.center-play-btn-circle').innerHTML = `<i class="fa-solid fa-play text-lg"></i>`;
-            centerOverlay.classList.remove('playing-hide');
-        }
-    }
-
-    playBtn.onclick = (e) => { e.stopPropagation(); executeToggleAction(); };
-    centerOverlay.onclick = (e) => { e.stopPropagation(); executeToggleAction(); };
-
-    audio.ontimeupdate = () => {
-        if(!audio.duration) return;
-        timeline.value = (audio.currentTime / audio.duration) * 100;
-        timeLabel.innerText = formatTimeMetrics(audio.currentTime);
-    };
-
-    audio.onended = () => {
-        playBtn.innerHTML = `<i class="fa-solid fa-rotate-right"></i>`;
-        centerOverlay.querySelector('.center-play-btn-circle').innerHTML = `<i class="fa-solid fa-rotate-right text-lg"></i>`;
-        centerOverlay.classList.remove('playing-hide');
-    };
-    timeline.oninput = () => {
-        audio.currentTime = (timeline.value / 100) * audio.duration;
-        if(audio.ended) {
-            playBtn.innerHTML = `<i class="fa-solid fa-rotate-right"></i>`;
-            centerOverlay.querySelector('.center-play-btn-circle').innerHTML = `<i class="fa-solid fa-rotate-right text-lg"></i>`;
-            centerOverlay.classList.remove('playing-hide');
-        } else if(!audio.paused) {
-            playBtn.innerHTML = `<i class="fa-solid fa-pause"></i>`;
-            centerOverlay.classList.add('playing-hide');
-        } else {
-            playBtn.innerHTML = `<i class="fa-solid fa-play"></i>`;
-            centerOverlay.querySelector('.center-play-btn-circle').innerHTML = `<i class="fa-solid fa-play text-lg"></i>`;
-            centerOverlay.classList.remove('playing-hide');
-        }
-    };
-    
-    ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
-    ctx.strokeStyle = '#151522'; ctx.lineWidth = 2; ctx.beginPath();
-    ctx.moveTo(0, canvas.clientHeight/2); ctx.lineTo(canvas.clientWidth, canvas.clientHeight/2); ctx.stroke();
-}
-
-function initAudioContextEngine(audioElement, canvas, ctx) {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    audioSource = audioCtx.createMediaElementSource(audioElement);
-    audioAnalyser = audioCtx.createAnalyser();
-    
-    audioSource.connect(audioAnalyser);
-    audioAnalyser.connect(audioCtx.destination);
-    audioAnalyser.fftSize = 128;
-    
-    const bufferLength = audioAnalyser.frequencyBinCount;
-    const dataArray = new Uint8Array(bufferLength);
-    const w = canvas.clientWidth;
-    const h = canvas.clientHeight;
-
-    function drawFullSymmetricWaves() {
-        audioAnimationId = requestAnimationFrame(drawFullSymmetricWaves);
-        audioAnalyser.getByteFrequencyData(dataArray);
-
-        ctx.fillStyle = '#020204';
-        ctx.fillRect(0, 0, w, h);
-
-        const barWidth = w / bufferLength;
-        let x = 0;
-
-        for(let i = 0; i < bufferLength; i++) {
-            const normalizedVal = dataArray[i] / 255;
-            const barHeight = normalizedVal * h * 0.8;
-            
-            ctx.fillStyle = `rgba(56, 189, 248, ${0.45 + normalizedVal})`;
-            ctx.fillRect(x, (h / 2) - (barHeight / 2), barWidth - 1, barHeight);
-            
-            ctx.fillStyle = 'var(--ff-cyan)';
-            ctx.fillRect(x, (h / 2) - (barHeight / 2) - 1, barWidth - 1, 1.5);
-            ctx.fillRect(x, (h / 2) + (barHeight / 2) - 1, barWidth - 1, 1.5);
-
-            x += barWidth;
-        }
-    }
-    drawFullSymmetricWaves();
-}
-
-function formatTimeMetrics(secs) {
+function formatTimeLayout(secs) {
+    if (isNaN(secs)) return "00:00";
     const m = Math.floor(secs / 60).toString().padStart(2, '0');
     const s = Math.floor(secs % 60).toString().padStart(2, '0');
     return `${m}:${s}`;
 }
 
-function downloadGroupedZip() {
-    document.getElementById('statusDescText').innerText = "Compressing files...";
-    window.location.href = `/api/extract?download_type=zip&mode=grouped`;
+async function downloadGroupedZip() {
+    if(activeCache.length === 0) return;
+    
+    // Check if handling simulated virtual URL blobs (from local stream injection)
+    if(activeCache[0].localUrl) {
+        const linkElement = document.createElement("a");
+        linkElement.href = activeCache[0].localUrl;
+        linkElement.download = activeCache[0].name;
+        document.body.appendChild(linkElement);
+        linkElement.click();
+        document.body.removeChild(linkElement);
+        return;
+    }
+
+    const triggerSpan = document.getElementById('filterTrigger').querySelector('span').innerText;
+    let indicesParam = "";
+    if (selectedFilters.size > 0) {
+        const filteredItems = activeCache.filter(i => selectedFilters.has(i.label));
+        indicesParam = "&indices=" + filteredItems.map(item => item.index).join(',');
+    }
+    
+    window.location.href = `/api/extract?download_type=zip&mode=grouped${indicesParam}`;
 }
 </script>
 </body>
