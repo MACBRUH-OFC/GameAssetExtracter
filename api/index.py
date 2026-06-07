@@ -21,7 +21,6 @@ app = Flask(__name__)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 HTML_PATH = os.path.join(BASE_DIR, 'index.html')
 
-# Strict 5MB file cap matching deployment platform limits
 MAX_FILE_SIZE = 5 * 1024 * 1024 
 
 def decompress_stream(data: bytes) -> bytes:
@@ -76,33 +75,33 @@ def process_object_unrestricted(obj, raw_env_data: bytes):
             raw = getattr(data, "m_Script", b"")
             if isinstance(raw, str): raw = raw.encode('utf-8', errors='replace')
             ext = ".txt"
-            label = "Text File"
+            label = "Text"
             if safe_name.lower().endswith('.atlas') or raw.startswith(b"\n") or b"size:" in raw:
                 if not safe_name.lower().endswith('.atlas'): ext = ".atlas.txt"
-                label = "Atlas Sheet"
+                label = "Text"
             elif raw.startswith((b"{", b"[")):
                 ext = ".json"
-                label = "Data Config"
+                label = "JSON"
             return f"{safe_name}{ext}", raw, f"Text/{safe_name}{ext}", label
 
         elif t in ["Texture2D", "Sprite"] and hasattr(data, 'image'):
             buf = io.BytesIO()
             data.image.save(buf, format="PNG", optimize=False)
-            return f"{safe_name}.png", buf.getvalue(), f"Textures/{safe_name}.png", f"{t} Asset"
+            return f"{safe_name}.png", buf.getvalue(), f"Textures/{safe_name}.png", "2D Texture"
 
         elif t == "SpriteAtlas":
             tree_data = dump_obj_to_dict(data)
             js_bytes = json.dumps(tree_data, indent=2, ensure_ascii=False).encode('utf-8')
-            return f"{safe_name}_atlas.json", js_bytes, f"Mapping/{safe_name}_atlas.json", "SpriteAtlas Map"
+            return f"{safe_name}_atlas.json", js_bytes, f"Mapping/{safe_name}_atlas.json", "JSON"
 
         elif t == "AudioClip":
             samples = getattr(data, "samples", None)
             if samples and list(samples.keys()):
                 audio_filename = list(samples.keys())[0]
-                return audio_filename, samples[audio_filename], f"Audio/{audio_filename}", "Audio Track"
+                return audio_filename, samples[audio_filename], f"Audio/{audio_filename}", "Audio"
             raw = obj.get_raw_data()
             ext = ".ogg" if raw.startswith(b'OggS') else ".wav"
-            return f"{safe_name}{ext}", raw, f"Audio/{safe_name}{ext}", "Audio Track"
+            return f"{safe_name}{ext}", raw, f"Audio/{safe_name}{ext}", "Audio"
 
         elif t == "VideoClip":
             raw = obj.get_raw_data()
@@ -111,51 +110,50 @@ def process_object_unrestricted(obj, raw_env_data: bytes):
                 if match != -1:
                     start_pos = max(0, match - 4)
                     raw = raw_env_data[start_pos:start_pos + 15_000_000]
-            return f"{safe_name}.mp4", raw, f"Video/{safe_name}.mp4", "Video Clip"
+            return f"{safe_name}.mp4", raw, f"Video/{safe_name}.mp4", "Video"
 
         elif t == "Mesh":
             try:
                 mesh_data = data.export().encode('utf-8')
-                return f"{safe_name}.obj", mesh_data, f"Meshes/{safe_name}.obj", "3D Mesh"
+                return f"{safe_name}.obj", mesh_data, f"Meshes/{safe_name}.obj", "Mesh"
             except:
                 tree_data = dump_obj_to_dict(data)
                 js_bytes = json.dumps(tree_data, indent=2, ensure_ascii=False).encode('utf-8')
-                return f"{safe_name}_mesh.json", js_bytes, f"Geometry/Mesh/{safe_name}.json", "Mesh Schema"
+                return f"{safe_name}_mesh.json", js_bytes, f"Geometry/Mesh/{safe_name}.json", "JSON"
 
         elif t in ["GameObject", "MonoBehaviour", "ScriptableObject", "SkinnedMeshRenderer", "MeshRenderer"]:
             tree_data = dump_obj_to_dict(data)
             js_bytes = json.dumps(tree_data, indent=2, ensure_ascii=False).encode('utf-8')
-            folder = "Hierarchy" if t == "GameObject" else "Scripts" if "Script" in t else "Geometry"
-            return f"{safe_name}_{t}.json", js_bytes, f"{folder}/{t}/{safe_name}.json", f"{t} Schema"
+            return f"{safe_name}_{t}.json", js_bytes, f"Hierarchy/{t}/{safe_name}.json", "JSON"
 
         elif t in ["Material", "Shader"]:
             tree_data = dump_obj_to_dict(data)
             js_bytes = json.dumps(tree_data, indent=2, ensure_ascii=False).encode('utf-8')
-            return f"{safe_name}_{t}.json", js_bytes, f"Shaders_Materials/{t}/{safe_name}.json", f"{t} Config"
+            return f"{safe_name}_{t}.json", js_bytes, f"Shaders_Materials/{t}/{safe_name}.json", "JSON"
 
         elif t in ["AnimationClip", "AnimatorController", "Animator"]:
             tree_data = dump_obj_to_dict(data)
             js_bytes = json.dumps(tree_data, indent=2, ensure_ascii=False).encode('utf-8')
-            return f"{safe_name}_{t}.json", js_bytes, f"Animations/{t}/{safe_name}.json", "Animation Map"
+            return f"{safe_name}_{t}.json", js_bytes, f"Animations/{t}/{safe_name}.json", "JSON"
 
         elif t == "Font":
             raw_font_data = getattr(data, "m_FontData", b"")
             if raw_font_data and len(raw_font_data) > 10:
                 ext = ".otf" if raw_font_data.startswith(b'OTTO') else ".ttf"
-                return f"{safe_name}{ext}", raw_font_data, f"Fonts/{safe_name}{ext}", "Font File"
-            return f"{safe_name}_font.json", json.dumps(dump_obj_to_dict(data)).encode('utf-8'), f"Fonts/{safe_name}.json", "Font Metadata"
+                return f"{safe_name}{ext}", raw_font_data, f"Fonts/{safe_name}{ext}", "Text"
+            return f"{safe_name}_font.json", json.dumps(dump_obj_to_dict(data)).encode('utf-8'), f"Fonts/{safe_name}.json", "JSON"
 
         elif t == "AssetBundle":
             tree_data = dump_obj_to_dict(data)
             js_bytes = json.dumps(tree_data, indent=2, ensure_ascii=False).encode('utf-8')
-            return f"{safe_name}_manifest.json", js_bytes, f"Containers/{safe_name}.json", "Bundle Manifest"
+            return f"{safe_name}_manifest.json", js_bytes, f"Containers/{safe_name}.json", "JSON"
 
         else:
             try:
                 tree_data = dump_obj_to_dict(data)
                 if tree_data:
                     js_bytes = json.dumps(tree_data, indent=2, ensure_ascii=False).encode('utf-8')
-                    return f"{safe_name}_{t}.json", js_bytes, f"Other/{t}/{safe_name}.json", f"Data ({t})"
+                    return f"{safe_name}_{t}.json", js_bytes, f"Other/{t}/{safe_name}.json", "JSON"
             except: pass
             raw_bytes = obj.get_raw_data()
             if raw_bytes:
@@ -189,7 +187,7 @@ def convert_ktx_to_png_fallback(file_bytes) -> bytes:
 
 def parse_raw_astc_header(data: bytes):
     if len(data) < 16 or data[:4] != b'\x13\xab\xa1\\':
-        raise Exception("Malformed or unexpected ASTC file signature identifier")
+        raise Exception("Malformed ASTC profile token")
     block_width = data[4]
     block_height = data[5]
     width = data[7] | (data[8] << 8) | (data[9] << 16)
@@ -200,8 +198,7 @@ def fetch_single_cdn_stream(url: str) -> bytes:
     headers = {"User-Agent": "ff-astc-api/1.0"}
     try:
         resp = requests.get(url, headers=headers, timeout=15)
-        if resp.status_code == 404:
-            return b""
+        if resp.status_code == 404: return b""
         resp.raise_for_status()
         return resp.content
     except:
@@ -213,7 +210,7 @@ def handle_remote_astc_reconstruction():
     environment = request.args.get('env', 'live').strip().lower()
 
     if not asset_id or not re.match(r'^\d+$', asset_id):
-        return jsonify({"error": "Bad request: identification target must contain digits only"}), 400
+        return jsonify({"error": "Bad request format parameters"}), 400
 
     base_url = f"https://dl-tata.freefireind.in/{environment}/ABHotUpdates/IconCDN/android"
     rgb_url = f"{base_url}/{asset_id}_rgb.astc"
@@ -226,7 +223,7 @@ def handle_remote_astc_reconstruction():
         sa_bytes = future_sa.result()
 
     if not rgb_bytes or not sa_bytes:
-        return jsonify({"error": f"Asset target ID {asset_id} not found on server storage partition"}), 404
+        return jsonify({"error": f"Asset target ID {asset_id} not found on CDN clusters"}), 404
 
     try:
         w, h, bw, bh = parse_raw_astc_header(rgb_bytes)
@@ -240,7 +237,6 @@ def handle_remote_astc_reconstruction():
 
         r, g, b, _ = img_rgb.split()
         alpha_channel, _, _, _ = img_sa.split()
-        
         final_transparent_image = Image.merge("RGBA", (r, g, b, alpha_channel))
 
         output_buffer = io.BytesIO()
@@ -254,11 +250,12 @@ def handle_remote_astc_reconstruction():
             download_name=f"{asset_id}.png"
         )
     except Exception as error_log:
-        return jsonify({"error": f"Decoding runtime malfunction: {str(error_log)}"}), 500
+        return jsonify({"error": f"Decoding runtime tracking error: {str(error_log)}"}), 500
 
 @app.route('/api/extract', methods=['POST'])
 def handle_extraction():
-    if 'asset_bundle' not in request.files: return jsonify({"error": "No file payload found"}), 400
+    if 'asset_bundle' not in request.files: 
+        return jsonify({"error": "No file payload detected"}), 400
     
     try:
         uploaded_file = request.files['asset_bundle']
@@ -267,49 +264,62 @@ def handle_extraction():
         uploaded_file.seek(0)
 
         if file_length > MAX_FILE_SIZE:
-            return jsonify({"error": f"File exceeds 5MB platform limits."}), 400
+            return jsonify({"error": "File exceeds the maximum 5MB limits."}), 400
 
         raw_bytes = uploaded_file.read()
         decompressed_data = decompress_stream(raw_bytes)
+        
+        # Create an in-memory zip file architecture to send directly
+        memory_zip = io.BytesIO()
         json_manifest = []
         
-        if decompressed_data.startswith(b'\xABKTX 11\xBB\r\n\x1A\n'):
-            try:
-                png_bytes = convert_ktx_to_png_fallback(decompressed_data)
-                name = os.path.splitext(uploaded_file.filename)[0] + ".png"
-                json_manifest.append({
-                    'index': 0, 
-                    'name': name, 
-                    'path': f"Textures/{name}", 
-                    'label': "KTX Image",
-                    'hex_data': png_bytes.hex()
-                })
-                return jsonify({"files": json_manifest})
-            except: pass
-
-        env = UnityPy.load(decompressed_data)
-        counter = 0
-        seen_md5 = set()
-        for obj in env.objects:
-            res = process_object_unrestricted(obj, decompressed_data)
-            if res:
-                fname, fbytes, zpath, tlabel = res
-                h = hashlib.md5(fbytes).hexdigest()
-                if h not in seen_md5:
-                    seen_md5.add(h)
+        with zipfile.ZipFile(memory_zip, 'w', zipfile.ZIP_DEFLATED) as zip_archive:
+            if decompressed_data.startswith(b'\xABKTX 11\xBB\r\n\x1A\n'):
+                try:
+                    png_bytes = convert_ktx_to_png_fallback(decompressed_data)
+                    name = os.path.splitext(uploaded_file.filename)[0] + ".png"
+                    target_path = f"Textures/{name}"
+                    
+                    zip_archive.writestr(target_path, png_bytes)
                     json_manifest.append({
-                        'index': counter, 
-                        'name': fname, 
-                        'path': zpath, 
-                        'label': tlabel,
-                        'hex_data': fbytes.hex()
+                        'name': name,
+                        'path': target_path,
+                        'label': "2D Texture"
                     })
-                    counter += 1
+                except: pass
+            else:
+                env = UnityPy.load(decompressed_data)
+                seen_md5 = set()
+                
+                for obj in env.objects:
+                    res = process_object_unrestricted(obj, decompressed_data)
+                    if res:
+                        fname, fbytes, zpath, tlabel = res
+                        h = hashlib.md5(fbytes).hexdigest()
+                        if h not in seen_md5:
+                            seen_md5.add(h)
+                            zip_archive.writestr(zpath, fbytes)
+                            json_manifest.append({
+                                'name': fname,
+                                'path': zpath,
+                                'label': tlabel
+                            })
+                del env
+                gc.collect()
+
+            # Append the runtime data map layout directly inside zip
+            zip_archive.writestr("manifest.json", json.dumps(json_manifest))
+
+        if not json_manifest: 
+            return jsonify({"error": "No structured asset components found inside payload."}), 400
         
-        del env
-        gc.collect()
-        if not json_manifest: return jsonify({"error": "No valid assets found in payload"}), 400
-        return jsonify({"files": json_manifest})
+        memory_zip.seek(0)
+        return send_file(
+            memory_zip,
+            mimetype='application/zip',
+            as_attachment=True,
+            download_name='extracted_assets.zip'
+        )
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -320,7 +330,7 @@ def serve_ui_layout(path):
         with open(HTML_PATH, 'r', encoding='utf-8') as f: 
             return f.read()
     except Exception as e: 
-        return f"File Synchronization Error: {str(e)}", 500
+        return f"File Sync Error: {str(e)}", 500
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=10000, debug=True)

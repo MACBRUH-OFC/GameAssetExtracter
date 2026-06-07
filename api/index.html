@@ -249,7 +249,7 @@ let activeCache = [];
 let selectedFilters = new Set();
 let activeExtractionMode = "bundle";
 let activeAstcEnvironment = "live";
-let globalZipBlobInstance = null; // Holds the processed payload archive
+let globalZipBlobInstance = null; 
 
 const FILTER_ORDER = ["2D Texture", "Mesh", "Audio", "Video", "Text", "JSON"];
 const MAX_FILE_SIZE = 5 * 1024 * 1024; 
@@ -454,17 +454,17 @@ document.getElementById('extractorForm').onsubmit = async (e) => {
         const res = await fetch("/api/extract", { method: "POST", body: formData });
         if(!res.ok) {
             const errorData = await res.json().catch(() => ({}));
-            throw new Error(errorData.error || `Server communication exception status standard code: ${res.status}`);
+            throw new Error(errorData.error || `Server communication exception code: ${res.status}`);
         }
 
-        // Capture complete binary file zip data direct stream
+        // Capture complete binary file zip data stream directly
         const archiveBlob = await res.blob();
         globalZipBlobInstance = archiveBlob;
 
-        // Unpack layout schema manifest client-side instantly
+        // Unpack archive layout manifest client-side instantly
         const zipInstance = await JSZip.loadAsync(archiveBlob);
         const manifestFile = zipInstance.file("manifest.json");
-        if(!manifestFile) throw new Error("Structural payload bundle execution broken: Missing mapping index tracker.");
+        if(!manifestFile) throw new Error("Missing asset mapping tracker package inside archive.");
 
         const manifestRawText = await manifestFile.async("string");
         const parsedManifest = JSON.parse(manifestRawText);
@@ -711,7 +711,7 @@ async function selectFile(item, element) {
                 </div>`;
         }
     } catch (e) {
-        mediaBox.innerHTML = `<div class="aspect-16-9-viewport text-red-500 text-xs font-semibold">Failed to process visualization data mapping.</div>`;
+        mediaBox.innerHTML = `<div class="aspect-16-9-viewport text-red-500 text-xs font-semibold">Failed to process visualization rendering path map.</div>`;
     }
 }
 
@@ -759,7 +759,7 @@ function initBabylonMeshScene(canvasId, modelUrl) {
             }
         });
     }, null, function (scene, message) {
-        console.error("Babylon engine pipeline error log:", message);
+        console.error("Babylon framework structural error stack layout:", message);
     }, ".obj");
 
     babylonEngine.runRenderLoop(() => { if (babylonScene) babylonScene.render(); });
@@ -932,7 +932,6 @@ function formatTimeLayout(secs) {
 async function downloadGroupedZip() {
     if(activeCache.length === 0) return;
 
-    // Local ASTC single download framework block handler
     if(activeExtractionMode === "astc" && activeCache[0].localUrl) {
         const linkElement = document.createElement("a");
         linkElement.href = activeCache[0].localUrl;
@@ -945,7 +944,6 @@ async function downloadGroupedZip() {
 
     if(!globalZipBlobInstance) return;
 
-    // Filter validation layer
     if (selectedFilters.size === 0) {
         const linkElement = document.createElement("a");
         linkElement.href = URL.createObjectURL(globalZipBlobInstance);
@@ -954,7 +952,7 @@ async function downloadGroupedZip() {
         linkElement.click();
         document.body.removeChild(linkElement);
     } else {
-        // Fast dynamic sub-archive reconstruction inside user client memory
+        // Fast micro-reconstruction layer inside browser active cache loop
         const subZip = new JSZip();
         const filteredFiles = activeCache.filter(i => selectedFilters.has(i.label));
         
