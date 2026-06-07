@@ -63,12 +63,22 @@ def process_object_unrestricted(obj, raw_env_data):
         # ------------------------
         # IMAGES
         # ------------------------
-        elif t in [
-            "Texture2D",
-            "Sprite",
-            "Cubemap",
-            "RenderTexture"
-        ]:
+        elif t in ["Texture2D", "Sprite"]:
+
+    try:
+        img = data.image
+
+        buf = io.BytesIO()
+        img.save(buf, format="PNG")
+
+        return (
+            f"{safe_name}.png",
+            buf.getvalue(),
+            f"Images/{safe_name}.png"
+        )
+
+    except Exception as e:
+        print("IMAGE ERROR", e)
             if hasattr(data, "image"):
                 buf = io.BytesIO()
                 data.image.save(buf, format="PNG")
@@ -130,26 +140,32 @@ def process_object_unrestricted(obj, raw_env_data):
         # MONOBEHAVIOUR
         # ------------------------
         elif t == "MonoBehaviour":
-            try:
-                tree = data.read_typetree()
 
-                return (
-                    f"{safe_name}.json",
-                    json.dumps(
-                        tree,
-                        indent=2,
-                        ensure_ascii=False
-                    ).encode("utf-8"),
-                    f"MonoBehaviour/{safe_name}.json"
-                )
-            except:
-                raw = obj.get_raw_data()
+    try:
+        tree = data.read_typetree()
 
-                return (
-                    f"{safe_name}.bin",
-                    raw,
-                    f"MonoBehaviour/{safe_name}.bin"
-                )
+        return (
+            f"{safe_name}.json",
+            json.dumps(
+                tree,
+                indent=2,
+                ensure_ascii=False
+            ).encode("utf-8"),
+            f"MonoBehaviour/{safe_name}.json"
+        )
+
+    except Exception:
+
+        try:
+            raw = obj.get_raw_data()
+
+            return (
+                f"{safe_name}.bytes",
+                raw,
+                f"MonoBehaviour/{safe_name}.bytes"
+            )
+        except:
+            pass
 
         # ------------------------
         # MATERIAL
@@ -279,10 +295,21 @@ def process_object_unrestricted(obj, raw_env_data):
                     f"Raw/{safe_name}.bin"
                 )
 
-    except Exception:
-        pass
+    except Exception as e:
+    try:
+        raw = obj.get_raw_data()
 
-    return None
+        name = f"{obj.type.name}_{obj.path_id}"
+
+        return (
+            f"{name}.bin",
+            raw,
+            f"Failed/{name}.bin"
+        )
+    except:
+        print(f"ERROR {obj.type.name}: {e}")
+
+return None
 
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
@@ -339,6 +366,7 @@ def handle_direct_extraction_stream():
         tracking_index_counter = 0
 
         for obj in objects_array:
+        print("TYPE:", obj.type.name)
             res = process_object_unrestricted(obj, final_data)
             if res:
                 filename, file_bytes, zip_folder_path = res
