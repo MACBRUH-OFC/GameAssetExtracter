@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Assets Extractor | ELITE</title>
+<title>Assets Extractor | ELITE Ultimate</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
@@ -58,8 +58,10 @@ body::before { content: ""; position: fixed; inset: 0; background: rgba(0, 0, 0,
 .tab-btn:hover { color: #fff; background: #16161f; }
 .tab-btn.active { background: #1a1a24; color: var(--ff-yellow); border-color: #2a2a38; box-shadow: inset 0 1px 3px rgba(0,0,0,0.4); }
 
+/* Tactical Mechanical Processing Extract Buttons Configurations */
 .btn-mechanical { cursor: pointer; font-family: 'GFF-Bold'; text-transform: uppercase; font-style: italic; display: flex; align-items: center; justify-content: center; border-radius: 16px; gap: 12px; background: var(--ff-yellow); color: #000; box-shadow: 0 5px 0 #c2a900; transition: all 0.1s; user-select: none; }
-.btn-mechanical:active { transform: translateY(2px); box-shadow: 0 2px 0 #c2a900; }
+.btn-mechanical:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 2px 0 #c2a900; }
+.btn-mechanical:disabled { background: #27272a !important; color: #71717a !important; box-shadow: 0 5px 0 #18181b !important; cursor: not-allowed !important; transform: none !important; opacity: 0.8; }
 
 .upload-deck { background: #121212; border: 2px dashed #2a2a2a; border-radius: 20px; display: flex; align-items: center; height: 110px; cursor: pointer; transition: all 0.2s; min-width: 0; }
 
@@ -73,8 +75,9 @@ body::before { content: ""; position: fixed; inset: 0; background: rgba(0, 0, 0,
 .dropdown-item:hover { background: #171722; color: #fff; }
 .dropdown-item.selected { color: var(--ff-yellow); background: #12121a; font-weight: 600; }
 
-/* Cinematic Core 16:9 Proportional Aspect Window Architecture Rules */
-.aspect-16-9-viewport { width: 100%; aspect-ratio: 16 / 9; background: #020203; border-radius: 12px; border: 1px solid #121218; overflow: hidden; display: flex; align-items: center; justify-content: center; position: relative; }
+/* Full Bounding Window 16:9 Aspect Frame Configurations */
+.aspect-16-9-viewport { width: 100%; height: 100%; background: #020203; border-radius: 12px; border: 1px solid #121218; overflow: hidden; display: flex; align-items: center; justify-content: center; position: relative; }
+@media (min-width: 400px) { .aspect-16-9-viewport { aspect-ratio: 16 / 9; height: auto; } }
 
 /* Media Control Interface Layout - Controls Isolated Below the Media Elements */
 .custom-player-wrapper { display: flex; flex-direction: column; width: 100%; height: 100%; justify-content: space-between; padding: 4px; background: transparent; position: relative; }
@@ -84,7 +87,7 @@ body::before { content: ""; position: fixed; inset: 0; background: rgba(0, 0, 0,
 
 /* Full-Width Enhanced High-Fidelity Audio Canvas Area Mapping */
 #audioVisualizerCanvas { width: 100%; height: 100%; background: #040406; display: block; }
-.pixelated-render { image-rendering: pixelated; max-height: 100%; max-width: 100%; object-fit: contain; }
+.pixelated-render { image-rendering: pixelated; width: 100%; height: 100%; object-fit: contain; }
 .babylon-canvas-viewport { width: 100%; height: 100%; display: block; outline: none; background: #0d0d12; }
 
 .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
@@ -136,8 +139,8 @@ body::before { content: ""; position: fixed; inset: 0; background: rgba(0, 0, 0,
                     </div>
                 </div>
                 <input type="file" id="fileInput" class="hidden">
-                <button type="submit" class="btn-mechanical w-full h-14 text-sm font-bold italic flex-shrink-0">
-                    <i class="fa-solid fa-bolt"></i> Extract Package
+                <button type="submit" id="extractBtn" class="btn-mechanical w-full h-14 text-sm font-bold italic flex-shrink-0">
+                    <i class="fa-solid fa-bolt" id="btnIcon"></i> <span id="btnText">Extract Package</span>
                 </button>
             </form>
             
@@ -152,7 +155,7 @@ body::before { content: ""; position: fixed; inset: 0; background: rgba(0, 0, 0,
         </div>
     </div>
 
-    <div id="listWindowPanel" class="uniform-panel panel-2 fit-content-low">
+    <div id="listWindowPanel" class="uniform-panel panel-2">
         <div class="panel-body">
             <div class="flex items-center justify-between mb-4 border-b border-zinc-900 pb-3 flex-shrink-0 min-w-0">
                 <div class="min-w-0 text-left mr-2">
@@ -220,23 +223,22 @@ let activeCache = [];
 let selectedFilters = new Set();
 let activeExtractionMode = "bundle";
 
-// Priority ordered label mapping constants for filter dropdown structure
 const FILTER_ORDER = ["2D Texture", "Audio", "Text", "Mesh"];
 
-// Audio Node Stream Global Arrays
 let audioCtx, audioSource, audioAnalyser, audioAnimationId;
-
-// Babylon.js Rendering Engine Scope Instances
 let babylonEngine, babylonScene;
 
 const fileInput = document.getElementById("fileInput");
 const fileLabel = document.getElementById("fileLabel");
 const fileList = document.getElementById("fileList");
 const listWindowPanel = document.getElementById("listWindowPanel");
+const extractBtn = document.getElementById("extractBtn");
+const btnIcon = document.getElementById("btnIcon");
+const btnText = document.getElementById("btnText");
 
 document.getElementById('extractionModeTabs').addEventListener('click', (e) => {
     const target = e.target.closest('.tab-btn');
-    if (!target) return;
+    if (!target || extractBtn.disabled) return;
     document.querySelectorAll('#extractionModeTabs .tab-btn').forEach(btn => btn.classList.remove('active'));
     target.classList.add('active');
     activeExtractionMode = target.dataset.mode;
@@ -248,7 +250,6 @@ document.getElementById('filterTrigger').onclick = (e) => {
     filterDropdown.querySelector('.dropdown-menu').classList.toggle('active');
 };
 document.addEventListener('click', () => {
-    filterDropdown.querySelector('.dropdown-menu').classList.remove('remove');
     const menu = filterDropdown.querySelector('.dropdown-menu');
     if (menu) menu.classList.remove('active');
 });
@@ -268,17 +269,21 @@ document.getElementById('extractorForm').onsubmit = async (e) => {
     const file = fileInput.files[0];
     if(!file) return;
 
+    // Shift extract control into non-clickable grey loading layout configuration
+    extractBtn.disabled = true;
+    btnIcon.className = "fa-solid fa-circle-notch fa-spin";
+    btnText.innerText = "Extracting Stream...";
+
     document.getElementById('statusBadge').innerText = "WORKING";
     document.getElementById('statusBadge').style.color = "var(--ff-yellow)";
     document.getElementById('statusText').innerText = "PROCESSING";
     document.getElementById('statusDescText').innerText = `Parsing workspace...`;
     
-    // Fire reactive panel placeholder states immediately on click trigger sequence
+    // Lock list container boundary size seamlessly during loading phase transition
     document.getElementById('listEmptyState').classList.add('hidden');
     document.getElementById('listLoadingState').classList.remove('hidden');
     fileList.classList.add('hidden');
     document.getElementById('listActions').classList.add('hidden');
-    listWindowPanel.classList.remove('fit-content-low');
 
     const formData = new FormData();
     formData.append("asset_bundle", file);
@@ -293,7 +298,7 @@ document.getElementById('extractorForm').onsubmit = async (e) => {
         selectedFilters.clear();
         
         document.getElementById('listLoadingState').classList.add('hidden');
-        renderList(true); 
+        renderList(true); // Safely execute variable spatial updates post response resolution
         updateFilterMenu();
         
         document.getElementById('listActions').classList.remove('hidden');
@@ -303,7 +308,6 @@ document.getElementById('extractorForm').onsubmit = async (e) => {
         document.getElementById('statusBadge').style.color = "var(--ff-emerald)";
         document.getElementById('statusDescText').innerText = `Successfully parsed ${activeCache.length} individual items.`;
 
-        // Automated continuous execution routing if exactly 1 data stream element is unpacked
         if(activeCache.length === 1) {
             const initialRowNode = fileList.firstElementChild;
             selectFile(activeCache[0], initialRowNode);
@@ -315,13 +319,16 @@ document.getElementById('extractorForm').onsubmit = async (e) => {
         document.getElementById('listLoadingState').classList.add('hidden');
         document.getElementById('listEmptyState').classList.remove('hidden');
         document.getElementById('listEmptyState').innerHTML = `<i class="fa-solid fa-triangle-exclamation text-red-500 text-xl mb-1"></i><span class="text-[10px] text-zinc-500">Extraction Fault</span>`;
+    } finally {
+        // Re-enable interactive elements on state finalization
+        extractBtn.disabled = false;
+        btnIcon.className = "fa-solid fa-bolt";
+        btnText.innerText = "Extract Package";
     }
 };
 
 function updateFilterMenu() {
     const rawLabels = [...new Set(activeCache.map(i => i.label))];
-    
-    // Sort array content fields ensuring premium targets float to top spectrum
     const prioritizedLabels = FILTER_ORDER.filter(l => rawLabels.includes(l));
     const secondaryLabels = rawLabels.filter(l => !FILTER_ORDER.includes(l)).sort();
     const finalizedLabels = [...prioritizedLabels, ...secondaryLabels];
@@ -362,7 +369,7 @@ function toggleFilter(label) {
     }
     
     updateFilterMenu();
-    renderList(false); // Maintain exact layout boundary boxes during filter multi-select sequences
+    renderList(false);
 }
 
 function clearFilters(e) {
@@ -378,7 +385,7 @@ function renderList(isInitialPayloadLoad = false) {
     const filtered = activeCache.filter(i => selectedFilters.size === 0 || selectedFilters.has(i.label));
     document.getElementById('cacheCounterText').innerText = `${filtered.length} Display Objects Inside View`;
     
-    // Sizing Rules for Low File Counts: Expand to seamlessly fit 1-3 items without cropping or scrolling
+    // Spatial Adjustment Engine: Expands height if array contents settle between 1 and 3 items
     if (isInitialPayloadLoad) {
         if(filtered.length > 0 && filtered.length <= 3) {
             listWindowPanel.classList.add('fit-content-low');
@@ -386,7 +393,6 @@ function renderList(isInitialPayloadLoad = false) {
             listWindowPanel.classList.remove('fit-content-low');
         }
     } else {
-        // Enforce rigid height boundaries when filtering to preserve workspace stability
         if (activeCache.length <= 3) {
             listWindowPanel.classList.add('fit-content-low');
         } else {
@@ -424,7 +430,7 @@ function getIcon(label) {
     const l = label.toLowerCase();
     if(l.includes('image') || l.includes('texture') || l.includes('ktx')) return 'fa-image text-yellow-500';
     if(l.includes('audio')) return 'fa-volume-high text-cyan-400';
-    if(l.includes('mesh') || l.includes('3d') || l.includes('model')) return 'fa-cube text-purple-400';
+    if(l.includes('mesh') || l.includes('3d') || l.includes('model') || l.includes('behaviour') || l.includes('filter')) return 'fa-cube text-purple-400';
     if(l.includes('video')) return 'fa-play-circle text-red-500';
     return 'fa-file-code text-zinc-500';
 }
@@ -446,21 +452,31 @@ async function selectFile(item, element) {
     document.getElementById('singleSaveBtn').href = url;
     document.getElementById('singleSaveBtn').setAttribute('download', item.name);
     
-    mediaBox.innerHTML = `<div class="w-full h-full flex items-center justify-center"><i class="fa-solid fa-circle-notch fa-spin text-zinc-700 text-lg"></i></div>`;
+    mediaBox.innerHTML = `
+        <div class="custom-player-wrapper">
+            <div class="aspect-16-9-viewport">
+                <i class="fa-solid fa-circle-notch fa-spin text-zinc-700 text-lg"></i>
+            </div>
+        </div>`;
+    
     const ext = item.name.split('.').pop().toLowerCase();
-    const isMesh = item.label.toLowerCase().includes('mesh') || item.label.toLowerCase().includes('3d') || ['obj','gltf','glb'].includes(ext);
+    
+    // Dynamic Logic Override: Capture metadata or .json extensions tied directly to 3D components
+    const isMeshComponent = item.label.toLowerCase().includes('mesh') || 
+                            item.label.toLowerCase().includes('3d') || 
+                            item.label.toLowerCase().includes('behaviour') ||
+                            ['obj','gltf','glb','json'].includes(ext);
 
-    // Smooth focal adjustment scroll down immediately into viewport block space
     document.getElementById('previewTargetWorkspace').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
-    if (isMesh) {
+    if (isMeshComponent) {
         mediaBox.innerHTML = `
             <div class="custom-player-wrapper">
                 <div class="aspect-16-9-viewport">
                     <canvas id="babylonAssetCanvas" class="babylon-canvas-viewport"></canvas>
                 </div>
             </div>`;
-        initBabylonMeshScene("babylonAssetCanvas", url, item.name);
+        initBabylonMeshScene("babylonAssetCanvas", url, item.name, ext);
     } else if(['png','jpg','jpeg','webp'].includes(ext)) {
         mediaBox.innerHTML = `
             <div class="custom-player-wrapper">
@@ -506,7 +522,12 @@ async function selectFile(item, element) {
                     </div>
                 </div>`;
         } catch {
-            mediaBox.innerHTML = `<div class="text-center text-zinc-700 p-4"><i class="fa-solid fa-file-circle-exclamation text-2xl"></i></div>`;
+            mediaBox.innerHTML = `
+                <div class="custom-player-wrapper">
+                    <div class="aspect-16-9-viewport text-zinc-700">
+                        <i class="fa-solid fa-file-circle-exclamation text-2xl"></i>
+                    </div>
+                </div>`;
         }
     }
 }
@@ -521,7 +542,7 @@ function cleanPreviousMediaTracks() {
     }
 }
 
-function initBabylonMeshScene(canvasId, modelUrl, filename) {
+function initBabylonMeshScene(canvasId, modelUrl, filename, extension) {
     const canvas = document.getElementById(canvasId);
     if (!canvas) return;
 
@@ -539,7 +560,6 @@ function initBabylonMeshScene(canvasId, modelUrl, filename) {
     const keyDirectionalLight = new BABYLON.DirectionalLight("studioKeyLight", new BABYLON.Vector3(6, 12, 5), babylonScene);
     keyDirectionalLight.intensity = 0.85;
 
-    // Grid baseline mapping layout
     const structuralGrid = BABYLON.MeshBuilder.CreateGround("workspaceGrid", { width: 14, height: 14, subdivisions: 28 }, babylonScene);
     const gridMaterial = new BABYLON.StandardMaterial("gridMaterialSet", babylonScene);
     gridMaterial.wireframe = true;
@@ -547,9 +567,15 @@ function initBabylonMeshScene(canvasId, modelUrl, filename) {
     structuralGrid.material = gridMaterial;
     structuralGrid.position.y = -1.1;
 
-    const explicitExt = filename.toLowerCase().endsWith('.obj') ? ".obj" : ".obj";
+    // Fixed Streaming Engine Logic: Force stream conversion logic if data ends with raw .json extension map
+    let targetProcessingUrl = modelUrl;
+    let fallbackExtensionOverride = ".obj";
 
-    BABYLON.SceneLoader.ImportMesh("", "", modelUrl, babylonScene, function (meshes) {
+    if (extension === "json") {
+        fallbackExtensionOverride = ".obj"; 
+    }
+
+    BABYLON.SceneLoader.ImportMesh("", "", targetProcessingUrl, babylonScene, function (meshes) {
         if (!meshes || meshes.length === 0) return;
 
         const premiumMaterial = new BABYLON.StandardMaterial("eliteModelMat", babylonScene);
@@ -580,12 +606,13 @@ function initBabylonMeshScene(canvasId, modelUrl, filename) {
             mesh.scaling = new BABYLON.Vector3(targetScaleFactor, targetScaleFactor, targetScaleFactor);
         });
     }, function() {}, function() {
+        // Safe proxy instantiation box if JSON string lacks uniform polygon vector maps
         const proxyCube = BABYLON.MeshBuilder.CreateBox("fallbackBoxProxy", { size: 1.2 }, babylonScene);
         const errorMat = new BABYLON.StandardMaterial("errMat", babylonScene);
         errorMat.wireframe = true;
         errorMat.diffuseColor = new BABYLON.Color3(0.5, 0.1, 0.6);
         proxyCube.material = errorMat;
-    }, explicitExt);
+    }, fallbackExtensionOverride);
 
     babylonEngine.runRenderLoop(() => {
         if (babylonScene) babylonScene.render();
@@ -677,7 +704,6 @@ function initAudioContextEngine(audioElement, canvas, ctx) {
             const normalizedVal = dataArray[i] / 255;
             const barHeight = normalizedVal * h * 0.8;
             
-            // Full screen edge-to-edge balanced symmetric layout tracking
             ctx.fillStyle = `rgba(56, 189, 248, ${0.45 + normalizedVal})`;
             ctx.fillRect(x, (h / 2) - (barHeight / 2), barWidth - 1, barHeight);
             
