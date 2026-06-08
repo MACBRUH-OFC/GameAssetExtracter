@@ -21,6 +21,19 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 HTML_PATH = os.path.join(BASE_DIR, 'index.html')
 GLOBAL_CACHE_REGISTRY = {}
 
+# Standard browser User-Agent header to avoid 403 Forbidden blocks from CDNs
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+}
+
+# Global CORS implementation
+@app.after_request
+def apply_cross_origin_resource_sharing(response):
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+    return response
+
 def decompress_stream(data: bytes) -> bytes:
     try:
         if data.startswith(b'\x1f\x8b'):
@@ -188,10 +201,9 @@ def convert_ktx_to_png_fallback(file_bytes) -> bytes:
 def handle_universal_extraction_pipeline():
     global GLOBAL_CACHE_REGISTRY
     download_type = request.args.get('download_type', '')
-    
-    # Retrieve bundle_url parameter from requests
     bundle_url_raw = request.form.get('bundle_url', '') or request.args.get('bundle_url', '') or request.args.get('url', '')
     
+    # Safely decode bundle_url parameter if encoded in base64
     bundle_url = ""
     if bundle_url_raw:
         try:
@@ -199,6 +211,7 @@ def handle_universal_extraction_pipeline():
             if padding_needed:
                 bundle_url_raw += '=' * (4 - padding_needed)
             decoded_val = base64.urlsafe_b64decode(bundle_url_raw.encode('utf-8')).decode('utf-8')
+            # Verify decoded value resembles a valid HTTP address to prevent false positive conversions
             if decoded_val.startswith(('http://', 'https://')):
                 bundle_url = decoded_val
             else:
@@ -206,10 +219,10 @@ def handle_universal_extraction_pipeline():
         except:
             bundle_url = bundle_url_raw
 
-    # Local helper to handle stateless, persistent remote extractions
+    # Function to extract remote bundles dynamically without server RAM caching
     def get_stateless_extracted_list(url):
         try:
-            res = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=15)
+            res = requests.get(url, headers=HEADERS, timeout=15)
             if res.status_code == 200:
                 decompressed_data = decompress_stream(res.content)
                 extracted_list = []
@@ -271,7 +284,7 @@ def handle_universal_extraction_pipeline():
         orig_filename = GLOBAL_CACHE_REGISTRY.get('original_name', 'assets') if not bundle_url else bundle_url.split('/')[-1]
         clean_name = re.split(r'[-.]', orig_filename)[0]
         
-        # Direct header assignment to maintain compatibility across all Flask versions
+        # Cross-version header assignment compatible with both Flask 1.x and Flask 2.x/3.x
         response = send_file(zip_io, mimetype='application/zip')
         response.headers["Content-Disposition"] = f'attachment; filename="{clean_name}[Extracted].zip"'
         return response
@@ -291,7 +304,7 @@ def handle_universal_extraction_pipeline():
         if not item:
             return jsonify({"error": "Index error"}), 400
             
-        # Direct header assignment to maintain compatibility across all Flask versions
+        # Cross-version header assignment compatible with both Flask 1.x and Flask 2.x/3.x
         response = send_file(io.BytesIO(item['bytes']), mimetype='application/octet-stream')
         response.headers["Content-Disposition"] = f'attachment; filename="{item["name"]}"'
         return response
@@ -307,7 +320,7 @@ def handle_universal_extraction_pipeline():
             filename = uploaded_file.filename
             raw_bytes = uploaded_file.read()
         elif bundle_url:
-            res = requests.get(bundle_url, headers={"User-Agent": "Mozilla/5.0"}, timeout=15)
+            res = requests.get(bundle_url, headers=HEADERS, timeout=15)
             if res.status_code == 200:
                 raw_bytes = res.content
                 filename = bundle_url.split('/')[-1]
@@ -355,7 +368,7 @@ def handle_universal_extraction_pipeline():
                     seen_md5.add(h)
                     extracted_list.append({'index': counter, 'name': fname, 'zip_path': zpath, 'bytes': fbytes, 'label': tlabel})
                     
-                    # Generate stateless preview URL if bundle_url exists
+                    # If bundle_url is provided, generate a stateless preview URL
                     if bundle_url:
                         encoded_bundle_url = base64.urlsafe_b64encode(bundle_url.encode('utf-8')).decode('utf-8')
                         preview_url = f"/api/extract?download_type=single&bundle_url={encoded_bundle_url}&file_index={counter}&name={fname}"
@@ -384,10 +397,16 @@ def handle_universal_extraction_pipeline():
 @app.route('/<path:path>')
 def serve_ui_layout(path):
     try:
-        # Fallback check to prevent 500 crash on serverless runtimes when index.html is missing
+        # Prevent 500 Error when index.html is missing on serverless directories
         if os.path.exists(HTML_PATH):
             with open(HTML_PATH, 'r', encoding='utf-8') as f: return f.read()
-        return "Unity Asset Extractor Pipeline API is Online (Stateless Mode Enabled).", 200
+        return jsonify({
+            "success": True,
+            "message": "Unity Asset Extractor Pipeline API is online.",
+            "endpoints": {
+                "universal_pipeline": "/api/extract [GET/POST]"
+            }
+        }), 200
     except Exception as e: return f"Error: {str(e)}", 500
 
 if __name__ == '__main__':
