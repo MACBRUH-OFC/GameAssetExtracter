@@ -22,6 +22,11 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 HTML_PATH = os.path.join(BASE_DIR, 'index.html')
 GLOBAL_CACHE_REGISTRY = {}
 
+# Standard browser User-Agent header to avoid 403 Forbidden blocks from CDNs
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+}
+
 # Global CORS implementation
 @app.after_request
 def apply_cross_origin_resource_sharing(response):
@@ -197,8 +202,23 @@ def convert_ktx_to_png_fallback(file_bytes) -> bytes:
 @app.route('/api/extract/bundle', methods=['POST'])
 def handle_asset_bundle_extraction():
     global GLOBAL_CACHE_REGISTRY
-    bundle_url = request.form.get('bundle_url', '') or request.args.get('bundle_url', '')
+    bundle_url_raw = request.form.get('bundle_url', '') or request.args.get('bundle_url', '')
     
+    # Safe fallback validation for base64 URLs
+    bundle_url = ""
+    if bundle_url_raw:
+        try:
+            padding_needed = len(bundle_url_raw) % 4
+            if padding_needed:
+                bundle_url_raw += '=' * (4 - padding_needed)
+            decoded_val = base64.urlsafe_b64decode(bundle_url_raw.encode('utf-8')).decode('utf-8')
+            if decoded_val.startswith(('http://', 'https://')):
+                bundle_url = decoded_val
+            else:
+                bundle_url = bundle_url_raw
+        except:
+            bundle_url = bundle_url_raw
+
     if 'asset_bundle' not in request.files and not bundle_url: 
         return jsonify({"error": "No file labeled 'asset_bundle' or 'bundle_url' parameter provided"}), 400
     try:
@@ -209,7 +229,7 @@ def handle_asset_bundle_extraction():
             filename = uploaded_file.filename
             raw_bytes = uploaded_file.read()
         elif bundle_url:
-            res = requests.get(bundle_url, timeout=15)
+            res = requests.get(bundle_url, headers=HEADERS, timeout=15)
             if res.status_code == 200:
                 raw_bytes = res.content
                 filename = bundle_url.split('/')[-1]
@@ -234,7 +254,7 @@ def handle_asset_bundle_extraction():
                     seen_md5.add(h)
                     extracted_list.append({'index': counter, 'name': fname, 'zip_path': zpath, 'bytes': fbytes, 'label': tlabel})
                     
-                    # If bundle_url is provided, generate a stateless preview URL
+                    # Generate a stateless preview URL if bundle_url exists
                     if bundle_url:
                         encoded_bundle_url = base64.urlsafe_b64encode(bundle_url.encode('utf-8')).decode('utf-8')
                         preview_url = f"/api/extract?download_type=single&bundle_url={encoded_bundle_url}&file_index={counter}&name={fname}"
@@ -301,14 +321,19 @@ def handle_universal_extraction_pipeline():
             padding_needed = len(bundle_url_raw) % 4
             if padding_needed:
                 bundle_url_raw += '=' * (4 - padding_needed)
-            bundle_url = base64.urlsafe_b64decode(bundle_url_raw.encode('utf-8')).decode('utf-8')
+            decoded_val = base64.urlsafe_b64decode(bundle_url_raw.encode('utf-8')).decode('utf-8')
+            # Verify decoded value resembles a valid HTTP address to prevent false positive base64 conversions
+            if decoded_val.startswith(('http://', 'https://')):
+                bundle_url = decoded_val
+            else:
+                bundle_url = bundle_url_raw
         except:
             bundle_url = bundle_url_raw
 
     # Function to extract remote bundles dynamically without caching
     def get_stateless_extracted_list(url):
         try:
-            res = requests.get(url, timeout=15)
+            res = requests.get(url, headers=HEADERS, timeout=15)
             if res.status_code == 200:
                 decompressed_data = decompress_stream(res.content)
                 env = UnityPy.load(decompressed_data)
@@ -363,7 +388,11 @@ def handle_universal_extraction_pipeline():
         
         orig_filename = request.args.get('name', 'assets')
         clean_name = re.split(r'[-.]', orig_filename)[0]
-        return send_file(zip_io, mimetype='application/zip', as_attachment=True, download_name=f"{clean_name}[Extracted].zip")
+        
+        # Use cross-version header assignment instead of download_name parameter to avoid crashes on Flask 1.x
+        response = send_file(zip_io, mimetype='application/zip')
+        response.headers["Content-Disposition"] = f'attachment; filename="{clean_name}[Extracted].zip"'
+        return response
 
     elif download_type == 'single':
         file_idx = int(request.args.get('file_index', -1))
@@ -380,18 +409,34 @@ def handle_universal_extraction_pipeline():
         if not item:
             return jsonify({"error": "Asset index not found or serverless cache expired. Try specifying bundle_url parameter."}), 400
             
-        return send_file(io.BytesIO(item['bytes']), mimetype='application/octet-stream', as_attachment=True, download_name=item['name'])
+        # Use direct header manipulation for download names to resolve compatibilities on older Flask environments
+        response = send_file(io.BytesIO(item['bytes']), mimetype='application/octet-stream')
+        response.headers["Content-Disposition"] = f'attachment; filename="{item["name"]}"'
+        return response
 
     if request.method == 'POST':
         return handle_asset_bundle_extraction()
     return jsonify({"error": "Invalid GET parameters"}), 400
 
+# Catch-all page layout handler that gracefully falls back if index.html doesn't exist on serverless task paths
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def serve_ui_layout(path):
     try:
-        with open(HTML_PATH, 'r', encoding='utf-8') as f: return f.read()
-    except Exception as e: return f"Error: {str(e)}", 500
+        if os.path.exists(HTML_PATH):
+            with open(HTML_PATH, 'r', encoding='utf-8') as f: 
+                return f.read()
+        return jsonify({
+            "success": True,
+            "message": "Unity Asset Extractor Pipeline API is online.",
+            "endpoints": {
+                "bundle_extraction": "/api/extract/bundle [POST]",
+                "ktx_extraction": "/api/extract/ktx [POST]",
+                "universal_pipeline": "/api/extract [GET/POST]"
+            }
+        }), 200
+    except Exception as e: 
+        return f"Error: {str(e)}", 500
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=10000, debug=True)
