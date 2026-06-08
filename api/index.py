@@ -8,9 +8,12 @@ import re
 import gc
 import hashlib
 import struct
+import requests
+import base64
 from flask import Flask, request, send_file, jsonify
 from PIL import Image
 import texture2ddecoder
+
 os.environ["UNITYPY_NO_GUI"] = "1"
 import UnityPy
 
@@ -19,7 +22,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 HTML_PATH = os.path.join(BASE_DIR, 'index.html')
 GLOBAL_CACHE_REGISTRY = {}
 
-# Global CORS implementation to ensure other websites can access these extraction APIs seamlessly
+# Global CORS implementation
 @app.after_request
 def apply_cross_origin_resource_sharing(response):
     response.headers["Access-Control-Allow-Origin"] = "*"
@@ -194,12 +197,26 @@ def convert_ktx_to_png_fallback(file_bytes) -> bytes:
 @app.route('/api/extract/bundle', methods=['POST'])
 def handle_asset_bundle_extraction():
     global GLOBAL_CACHE_REGISTRY
-    if 'asset_bundle' not in request.files: 
-        return jsonify({"error": "No file labeled 'asset_bundle' provided"}), 400
+    bundle_url = request.form.get('bundle_url', '') or request.args.get('bundle_url', '')
+    
+    if 'asset_bundle' not in request.files and not bundle_url: 
+        return jsonify({"error": "No file labeled 'asset_bundle' or 'bundle_url' parameter provided"}), 400
     try:
-        uploaded_file = request.files['asset_bundle']
-        GLOBAL_CACHE_REGISTRY['original_name'] = uploaded_file.filename
-        raw_bytes = uploaded_file.read()
+        raw_bytes = b""
+        filename = "assets"
+        if 'asset_bundle' in request.files:
+            uploaded_file = request.files['asset_bundle']
+            filename = uploaded_file.filename
+            raw_bytes = uploaded_file.read()
+        elif bundle_url:
+            res = requests.get(bundle_url, timeout=15)
+            if res.status_code == 200:
+                raw_bytes = res.content
+                filename = bundle_url.split('/')[-1]
+            else:
+                return jsonify({"error": f"Failed to retrieve remote bundle: Status {res.status_code}"}), 400
+
+        GLOBAL_CACHE_REGISTRY['original_name'] = filename
         decompressed_data = decompress_stream(raw_bytes)
         
         extracted_list = []
@@ -216,7 +233,22 @@ def handle_asset_bundle_extraction():
                 if h not in seen_md5:
                     seen_md5.add(h)
                     extracted_list.append({'index': counter, 'name': fname, 'zip_path': zpath, 'bytes': fbytes, 'label': tlabel})
-                    json_manifest.append({'index': counter, 'name': fname, 'path': zpath, 'label': tlabel})
+                    
+                    # If bundle_url is provided, generate a stateless preview URL
+                    if bundle_url:
+                        encoded_bundle_url = base64.urlsafe_b64encode(bundle_url.encode('utf-8')).decode('utf-8')
+                        preview_url = f"/api/extract?download_type=single&bundle_url={encoded_bundle_url}&file_index={counter}&name={fname}"
+                    else:
+                        preview_url = f"/api/extract?download_type=single&file_index={counter}"
+
+                    json_manifest.append({
+                        'index': counter, 
+                        'name': fname, 
+                        'path': zpath, 
+                        'label': tlabel,
+                        'preview_url': preview_url,
+                        'url': preview_url
+                    })
                     counter += 1
         
         del env
@@ -255,21 +287,72 @@ def handle_ktx_texture_extraction():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# Legacy fallback endpoint routing to verify backward compatibility with older setups
+# Universal extraction route supporting stateless parameter flags
 @app.route('/api/extract', methods=['GET', 'POST'])
 def handle_universal_extraction_pipeline():
     global GLOBAL_CACHE_REGISTRY
     download_type = request.args.get('download_type', '')
+    bundle_url_raw = request.args.get('bundle_url', '')
+    
+    # Safely decode bundle_url parameter if encoded in base64
+    bundle_url = ""
+    if bundle_url_raw:
+        try:
+            padding_needed = len(bundle_url_raw) % 4
+            if padding_needed:
+                bundle_url_raw += '=' * (4 - padding_needed)
+            bundle_url = base64.urlsafe_b64decode(bundle_url_raw.encode('utf-8')).decode('utf-8')
+        except:
+            bundle_url = bundle_url_raw
+
+    # Function to extract remote bundles dynamically without caching
+    def get_stateless_extracted_list(url):
+        try:
+            res = requests.get(url, timeout=15)
+            if res.status_code == 200:
+                decompressed_data = decompress_stream(res.content)
+                env = UnityPy.load(decompressed_data)
+                extracted_list = []
+                counter = 0
+                seen_md5 = set()
+                for obj in env.objects:
+                    extracted_res = process_object_unrestricted(obj, decompressed_data)
+                    if extracted_res:
+                        fname, fbytes, zpath, tlabel = extracted_res
+                        h = hashlib.md5(fbytes).hexdigest()
+                        if h not in seen_md5:
+                            seen_md5.add(h)
+                            extracted_list.append({
+                                'index': counter,
+                                'name': fname,
+                                'zip_path': zpath,
+                                'bytes': fbytes,
+                                'label': tlabel
+                            })
+                            counter += 1
+                return extracted_list
+        except Exception as e:
+            print(f"Stateless extraction error: {e}")
+        return []
 
     if download_type == 'zip':
-        if not GLOBAL_CACHE_REGISTRY.get('extracted'): return jsonify({"error": "No cache"}), 400
+        target_list = []
+        if bundle_url:
+            target_list = get_stateless_extracted_list(bundle_url)
+        else:
+            if not GLOBAL_CACHE_REGISTRY.get('extracted'): 
+                return jsonify({"error": "Serverless cache expired. Try calling with bundle_url parameter."}), 400
+            target_list = GLOBAL_CACHE_REGISTRY['extracted']
+            
         mode = request.args.get('mode', 'normal')
         filter_indices = request.args.get('indices', '')
-        target_list = GLOBAL_CACHE_REGISTRY['extracted']
         
         if filter_indices:
             idx_list = [int(i) for i in filter_indices.split(',') if i.isdigit()]
             target_list = [item for item in target_list if item['index'] in idx_list]
+
+        if not target_list:
+            return jsonify({"error": "No assets to pack"}), 400
 
         zip_io = io.BytesIO()
         with zipfile.ZipFile(zip_io, "w", zipfile.ZIP_DEFLATED) as zf:
@@ -278,15 +361,25 @@ def handle_universal_extraction_pipeline():
                 zf.writestr(path, item['bytes'])
         zip_io.seek(0)
         
-        orig_filename = GLOBAL_CACHE_REGISTRY.get('original_name', 'assets')
+        orig_filename = request.args.get('name', 'assets')
         clean_name = re.split(r'[-.]', orig_filename)[0]
         return send_file(zip_io, mimetype='application/zip', as_attachment=True, download_name=f"{clean_name}[Extracted].zip")
 
     elif download_type == 'single':
         file_idx = int(request.args.get('file_index', -1))
-        if not GLOBAL_CACHE_REGISTRY.get('extracted') or file_idx < 0 or file_idx >= len(GLOBAL_CACHE_REGISTRY['extracted']):
-            return jsonify({"error": "Index error"}), 400
-        item = GLOBAL_CACHE_REGISTRY['extracted'][file_idx]
+        item = None
+        
+        if bundle_url:
+            target_list = get_stateless_extracted_list(bundle_url)
+            if 0 <= file_idx < len(target_list):
+                item = target_list[file_idx]
+        else:
+            if GLOBAL_CACHE_REGISTRY.get('extracted') and 0 <= file_idx < len(GLOBAL_CACHE_REGISTRY['extracted']):
+                item = GLOBAL_CACHE_REGISTRY['extracted'][file_idx]
+                
+        if not item:
+            return jsonify({"error": "Asset index not found or serverless cache expired. Try specifying bundle_url parameter."}), 400
+            
         return send_file(io.BytesIO(item['bytes']), mimetype='application/octet-stream', as_attachment=True, download_name=item['name'])
 
     if request.method == 'POST':
