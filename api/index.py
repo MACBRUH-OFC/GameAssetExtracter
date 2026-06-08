@@ -8,6 +8,8 @@ import re
 import gc
 import hashlib
 import struct
+import requests
+import base64
 from flask import Flask, request, send_file, jsonify
 from PIL import Image
 import texture2ddecoder
@@ -186,16 +188,78 @@ def convert_ktx_to_png_fallback(file_bytes) -> bytes:
 def handle_universal_extraction_pipeline():
     global GLOBAL_CACHE_REGISTRY
     download_type = request.args.get('download_type', '')
+    
+    # Retrieve bundle_url parameter from requests
+    bundle_url_raw = request.form.get('bundle_url', '') or request.args.get('bundle_url', '') or request.args.get('url', '')
+    
+    bundle_url = ""
+    if bundle_url_raw:
+        try:
+            padding_needed = len(bundle_url_raw) % 4
+            if padding_needed:
+                bundle_url_raw += '=' * (4 - padding_needed)
+            decoded_val = base64.urlsafe_b64decode(bundle_url_raw.encode('utf-8')).decode('utf-8')
+            if decoded_val.startswith(('http://', 'https://')):
+                bundle_url = decoded_val
+            else:
+                bundle_url = bundle_url_raw
+        except:
+            bundle_url = bundle_url_raw
+
+    # Local helper to handle stateless, persistent remote extractions
+    def get_stateless_extracted_list(url):
+        try:
+            res = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=15)
+            if res.status_code == 200:
+                decompressed_data = decompress_stream(res.content)
+                extracted_list = []
+                
+                # Check KTX Signature
+                if decompressed_data.startswith(b'\xABKTX 11\xBB\r\n\x1A\n'):
+                    try:
+                        png = convert_ktx_to_png_fallback(decompressed_data)
+                        name = url.split('/')[-1].split('.')[0] + ".png"
+                        extracted_list.append({'index': 0, 'name': name, 'zip_path': f"Textures/{name}", 'bytes': png, 'label': "KTX Image"})
+                        return extracted_list
+                    except:
+                        pass
+
+                env = UnityPy.load(decompressed_data)
+                counter = 0
+                seen_md5 = set()
+                for obj in env.objects:
+                    res_obj = process_object_unrestricted(obj, decompressed_data)
+                    if res_obj:
+                        fname, fbytes, zpath, tlabel = res_obj
+                        h = hashlib.md5(fbytes).hexdigest()
+                        if h not in seen_md5:
+                            seen_md5.add(h)
+                            extracted_list.append({'index': counter, 'name': fname, 'zip_path': zpath, 'bytes': fbytes, 'label': tlabel})
+                            counter += 1
+                del env
+                gc.collect()
+                return extracted_list
+        except Exception as e:
+            print(f"Stateless extraction failed: {e}")
+        return []
 
     if download_type == 'zip':
-        if not GLOBAL_CACHE_REGISTRY.get('extracted'): return jsonify({"error": "No cache"}), 400
+        target_list = []
+        if bundle_url:
+            target_list = get_stateless_extracted_list(bundle_url)
+        else:
+            if not GLOBAL_CACHE_REGISTRY.get('extracted'): return jsonify({"error": "No cache"}), 400
+            target_list = GLOBAL_CACHE_REGISTRY['extracted']
+            
         mode = request.args.get('mode', 'normal')
         filter_indices = request.args.get('indices', '')
-        target_list = GLOBAL_CACHE_REGISTRY['extracted']
         
         if filter_indices:
             idx_list = [int(i) for i in filter_indices.split(',') if i.isdigit()]
             target_list = [item for item in target_list if item['index'] in idx_list]
+
+        if not target_list:
+            return jsonify({"error": "No assets to pack"}), 400
 
         zip_io = io.BytesIO()
         with zipfile.ZipFile(zip_io, "w", zipfile.ZIP_DEFLATED) as zf:
@@ -204,22 +268,53 @@ def handle_universal_extraction_pipeline():
                 zf.writestr(path, item['bytes'])
         zip_io.seek(0)
         
-        orig_filename = GLOBAL_CACHE_REGISTRY.get('original_name', 'assets')
+        orig_filename = GLOBAL_CACHE_REGISTRY.get('original_name', 'assets') if not bundle_url else bundle_url.split('/')[-1]
         clean_name = re.split(r'[-.]', orig_filename)[0]
-        return send_file(zip_io, mimetype='application/zip', as_attachment=True, download_name=f"{clean_name}[Extracted].zip")
+        
+        # Direct header assignment to maintain compatibility across all Flask versions
+        response = send_file(zip_io, mimetype='application/zip')
+        response.headers["Content-Disposition"] = f'attachment; filename="{clean_name}[Extracted].zip"'
+        return response
 
     elif download_type == 'single':
         file_idx = int(request.args.get('file_index', -1))
-        if not GLOBAL_CACHE_REGISTRY.get('extracted') or file_idx < 0 or file_idx >= len(GLOBAL_CACHE_REGISTRY['extracted']):
+        item = None
+        
+        if bundle_url:
+            target_list = get_stateless_extracted_list(bundle_url)
+            if 0 <= file_idx < len(target_list):
+                item = target_list[file_idx]
+        else:
+            if GLOBAL_CACHE_REGISTRY.get('extracted') and 0 <= file_idx < len(GLOBAL_CACHE_REGISTRY['extracted']):
+                item = GLOBAL_CACHE_REGISTRY['extracted'][file_idx]
+                
+        if not item:
             return jsonify({"error": "Index error"}), 400
-        item = GLOBAL_CACHE_REGISTRY['extracted'][file_idx]
-        return send_file(io.BytesIO(item['bytes']), mimetype='application/octet-stream', as_attachment=True, download_name=item['name'])
+            
+        # Direct header assignment to maintain compatibility across all Flask versions
+        response = send_file(io.BytesIO(item['bytes']), mimetype='application/octet-stream')
+        response.headers["Content-Disposition"] = f'attachment; filename="{item["name"]}"'
+        return response
 
-    if 'asset_bundle' not in request.files: return jsonify({"error": "No file"}), 400
+    if 'asset_bundle' not in request.files and not bundle_url: 
+        return jsonify({"error": "No file"}), 400
+        
     try:
-        uploaded_file = request.files['asset_bundle']
-        GLOBAL_CACHE_REGISTRY['original_name'] = uploaded_file.filename
-        raw_bytes = uploaded_file.read()
+        raw_bytes = b""
+        filename = "assets"
+        if 'asset_bundle' in request.files:
+            uploaded_file = request.files['asset_bundle']
+            filename = uploaded_file.filename
+            raw_bytes = uploaded_file.read()
+        elif bundle_url:
+            res = requests.get(bundle_url, headers={"User-Agent": "Mozilla/5.0"}, timeout=15)
+            if res.status_code == 200:
+                raw_bytes = res.content
+                filename = bundle_url.split('/')[-1]
+            else:
+                return jsonify({"error": "Download error"}), 400
+
+        GLOBAL_CACHE_REGISTRY['original_name'] = filename
         decompressed_data = decompress_stream(raw_bytes)
         extracted_list = []
         json_manifest = []
@@ -227,9 +322,23 @@ def handle_universal_extraction_pipeline():
         if decompressed_data.startswith(b'\xABKTX 11\xBB\r\n\x1A\n'):
             try:
                 png = convert_ktx_to_png_fallback(decompressed_data)
-                name = os.path.splitext(uploaded_file.filename)[0] + ".png"
+                name = os.path.splitext(filename)[0] + ".png"
+                
+                if bundle_url:
+                    encoded_bundle_url = base64.urlsafe_b64encode(bundle_url.encode('utf-8')).decode('utf-8')
+                    preview_url = f"/api/extract?download_type=single&bundle_url={encoded_bundle_url}&file_index=0&name={name}"
+                else:
+                    preview_url = f"/api/extract?download_type=single&file_index=0"
+
                 extracted_list.append({'index': 0, 'name': name, 'zip_path': f"Textures/{name}", 'bytes': png, 'label': "KTX Image"})
-                json_manifest.append({'index': 0, 'name': name, 'path': f"Textures/{name}", 'label': "KTX Image"})
+                json_manifest.append({
+                    'index': 0, 
+                    'name': name, 
+                    'path': f"Textures/{name}", 
+                    'label': "KTX Image",
+                    'preview_url': preview_url,
+                    'url': preview_url
+                })
                 GLOBAL_CACHE_REGISTRY['extracted'] = extracted_list
                 return jsonify({"files": json_manifest})
             except: pass
@@ -245,7 +354,22 @@ def handle_universal_extraction_pipeline():
                 if h not in seen_md5:
                     seen_md5.add(h)
                     extracted_list.append({'index': counter, 'name': fname, 'zip_path': zpath, 'bytes': fbytes, 'label': tlabel})
-                    json_manifest.append({'index': counter, 'name': fname, 'path': zpath, 'label': tlabel})
+                    
+                    # Generate stateless preview URL if bundle_url exists
+                    if bundle_url:
+                        encoded_bundle_url = base64.urlsafe_b64encode(bundle_url.encode('utf-8')).decode('utf-8')
+                        preview_url = f"/api/extract?download_type=single&bundle_url={encoded_bundle_url}&file_index={counter}&name={fname}"
+                    else:
+                        preview_url = f"/api/extract?download_type=single&file_index={counter}"
+
+                    json_manifest.append({
+                        'index': counter, 
+                        'name': fname, 
+                        'path': zpath, 
+                        'label': tlabel,
+                        'preview_url': preview_url,
+                        'url': preview_url
+                    })
                     counter += 1
         
         del env
@@ -260,7 +384,10 @@ def handle_universal_extraction_pipeline():
 @app.route('/<path:path>')
 def serve_ui_layout(path):
     try:
-        with open(HTML_PATH, 'r', encoding='utf-8') as f: return f.read()
+        # Fallback check to prevent 500 crash on serverless runtimes when index.html is missing
+        if os.path.exists(HTML_PATH):
+            with open(HTML_PATH, 'r', encoding='utf-8') as f: return f.read()
+        return "Unity Asset Extractor Pipeline API is Online (Stateless Mode Enabled).", 200
     except Exception as e: return f"Error: {str(e)}", 500
 
 if __name__ == '__main__':
