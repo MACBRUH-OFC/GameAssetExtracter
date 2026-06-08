@@ -19,6 +19,14 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 HTML_PATH = os.path.join(BASE_DIR, 'index.html')
 GLOBAL_CACHE_REGISTRY = {}
 
+# Global CORS implementation to ensure other websites can access these extraction APIs seamlessly
+@app.after_request
+def apply_cross_origin_resource_sharing(response):
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+    return response
+
 def decompress_stream(data: bytes) -> bytes:
     try:
         if data.startswith(b'\x1f\x8b'):
@@ -182,6 +190,72 @@ def convert_ktx_to_png_fallback(file_bytes) -> bytes:
     img.save(output, format="PNG")
     return output.getvalue()
 
+# Dedicated API for extracting Unity Asset Bundles
+@app.route('/api/extract/bundle', methods=['POST'])
+def handle_asset_bundle_extraction():
+    global GLOBAL_CACHE_REGISTRY
+    if 'asset_bundle' not in request.files: 
+        return jsonify({"error": "No file labeled 'asset_bundle' provided"}), 400
+    try:
+        uploaded_file = request.files['asset_bundle']
+        GLOBAL_CACHE_REGISTRY['original_name'] = uploaded_file.filename
+        raw_bytes = uploaded_file.read()
+        decompressed_data = decompress_stream(raw_bytes)
+        
+        extracted_list = []
+        json_manifest = []
+        env = UnityPy.load(decompressed_data)
+        counter = 0
+        seen_md5 = set()
+        
+        for obj in env.objects:
+            res = process_object_unrestricted(obj, decompressed_data)
+            if res:
+                fname, fbytes, zpath, tlabel = res
+                h = hashlib.md5(fbytes).hexdigest()
+                if h not in seen_md5:
+                    seen_md5.add(h)
+                    extracted_list.append({'index': counter, 'name': fname, 'zip_path': zpath, 'bytes': fbytes, 'label': tlabel})
+                    json_manifest.append({'index': counter, 'name': fname, 'path': zpath, 'label': tlabel})
+                    counter += 1
+        
+        del env
+        gc.collect()
+        if not extracted_list: 
+            return jsonify({"error": "No assets could be processed from this bundle layout"}), 400
+            
+        GLOBAL_CACHE_REGISTRY['extracted'] = extracted_list
+        return jsonify({"files": json_manifest})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# Dedicated API for extracting standalone KTX Textures
+@app.route('/api/extract/ktx', methods=['POST'])
+def handle_ktx_texture_extraction():
+    global GLOBAL_CACHE_REGISTRY
+    if 'asset_bundle' not in request.files: 
+        return jsonify({"error": "No file labeled 'asset_bundle' provided"}), 400
+    try:
+        uploaded_file = request.files['asset_bundle']
+        GLOBAL_CACHE_REGISTRY['original_name'] = uploaded_file.filename
+        raw_bytes = uploaded_file.read()
+        decompressed_data = decompress_stream(raw_bytes)
+        
+        if decompressed_data.startswith(b'\xABKTX 11\xBB\r\n\x1A\n'):
+            png = convert_ktx_to_png_fallback(decompressed_data)
+            name = os.path.splitext(uploaded_file.filename)[0] + ".png"
+            
+            extracted_list = [{'index': 0, 'name': name, 'zip_path': f"Textures/{name}", 'bytes': png, 'label': "KTX Image"}]
+            json_manifest = [{'index': 0, 'name': name, 'path': f"Textures/{name}", 'label': "KTX Image"}]
+            
+            GLOBAL_CACHE_REGISTRY['extracted'] = extracted_list
+            return jsonify({"files": json_manifest})
+        else:
+            return jsonify({"error": "Provided file data does not contain a valid KTX 11 signature"}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# Legacy fallback endpoint routing to verify backward compatibility with older setups
 @app.route('/api/extract', methods=['GET', 'POST'])
 def handle_universal_extraction_pipeline():
     global GLOBAL_CACHE_REGISTRY
@@ -215,46 +289,9 @@ def handle_universal_extraction_pipeline():
         item = GLOBAL_CACHE_REGISTRY['extracted'][file_idx]
         return send_file(io.BytesIO(item['bytes']), mimetype='application/octet-stream', as_attachment=True, download_name=item['name'])
 
-    if 'asset_bundle' not in request.files: return jsonify({"error": "No file"}), 400
-    try:
-        uploaded_file = request.files['asset_bundle']
-        GLOBAL_CACHE_REGISTRY['original_name'] = uploaded_file.filename
-        raw_bytes = uploaded_file.read()
-        decompressed_data = decompress_stream(raw_bytes)
-        extracted_list = []
-        json_manifest = []
-        
-        if decompressed_data.startswith(b'\xABKTX 11\xBB\r\n\x1A\n'):
-            try:
-                png = convert_ktx_to_png_fallback(decompressed_data)
-                name = os.path.splitext(uploaded_file.filename)[0] + ".png"
-                extracted_list.append({'index': 0, 'name': name, 'zip_path': f"Textures/{name}", 'bytes': png, 'label': "KTX Image"})
-                json_manifest.append({'index': 0, 'name': name, 'path': f"Textures/{name}", 'label': "KTX Image"})
-                GLOBAL_CACHE_REGISTRY['extracted'] = extracted_list
-                return jsonify({"files": json_manifest})
-            except: pass
-
-        env = UnityPy.load(decompressed_data)
-        counter = 0
-        seen_md5 = set()
-        for obj in env.objects:
-            res = process_object_unrestricted(obj, decompressed_data)
-            if res:
-                fname, fbytes, zpath, tlabel = res
-                h = hashlib.md5(fbytes).hexdigest()
-                if h not in seen_md5:
-                    seen_md5.add(h)
-                    extracted_list.append({'index': counter, 'name': fname, 'zip_path': zpath, 'bytes': fbytes, 'label': tlabel})
-                    json_manifest.append({'index': counter, 'name': fname, 'path': zpath, 'label': tlabel})
-                    counter += 1
-        
-        del env
-        gc.collect()
-        if not extracted_list: return jsonify({"error": "No assets found"}), 400
-        GLOBAL_CACHE_REGISTRY['extracted'] = extracted_list
-        return jsonify({"files": json_manifest})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    if request.method == 'POST':
+        return handle_asset_bundle_extraction()
+    return jsonify({"error": "Invalid GET parameters"}), 400
 
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
