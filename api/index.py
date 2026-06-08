@@ -11,11 +11,23 @@ import struct
 import requests
 import base64
 from flask import Flask, request, send_file, jsonify
-from PIL import Image
-import texture2ddecoder
 
-os.environ["UNITYPY_NO_GUI"] = "1"
-import UnityPy
+# Defensive compiled import structures to prevent Vercel startup crashes
+try:
+    from PIL import Image
+except ImportError:
+    Image = None
+
+try:
+    import texture2ddecoder
+except ImportError:
+    texture2ddecoder = None
+
+try:
+    os.environ["UNITYPY_NO_GUI"] = "1"
+    import UnityPy
+except ImportError:
+    UnityPy = None
 
 app = Flask(__name__)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -97,6 +109,8 @@ def process_object_unrestricted(obj, raw_env_data: bytes):
             return f"{safe_name}{ext}", raw, f"Text/{safe_name}{ext}", label
 
         elif t in ["Texture2D", "Sprite"] and hasattr(data, 'image'):
+            if Image is None:
+                return f"{safe_name}_texture.json", json.dumps(dump_obj_to_dict(data)).encode('utf-8'), f"Textures/{safe_name}.json", "Texture Metadata (Pillow Missing)"
             buf = io.BytesIO()
             data.image.save(buf, format="PNG", optimize=False)
             return f"{safe_name}.png", buf.getvalue(), f"Textures/{safe_name}.png", f"{t} Asset"
@@ -175,6 +189,11 @@ def process_object_unrestricted(obj, raw_env_data: bytes):
     return None
 
 def convert_ktx_to_png_fallback(file_bytes) -> bytes:
+    if texture2ddecoder is None:
+        raise Exception("texture2ddecoder library is not installed or failed to load in this environment.")
+    if Image is None:
+        raise Exception("Pillow (PIL) library is not installed or failed to load in this environment.")
+        
     f = io.BytesIO(file_bytes)
     header = f.read(64)
     if len(header) < 64 or header[:12] != b'\xABKTX 11\xBB\r\n\x1A\n': raise Exception("Invalid KTX")
@@ -202,6 +221,9 @@ def convert_ktx_to_png_fallback(file_bytes) -> bytes:
 @app.route('/api/extract/bundle', methods=['POST'])
 def handle_asset_bundle_extraction():
     global GLOBAL_CACHE_REGISTRY
+    if UnityPy is None:
+        return jsonify({"error": "UnityPy library is not installed or failed to load in this environment."}), 500
+
     bundle_url_raw = request.form.get('bundle_url', '') or request.args.get('bundle_url', '')
     
     # Safe fallback validation for base64 URLs
@@ -254,7 +276,7 @@ def handle_asset_bundle_extraction():
                     seen_md5.add(h)
                     extracted_list.append({'index': counter, 'name': fname, 'zip_path': zpath, 'bytes': fbytes, 'label': tlabel})
                     
-                    # Generate a stateless preview URL if bundle_url exists
+                    # If bundle_url is provided, generate a stateless preview URL
                     if bundle_url:
                         encoded_bundle_url = base64.urlsafe_b64encode(bundle_url.encode('utf-8')).decode('utf-8')
                         preview_url = f"/api/extract?download_type=single&bundle_url={encoded_bundle_url}&file_index={counter}&name={fname}"
@@ -332,6 +354,8 @@ def handle_universal_extraction_pipeline():
 
     # Function to extract remote bundles dynamically without caching
     def get_stateless_extracted_list(url):
+        if UnityPy is None:
+            return []
         try:
             res = requests.get(url, headers=HEADERS, timeout=15)
             if res.status_code == 200:
@@ -423,12 +447,27 @@ def handle_universal_extraction_pipeline():
 @app.route('/<path:path>')
 def serve_ui_layout(path):
     try:
+        # Check diagnostic status of compiled dependencies
+        missing_libraries = []
+        if Image is None:
+            missing_libraries.append("Pillow (PIL)")
+        if texture2ddecoder is None:
+            missing_libraries.append("texture2ddecoder")
+        if UnityPy is None:
+            missing_libraries.append("UnityPy")
+
         if os.path.exists(HTML_PATH):
             with open(HTML_PATH, 'r', encoding='utf-8') as f: 
                 return f.read()
+                
         return jsonify({
             "success": True,
+            "status": "Online" if not missing_libraries else "Degraded (Missing dependencies)",
             "message": "Unity Asset Extractor Pipeline API is online.",
+            "diagnostics": {
+                "missing_dependencies": missing_libraries,
+                "environment_status": "Ready" if not missing_libraries else "Missing libraries in requirements.txt on Vercel environment."
+            },
             "endpoints": {
                 "bundle_extraction": "/api/extract/bundle [POST]",
                 "ktx_extraction": "/api/extract/ktx [POST]",
