@@ -178,6 +178,13 @@ body { background: #030305; color: #fff; min-height: 100vh; font-family: 'Inter'
                     <p id="cacheCounterText" class="text-[10px] text-zinc-500 truncate">0 files found</p>
                 </div>
                 <div class="flex items-center gap-2 hidden" id="listActions">
+                    <div class="custom-dropdown" id="sortDropdown">
+                        <div class="dropdown-trigger" id="sortTrigger">
+                            <span><i class="fa-solid fa-arrow-down-wide-short text-[10px] mr-1.5 text-zinc-400"></i>Sort</span>
+                            <i class="fa-solid fa-chevron-down text-[9px] flex-shrink-0 text-zinc-500"></i>
+                        </div>
+                        <div class="dropdown-menu custom-scrollbar" id="sortMenu"></div>
+                    </div>
                     <div class="custom-dropdown" id="filterDropdown">
                         <div class="dropdown-trigger" id="filterTrigger">
                             <span><i class="fa-solid fa-filter text-[10px] mr-1.5 text-zinc-400"></i>Filter</span> 
@@ -185,9 +192,19 @@ body { background: #030305; color: #fff; min-height: 100vh; font-family: 'Inter'
                         </div>
                         <div class="dropdown-menu custom-scrollbar" id="filterMenu"></div>
                     </div>
-                    <button onclick="downloadGroupedZip()" class="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-yellow-500 hover:text-white hover:bg-yellow-500 hover:border-yellow-500 transition-all shadow-md flex-shrink-0">
+                    <button id="zipActionBtn" onclick="downloadZip()" title="Download all as ZIP" class="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-yellow-500 hover:text-white hover:bg-yellow-500 hover:border-yellow-500 transition-all shadow-md flex-shrink-0">
                         <i class="fa-solid fa-file-zipper text-xs"></i>
                     </button>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 mb-3 hidden flex-shrink-0" id="listSearchRow">
+                <label class="flex items-center justify-center w-8 h-8 rounded-lg bg-[#0e0e14] border border-zinc-900 flex-shrink-0 cursor-pointer" title="Select all visible files">
+                    <input type="checkbox" id="selectAllCheckbox" class="accent-[#ffde00] w-3.5 h-3.5 cursor-pointer">
+                </label>
+                <div class="relative flex-1 min-w-0">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-[10px] text-zinc-600 pointer-events-none"></i>
+                    <input id="searchInput" type="text" placeholder="Search files..." class="w-full bg-[#0e0e14] border border-zinc-900 rounded-lg pl-8 pr-7 py-1.5 text-[11px] text-zinc-300 placeholder-zinc-600 focus:outline-none focus:border-zinc-700 transition-colors">
+                    <i id="searchClearBtn" class="fa-solid fa-xmark absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-zinc-600 hover:text-white cursor-pointer hidden"></i>
                 </div>
             </div>
             <div class="scrollable-content-box flex-1 flex flex-col">
@@ -195,6 +212,11 @@ body { background: #030305; color: #fff; min-height: 100vh; font-family: 'Inter'
                     <i class="fa-solid fa-folder-tree text-2xl mb-3 text-zinc-800"></i>
                     <span class="text-[9px] font-bold gff uppercase tracking-widest text-zinc-600 block">No Data Loaded</span>
                     <p class="text-[10px] text-zinc-500 max-w-[180px] mt-1 leading-normal">Upload a valid file and extract it to view content.</p>
+                </div>
+                <div id="listNoMatchState" class="hidden flex-1 flex flex-col items-center justify-center text-zinc-700 p-8 text-center">
+                    <i class="fa-solid fa-magnifying-glass text-2xl mb-3 text-zinc-800"></i>
+                    <span class="text-[9px] font-bold gff uppercase tracking-widest text-zinc-600 block">No Matches</span>
+                    <p class="text-[10px] text-zinc-500 max-w-[180px] mt-1 leading-normal">Try a different search term or clear your filters.</p>
                 </div>
                 <div id="listLoadingState" class="hidden flex-1 flex flex-col items-center justify-center text-zinc-500 p-8 text-center">
                     <i class="fa-solid fa-circle-notch fa-spin text-yellow-500 text-xl mb-3"></i>
@@ -237,7 +259,18 @@ body { background: #030305; color: #fff; min-height: 100vh; font-family: 'Inter'
 <script>
 let activeCache = [];
 let selectedFilters = new Set();
+let selectedIndices = new Set();
+let searchQuery = "";
+let sortMode = "default";
 let activeExtractionMode = "bundle";
+
+const SORT_OPTIONS = [
+    { key: "default", label: "Default Order" },
+    { key: "name-asc", label: "Name (A-Z)" },
+    { key: "name-desc", label: "Name (Z-A)" },
+    { key: "size-desc", label: "Size (Largest)" },
+    { key: "size-asc", label: "Size (Smallest)" },
+];
 
 const FILTER_ORDER = ["2D Texture", "Mesh", "Audio", "Video", "Text", "JSON"];
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 Megabytes Strict Cap Limit
@@ -314,12 +347,47 @@ document.getElementById('extractionModeTabs').addEventListener('click', (e) => {
 const filterDropdown = document.getElementById('filterDropdown');
 document.getElementById('filterTrigger').onclick = (e) => {
     e.stopPropagation();
+    sortDropdown.querySelector('.dropdown-menu').classList.remove('active');
     filterDropdown.querySelector('.dropdown-menu').classList.toggle('active');
 };
+
+const sortDropdown = document.getElementById('sortDropdown');
+document.getElementById('sortTrigger').onclick = (e) => {
+    e.stopPropagation();
+    filterDropdown.querySelector('.dropdown-menu').classList.remove('active');
+    sortDropdown.querySelector('.dropdown-menu').classList.toggle('active');
+};
+
 document.addEventListener('click', () => {
-    const menu = filterDropdown.querySelector('.dropdown-menu');
-    if (menu) menu.classList.remove('active');
+    document.querySelectorAll('.dropdown-menu').forEach(menu => menu.classList.remove('active'));
 });
+
+let searchDebounceTimer = null;
+const searchInput = document.getElementById('searchInput');
+const searchClearBtn = document.getElementById('searchClearBtn');
+searchInput.addEventListener('input', () => {
+    searchClearBtn.classList.toggle('hidden', searchInput.value.length === 0);
+    clearTimeout(searchDebounceTimer);
+    searchDebounceTimer = setTimeout(() => {
+        searchQuery = searchInput.value.trim().toLowerCase();
+        renderList(false);
+    }, 120);
+});
+searchClearBtn.onclick = () => {
+    searchInput.value = "";
+    searchQuery = "";
+    searchClearBtn.classList.add('hidden');
+    renderList(false);
+    searchInput.focus();
+};
+
+document.getElementById('selectAllCheckbox').onchange = (e) => {
+    const filtered = getFilteredAndSortedCache();
+    if (e.target.checked) filtered.forEach(item => selectedIndices.add(item.index));
+    else filtered.forEach(item => selectedIndices.delete(item.index));
+    renderList(false);
+    updateZipActionButton();
+};
 
 document.getElementById('extractorForm').onsubmit = async (e) => {
     e.preventDefault();
@@ -345,9 +413,11 @@ document.getElementById('extractorForm').onsubmit = async (e) => {
     document.getElementById('statusDescText').innerText = `Unpacking contents...`;
     
     document.getElementById('listEmptyState').classList.add('hidden');
+    document.getElementById('listNoMatchState').classList.add('hidden');
     document.getElementById('listLoadingState').classList.remove('hidden');
     fileList.classList.add('hidden');
     document.getElementById('listActions').classList.add('hidden');
+    document.getElementById('listSearchRow').classList.add('hidden');
 
     const formData = new FormData();
     formData.append("asset_bundle", file);
@@ -360,12 +430,20 @@ document.getElementById('extractorForm').onsubmit = async (e) => {
 
         activeCache = data.files || [];
         selectedFilters.clear();
+        selectedIndices.clear();
+        searchQuery = "";
+        sortMode = "default";
+        document.getElementById('searchInput').value = "";
+        document.getElementById('selectAllCheckbox').checked = false;
         
         document.getElementById('listLoadingState').classList.add('hidden');
         renderList(true); 
         updateFilterMenu();
+        updateSortMenu();
+        updateZipActionButton();
         
         document.getElementById('listActions').classList.remove('hidden');
+        document.getElementById('listSearchRow').classList.remove('hidden');
         fileList.classList.remove('hidden');
         
         document.getElementById('statusBadge').innerText = "SUCCESS";
@@ -436,10 +514,54 @@ function clearFilters(e) {
     renderList(false);
 }
 
+function updateSortMenu() {
+    const menu = document.getElementById('sortMenu');
+    menu.innerHTML = "";
+    SORT_OPTIONS.forEach(opt => {
+        const isSelected = sortMode === opt.key;
+        const item = document.createElement('div');
+        item.className = `dropdown-item ${isSelected ? 'selected' : ''}`;
+        item.innerHTML = `
+            <span class="truncate pr-2">${opt.label}</span>
+            <i class="fa-solid ${isSelected ? 'fa-circle-dot text-[#ffde00]' : 'fa-circle text-zinc-800'} text-[10px] flex-shrink-0"></i>
+        `;
+        item.onclick = (e) => {
+            e.stopPropagation();
+            sortMode = opt.key;
+            const triggerSpan = document.getElementById('sortTrigger').querySelector('span');
+            triggerSpan.innerHTML = opt.key === 'default'
+                ? `<i class="fa-solid fa-arrow-down-wide-short text-[10px] mr-1.5 text-zinc-400"></i>Sort`
+                : opt.label;
+            updateSortMenu();
+            renderList(false);
+        };
+        menu.appendChild(item);
+    });
+}
+
+function getFilteredAndSortedCache() {
+    let filtered = activeCache.filter(i => selectedFilters.size === 0 || selectedFilters.has(i.label));
+    if (searchQuery) filtered = filtered.filter(i => i.name.toLowerCase().includes(searchQuery));
+
+    const sorted = [...filtered];
+    if (sortMode === 'name-asc') sorted.sort((a, b) => a.name.localeCompare(b.name));
+    else if (sortMode === 'name-desc') sorted.sort((a, b) => b.name.localeCompare(a.name));
+    else if (sortMode === 'size-asc') sorted.sort((a, b) => (a.size || 0) - (b.size || 0));
+    else if (sortMode === 'size-desc') sorted.sort((a, b) => (b.size || 0) - (a.size || 0));
+    return sorted;
+}
+
+function formatBytes(bytes) {
+    if (!bytes || bytes <= 0) return "0 B";
+    const units = ["B", "KB", "MB", "GB"];
+    const i = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
+    return `${(bytes / Math.pow(1024, i)).toFixed(i === 0 ? 0 : 1)} ${units[i]}`;
+}
+
 function renderList(isInitialPayloadLoad = false) {
     fileList.innerHTML = "";
-    const filtered = activeCache.filter(i => selectedFilters.size === 0 || selectedFilters.has(i.label));
-    document.getElementById('cacheCounterText').innerText = `${filtered.length} files matching filter`;
+    const filtered = getFilteredAndSortedCache();
+    document.getElementById('cacheCounterText').innerText = `${filtered.length} of ${activeCache.length} files shown`;
     
     if (isInitialPayloadLoad) {
         if(filtered.length > 0 && filtered.length <= 3) listWindowPanel.classList.add('fit-content-low');
@@ -449,27 +571,51 @@ function renderList(isInitialPayloadLoad = false) {
         else listWindowPanel.classList.remove('fit-content-low');
     }
     
-    if(filtered.length === 0) document.getElementById('listEmptyState').classList.remove('hidden');
-    else document.getElementById('listEmptyState').classList.add('hidden');
-    
+    const hasNoData = activeCache.length === 0;
+    document.getElementById('listEmptyState').classList.toggle('hidden', !hasNoData);
+    document.getElementById('listNoMatchState').classList.toggle('hidden', hasNoData || filtered.length !== 0);
+
+    const selectAllBox = document.getElementById('selectAllCheckbox');
+    selectAllBox.checked = filtered.length > 0 && filtered.every(i => selectedIndices.has(i.index));
+    selectAllBox.indeterminate = !selectAllBox.checked && filtered.some(i => selectedIndices.has(i.index));
+
     filtered.forEach(item => {
         const row = document.createElement('div');
+        const isChecked = selectedIndices.has(item.index);
         row.className = "flex items-center justify-between p-2 rounded-xl bg-[#0b0b0f] border border-zinc-900 hover:border-zinc-700 cursor-pointer group min-w-0";
-        row.onclick = () => selectFile(item, row);
+        row.onclick = (e) => { if (e.target.closest('.row-select-box')) return; selectFile(item, row); };
         row.innerHTML = `
             <div class="flex items-center gap-3 min-w-0 flex-1 text-left">
-                <div class="w-8 h-8 rounded-lg bg-black flex items-center justify-center border border-zinc-900 flex-shrink-0">
-                    <i class="fa-solid ${getIcon(item.label)} text-[11px]"></i>
+                <label class="row-select-box flex items-center justify-center w-5 h-5 flex-shrink-0 cursor-pointer">
+                    <input type="checkbox" data-index="${item.index}" class="accent-[#ffde00] w-3.5 h-3.5 cursor-pointer" ${isChecked ? 'checked' : ''}>
+                </label>
+                <div class="w-8 h-8 rounded-lg bg-black flex items-center justify-center border border-zinc-900 flex-shrink-0 overflow-hidden">
+                    ${getThumbOrIcon(item)}
                 </div>
                 <div class="min-w-0 flex-1">
                     <p class="text-[11px] font-bold text-zinc-300 truncate group-hover:text-white">${item.name}</p>
-                    <p class="text-[8px] font-black text-zinc-600 uppercase gff tracking-wider">${item.label}</p>
+                    <p class="text-[8px] font-black text-zinc-600 uppercase gff tracking-wider">${item.label} &middot; ${formatBytes(item.size)}</p>
                 </div>
             </div>
             <i class="fa-solid fa-angle-right text-[10px] text-zinc-800 group-hover:text-zinc-400 group-hover:translate-x-0.5 transition-all ml-2 flex-shrink-0"></i>
         `;
+        row.querySelector('input[type="checkbox"]').onchange = (e) => {
+            if (e.target.checked) selectedIndices.add(item.index);
+            else selectedIndices.delete(item.index);
+            renderList(false);
+            updateZipActionButton();
+        };
         fileList.appendChild(row);
     });
+}
+
+function getThumbOrIcon(item) {
+    const l = item.label.toLowerCase();
+    if (l.includes('texture') || l.includes('image')) {
+        const thumbUrl = item.preview_url || item.url;
+        return `<img src="${thumbUrl}" loading="lazy" class="w-full h-full object-cover" onerror="this.replaceWith(Object.assign(document.createElement('i'), {className:'fa-solid ${getIcon(item.label)} text-[11px]'}))">`;
+    }
+    return `<i class="fa-solid ${getIcon(item.label)} text-[11px]"></i>`;
 }
 
 function getIcon(label) {
@@ -480,6 +626,31 @@ function getIcon(label) {
     if(l.includes('video')) return 'fa-play-circle text-red-500';
     if(l.includes('json')) return 'fa-file-lines text-emerald-400';
     return 'fa-file-code text-zinc-500';
+}
+
+function updateZipActionButton() {
+    const btn = document.getElementById('zipActionBtn');
+    if (selectedIndices.size > 0) {
+        btn.innerHTML = `<i class="fa-solid fa-file-zipper text-xs"></i><span class="text-[9px] font-black ml-1">${selectedIndices.size}</span>`;
+        btn.title = `Download ${selectedIndices.size} selected file(s) as ZIP`;
+        btn.classList.add('w-auto', 'px-2');
+        btn.classList.remove('w-8');
+    } else {
+        btn.innerHTML = `<i class="fa-solid fa-file-zipper text-xs"></i>`;
+        btn.title = "Download all as ZIP";
+        btn.classList.remove('w-auto', 'px-2');
+        btn.classList.add('w-8');
+    }
+}
+
+function downloadZip() {
+    document.getElementById('statusDescText').innerText = "Compressing files...";
+    if (selectedIndices.size > 0) {
+        const indices = [...selectedIndices].join(',');
+        window.location.href = `/api/extract?download_type=zip&mode=grouped&indices=${indices}`;
+    } else {
+        window.location.href = `/api/extract?download_type=zip&mode=grouped`;
+    }
 }
 
 async function selectFile(item, element) {
@@ -821,10 +992,7 @@ function formatTimeMetrics(secs) {
     return `${m}:${s}`;
 }
 
-function downloadGroupedZip() {
-    document.getElementById('statusDescText').innerText = "Compressing files...";
-    window.location.href = `/api/extract?download_type=zip&mode=grouped`;
-}
+
 </script>
 </body>
 </html>

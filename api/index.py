@@ -230,6 +230,7 @@ def extract_from_bytes(decompressed_data: bytes, filename: str):
                 'name': name, 
                 'path': f"Textures/{name}", 
                 'label': "KTX Image",
+                'size': len(png),
                 'data': base64.b64encode(png).decode('utf-8')
             })
             return extracted_list, json_manifest
@@ -260,6 +261,7 @@ def extract_from_bytes(decompressed_data: bytes, filename: str):
                         'name': fname, 
                         'path': zpath, 
                         'label': tlabel,
+                        'size': len(fbytes),
                         'data': b64_data
                     })
                     counter += 1
