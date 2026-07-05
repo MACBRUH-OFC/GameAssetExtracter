@@ -276,7 +276,7 @@ const FILTER_ORDER = ["2D Texture", "Mesh", "Audio", "Video", "Text", "JSON"];
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 Megabytes Strict Cap Limit
 
 let audioCtx, audioSource, audioAnalyser, audioAnimationId;
-let babylonEngine, babylonScene;
+let babylonEngine, babylonScene, babylonCamera, sharedMeshMaterial;
 
 const fileInput = document.getElementById("fileInput");
 const fileLabel = document.getElementById("fileLabel");
@@ -680,12 +680,26 @@ async function selectFile(item, element) {
 
     if (isStrictMesh) {
         mediaBox.innerHTML = `
-            <div class="custom-player-wrapper h-full">
-                <div class="aspect-16-9-viewport full-viewport-mesh">
+            <div class="custom-player-wrapper h-full relative">
+                <div class="aspect-16-9-viewport full-viewport-mesh relative">
                     <canvas id="babylonAssetCanvas" class="babylon-canvas-viewport"></canvas>
+                    <div class="absolute top-2 left-2 right-2 flex items-center gap-2 z-30">
+                        <div class="custom-dropdown flex-1 min-w-0" id="texturePickerDropdown">
+                            <div class="dropdown-trigger !bg-[#0c0c12]/90 backdrop-blur" id="texturePickerTrigger">
+                                <span class="truncate" id="texturePickerLabel"><i class="fa-solid fa-swatchbook text-[10px] mr-1.5 text-zinc-400"></i>Detecting texture...</span>
+                                <i class="fa-solid fa-chevron-down text-[9px] flex-shrink-0 text-zinc-500"></i>
+                            </div>
+                            <div class="dropdown-menu custom-scrollbar" id="texturePickerMenu"></div>
+                        </div>
+                        <button id="meshResetViewBtn" title="Reset camera" class="w-8 h-8 rounded-lg bg-[#0c0c12]/90 backdrop-blur border border-zinc-800 flex items-center justify-center text-zinc-400 hover:text-[#ffde00] transition-all flex-shrink-0">
+                            <i class="fa-solid fa-arrows-rotate text-xs"></i>
+                        </button>
+                    </div>
                 </div>
             </div>`;
-        initBabylonMeshScene("babylonAssetCanvas", url, item.name);
+        const bestMatch = findBestTextureMatch(item.name);
+        initBabylonMeshScene("babylonAssetCanvas", url, bestMatch);
+        setupTexturePicker(bestMatch);
     } else if(['png','jpg','jpeg','webp'].includes(ext) || item.label.toLowerCase().includes('texture')) {
         mediaBox.innerHTML = `
             <div class="custom-player-wrapper h-full">
@@ -758,10 +772,134 @@ async function selectFile(item, element) {
 function cleanPreviousMediaTracks() {
     if (audioAnimationId) cancelAnimationFrame(audioAnimationId);
     if (audioCtx) { audioCtx.close(); audioCtx = null; }
-    if (babylonEngine) { window.removeEventListener("resize", resizeBabylonViewportMatrix); babylonEngine.dispose(); babylonEngine = null; }
+    if (babylonEngine) {
+        window.removeEventListener("resize", resizeBabylonViewportMatrix);
+        babylonEngine.dispose();
+        babylonEngine = null; babylonCamera = null; sharedMeshMaterial = null;
+    }
 }
 
-function initBabylonMeshScene(canvasId, modelUrl, filename) {
+// Heuristic match: strips extensions/non-alphanumerics and looks for the closest-named
+// texture extracted from the same bundle, so the mesh viewer shows the real skin instead
+// of a placeholder color.
+function normalizeAssetName(name) {
+    return name.replace(/\.[^/.]+$/, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+function longestCommonSubstringLength(a, b) {
+    let best = 0;
+    for (let i = 0; i < a.length; i++) {
+        for (let j = 0; j < b.length; j++) {
+            let k = 0;
+            while (i + k < a.length && j + k < b.length && a[i + k] === b[j + k]) k++;
+            if (k > best) best = k;
+        }
+    }
+    return best;
+}
+
+function findBestTextureMatch(meshName) {
+    const textures = activeCache.filter(i => i.label.toLowerCase().includes('texture'));
+    if (textures.length === 0) return null;
+    if (textures.length === 1) return textures[0];
+
+    const meshKey = normalizeAssetName(meshName);
+    let best = null, bestScore = 0;
+    textures.forEach(tex => {
+        const texKey = normalizeAssetName(tex.name);
+        let score;
+        if (texKey === meshKey) score = 999;
+        else if (texKey.includes(meshKey) || meshKey.includes(texKey)) score = Math.min(texKey.length, meshKey.length);
+        else score = longestCommonSubstringLength(meshKey, texKey);
+        if (score > bestScore) { bestScore = score; best = tex; }
+    });
+    return bestScore >= 3 ? best : null;
+}
+
+function setupTexturePicker(selectedItem) {
+    const textures = activeCache.filter(i => i.label.toLowerCase().includes('texture'));
+    const trigger = document.getElementById('texturePickerTrigger');
+    const label = document.getElementById('texturePickerLabel');
+    const menu = document.getElementById('texturePickerMenu');
+    const dropdown = document.getElementById('texturePickerDropdown');
+    if (!trigger) return;
+
+    const setLabel = (item) => {
+        label.innerHTML = item
+            ? `<i class="fa-solid fa-swatchbook text-[10px] mr-1.5 text-[#ffde00]"></i><span class="truncate">${item.name}</span>`
+            : `<i class="fa-solid fa-swatchbook text-[10px] mr-1.5 text-zinc-400"></i>No texture found`;
+    };
+
+    const buildMenu = (currentSelection) => {
+        menu.innerHTML = "";
+        if (textures.length === 0) {
+            menu.innerHTML = `<div class="dropdown-item text-zinc-600">No textures in this bundle</div>`;
+            return;
+        }
+        const noneRow = document.createElement('div');
+        noneRow.className = `dropdown-item ${!currentSelection ? 'selected' : ''}`;
+        noneRow.innerHTML = `<span>Solid color (no texture)</span>`;
+        noneRow.onclick = (e) => { e.stopPropagation(); applyPick(null); };
+        menu.appendChild(noneRow);
+
+        textures.forEach(tex => {
+            const isSel = !!currentSelection && currentSelection.index === tex.index;
+            const row = document.createElement('div');
+            row.className = `dropdown-item ${isSel ? 'selected' : ''}`;
+            row.innerHTML = `<span class="truncate pr-2">${tex.name}</span>${isSel ? '<i class="fa-solid fa-check text-[#ffde00] text-[10px] flex-shrink-0"></i>' : ''}`;
+            row.onclick = (e) => { e.stopPropagation(); applyPick(tex); };
+            menu.appendChild(row);
+        });
+    };
+
+    const applyPick = (tex) => {
+        setLabel(tex);
+        buildMenu(tex);
+        dropdown.querySelector('.dropdown-menu').classList.remove('active');
+        applyTextureToMesh(tex);
+    };
+
+    setLabel(selectedItem);
+    buildMenu(selectedItem);
+
+    trigger.onclick = (e) => {
+        e.stopPropagation();
+        document.querySelectorAll('.dropdown-menu').forEach(m => { if (m !== menu) m.classList.remove('active'); });
+        menu.classList.toggle('active');
+    };
+
+    const resetBtn = document.getElementById('meshResetViewBtn');
+    if (resetBtn) resetBtn.onclick = () => resetMeshCameraView();
+}
+
+function applyMaterialTexture(material, textureItem) {
+    if (material.diffuseTexture) { material.diffuseTexture.dispose(); material.diffuseTexture = null; }
+    if (textureItem) {
+        const tex = new BABYLON.Texture(textureItem.preview_url || textureItem.url, babylonScene);
+        tex.hasAlpha = true;
+        material.useAlphaFromDiffuseTexture = true;
+        material.diffuseTexture = tex;
+        material.diffuseColor = new BABYLON.Color3(1, 1, 1);
+    } else {
+        material.useAlphaFromDiffuseTexture = false;
+        material.diffuseColor = new BABYLON.Color3(0.72, 0.72, 0.78);
+    }
+}
+
+function applyTextureToMesh(textureItem) {
+    if (!sharedMeshMaterial) return;
+    applyMaterialTexture(sharedMeshMaterial, textureItem);
+}
+
+function resetMeshCameraView() {
+    if (!babylonCamera) return;
+    babylonCamera.alpha = Math.PI / 2;
+    babylonCamera.beta = Math.PI / 2.5;
+    babylonCamera.radius = 4;
+    babylonCamera.target = BABYLON.Vector3.Zero();
+}
+
+function initBabylonMeshScene(canvasId, modelUrl, textureItem) {
     const canvas = document.getElementById(canvasId);
     if (!canvas) return;
 
@@ -769,9 +907,11 @@ function initBabylonMeshScene(canvasId, modelUrl, filename) {
     babylonScene = new BABYLON.Scene(babylonEngine);
     babylonScene.clearColor = new BABYLON.Color4(0.04, 0.04, 0.06, 1);
 
-    const camera = new BABYLON.ArcRotateCamera("TacticalCamera", Math.PI / 2, Math.PI / 2.5, 4, BABYLON.Vector3.Zero(), babylonScene);
-    camera.attachControl(canvas, true);
-    camera.wheelPrecision = 45;
+    babylonCamera = new BABYLON.ArcRotateCamera("TacticalCamera", Math.PI / 2, Math.PI / 2.5, 4, BABYLON.Vector3.Zero(), babylonScene);
+    babylonCamera.attachControl(canvas, true);
+    babylonCamera.wheelPrecision = 45;
+    babylonCamera.lowerRadiusLimit = 1;
+    babylonCamera.upperRadiusLimit = 20;
 
     const atmosphericLight = new BABYLON.HemisphericLight("ambientAtmosphere", new BABYLON.Vector3(0, 1, 0), babylonScene);
     atmosphericLight.intensity = 0.6;
@@ -786,16 +926,15 @@ function initBabylonMeshScene(canvasId, modelUrl, filename) {
     structuralGrid.material = gridMaterial;
     structuralGrid.position.y = -1.1;
 
+    sharedMeshMaterial = new BABYLON.StandardMaterial("sharedAssetMaterial", babylonScene);
+    sharedMeshMaterial.specularColor = new BABYLON.Color3(0.25, 0.25, 0.25);
+    sharedMeshMaterial.backFaceCulling = false;
+    applyMaterialTexture(sharedMeshMaterial, textureItem);
+
     BABYLON.SceneLoader.ImportMesh("", "", modelUrl, babylonScene, function (meshes) {
         if (!meshes || meshes.length === 0) return;
 
-        const premiumMaterial = new BABYLON.StandardMaterial("eliteModelMat", babylonScene);
-        premiumMaterial.diffuseColor = new BABYLON.Color3(0.85, 0.15, 0.2); 
-        premiumMaterial.specularColor = new BABYLON.Color3(1.0, 0.85, 0.0); 
-        premiumMaterial.specularPower = 32;
-        premiumMaterial.backFaceCulling = false;
-
-        meshes.forEach(mesh => { if(!mesh.material) mesh.material = premiumMaterial; });
+        meshes.forEach(mesh => { if(!mesh.material) mesh.material = sharedMeshMaterial; });
 
         let min = meshes[0].getBoundingInfo().boundingBox.minimumWorld;
         let max = meshes[0].getBoundingInfo().boundingBox.maximumWorld;
