@@ -89,6 +89,69 @@ def extract_clean_name(obj, data, default_type: str) -> str:
             return val.strip()
     return f"{default_type}_{obj.path_id}"
 
+def scan_streamed_etc1_textures(data: bytes):
+    """Recognize Texture2D metadata that the mobile raw scanner can see.
+
+    Some mini-update bundles leave the serialized Texture2D record readable
+    while keeping its pixel bytes in an external archive .resS stream. Report
+    those records for diagnostics; never treat guessed bytes as an image.
+    """
+    max_dimension = 8192
+    records = []
+    seen = set()
+
+    for object_start in range(0, max(0, len(data) - 0x8C), 4):
+        width, height, image_size = struct.unpack_from("<III", data, object_start + 0x20)
+        texture_format = struct.unpack_from("<I", data, object_start + 0x30)[0]
+        if texture_format != 34 or not (1 <= width <= max_dimension and 1 <= height <= max_dimension):
+            continue
+        expected_size = ((width + 3) // 4) * ((height + 3) // 4) * 8
+        if image_size != expected_size or image_size > len(data):
+            continue
+
+        stream_offset = struct.unpack_from("<Q", data, object_start + 0x78)[0]
+        stream_size = struct.unpack_from("<I", data, object_start + 0x80)[0]
+        path_size = struct.unpack_from("<I", data, object_start + 0x84)[0]
+        if stream_size != image_size or not (1 <= path_size <= 512):
+            continue
+        path_start = object_start + 0x88
+        stream_path = data[path_start:path_start + path_size].split(b"\0", 1)[0].decode("utf-8", "replace")
+        if not stream_path.lower().endswith(".ress"):
+            continue
+
+        name_size = struct.unpack_from("<I", data, object_start)[0]
+        name = ""
+        if 1 <= name_size <= 150:
+            candidate = data[object_start + 4:object_start + 4 + name_size].decode("utf-8", "replace").strip("\0")
+            if candidate and all(ch.isprintable() for ch in candidate):
+                name = candidate
+        if not name:
+            scan_start = max(0, object_start - 0x180)
+            scan_end = min(len(data), object_start + 0x300)
+            candidates = re.findall(rb"[A-Za-z][A-Za-z0-9_./-]{2,150}", data[scan_start:scan_end])
+            ignored = {b"Texture2D", b"Texture", b"Material", b"Shader", b"Sprite", b"GameObject", b"Transform", b"MonoBehaviour", b"UnityEngine", b"Unity", b"Assets", b"Resources"}
+            names = [item.decode("ascii", "ignore") for item in candidates if item not in ignored and not item.lower().startswith((b"http://", b"https://", b"www."))]
+            if names:
+                name = max(names, key=lambda item: ("_" in item, any(ch.isupper() for ch in item), len(item)))
+        if not name or not all(ch.isprintable() for ch in name):
+            continue
+
+        identity = (object_start, name, width, height)
+        if identity in seen:
+            continue
+        seen.add(identity)
+        records.append({
+            "name": name,
+            "width": width,
+            "height": height,
+            "format": "ETC_RGB4",
+            "stream_path": stream_path,
+            "stream_offset": stream_offset,
+            "stream_size": stream_size,
+            "metadata_offset": object_start,
+        })
+    return records
+
 def dump_obj_to_dict(obj_data) -> dict:
     out = {}
     try:
@@ -294,7 +357,7 @@ def extract_from_bytes(decompressed_data: bytes, filename: str):
                 'size': len(png),
                 'data': base64.b64encode(png).decode('utf-8')
             })
-            return extracted_list, json_manifest, None
+            return extracted_list, json_manifest, None, []
         except:
             pass
 
@@ -340,7 +403,13 @@ def extract_from_bytes(decompressed_data: bytes, filename: str):
     if not extracted_list and load_error:
         print(f"UnityPy could not parse {filename}: {load_error}")
         
-    return extracted_list, json_manifest, load_error
+    texture_metadata = scan_streamed_etc1_textures(decompressed_data) if not extracted_list else []
+    if texture_metadata and not load_error and decompressed_data.startswith(b"UnityFS\0"):
+        # UnityPy can swallow the per-entry UnityCN decryption error and return
+        # an empty environment after the compatibility retry. Preserve the
+        # failure state so API callers receive the streamed-texture diagnostics.
+        load_error = "BundleFile is encrypted; UnityCN payload blocks were not decoded"
+    return extracted_list, json_manifest, load_error, texture_metadata
 
 @app.route('/api/extract', methods=['GET', 'POST'])
 def handle_universal_extraction_pipeline():
@@ -362,13 +431,21 @@ def handle_universal_extraction_pipeline():
         filename = os.path.basename(bundle_url.split('?')[0]) or "assets"
         decompressed_data = decompress_stream(raw_bytes)
         
-        extracted_list, json_manifest, load_error = extract_from_bytes(decompressed_data, filename)
+        extracted_list, json_manifest, load_error, texture_metadata = extract_from_bytes(decompressed_data, filename)
         if not extracted_list:
             signature = decompressed_data[:8].decode("ascii", errors="replace").rstrip("\x00")
             if "BundleFile is encrypted" in (load_error or ""):
+                detail = ""
+                if texture_metadata:
+                    found = ", ".join(
+                        f"{item['name']} ({item['width']}×{item['height']} ETC_RGB4)"
+                        for item in texture_metadata[:8]
+                    )
+                    detail = f" Found {len(texture_metadata)} texture record(s): {found}. Pixel data is referenced from streamed .resS resources, which this bundle parse did not recover."
                 return jsonify({
-                    "error": "This UnityCN bundle could not be decoded; no extractable assets were recovered.",
+                    "error": "This UnityCN bundle could not be decoded; no pixel assets were recovered." + detail,
                     "code": "unitycn_payload_unavailable",
+                    "detected_textures": texture_metadata,
                 }), 422
             return jsonify({"error": "No extractable assets found in bundle", "format": signature or "unknown"}), 422
             
@@ -442,12 +519,20 @@ def handle_universal_extraction_pipeline():
         raw_bytes = uploaded_file.read()
         decompressed_data = decompress_stream(raw_bytes)
         
-        extracted_list, json_manifest, load_error = extract_from_bytes(decompressed_data, uploaded_file.filename)
+        extracted_list, json_manifest, load_error, texture_metadata = extract_from_bytes(decompressed_data, uploaded_file.filename)
         if not extracted_list:
             if "BundleFile is encrypted" in (load_error or ""):
+                detail = ""
+                if texture_metadata:
+                    found = ", ".join(
+                        f"{item['name']} ({item['width']}×{item['height']} ETC_RGB4)"
+                        for item in texture_metadata[:8]
+                    )
+                    detail = f" Found {len(texture_metadata)} texture record(s): {found}. Pixel data is referenced from streamed .resS resources, which this bundle parse did not recover."
                 return jsonify({
-                    "error": "This UnityCN bundle could not be decoded; no extractable assets were recovered.",
+                    "error": "This UnityCN bundle could not be decoded; no pixel assets were recovered." + detail,
                     "code": "unitycn_payload_unavailable",
+                    "detected_textures": texture_metadata,
                 }), 422
             return jsonify({"error": "No extractable assets found in bundle"}), 422
             
