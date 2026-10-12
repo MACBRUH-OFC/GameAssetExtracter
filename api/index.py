@@ -10,6 +10,7 @@ import hashlib
 import struct
 import urllib.request
 import base64
+from urllib.parse import unquote
 from flask import Flask, request, send_file, jsonify
 from PIL import Image
 import texture2ddecoder
@@ -20,6 +21,51 @@ app = Flask(__name__)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 HTML_PATH = os.path.join(BASE_DIR, 'index.html')
 GLOBAL_CACHE_REGISTRY = {}
+
+def configure_assetbundle_decrypt_key():
+    """Configure UnityCN decryption from a Vercel environment secret, if set."""
+    configured_key = os.environ.get("UNITY_ASSETBUNDLE_DECRYPT_KEY", "").strip()
+    if not configured_key:
+        return False
+
+    try:
+        key = bytes.fromhex(configured_key) if re.fullmatch(r"[0-9a-fA-F]{32}", configured_key) else configured_key.encode("utf-8")
+        UnityPy.set_assetbundle_decrypt_key(key)
+    except (ValueError, UnicodeEncodeError) as exc:
+        raise ValueError("UNITY_ASSETBUNDLE_DECRYPT_KEY must be a 16-byte key or 32 hexadecimal characters") from exc
+    return True
+
+def load_unity_bundle(data: bytes):
+    """Load UnityFS bundles, retrying the UnityCN flag collision seen in live patches.
+
+    Some UnityCN patch bundles mark flag 0x200, which older UnityPy versions
+    interpret as encryption. Only retry after the normal parser reports that
+    exact condition; the original input bytes are never modified.
+    """
+    try:
+        return UnityPy.load(data)
+    except LookupError as exc:
+        if "BundleFile is encrypted" not in str(exc) or not data.startswith(b"UnityFS\0"):
+            raise
+
+    # UnityFS header: signature, format version, two null-terminated version
+    # strings, file size, and two block sizes, followed by flags.
+    pos = 8
+    try:
+        _, = struct.unpack_from(">I", data, pos)
+        pos += 4
+        for _ in range(2):
+            end = data.index(b"\0", pos)
+            pos = end + 1
+        pos += 8 + 4 + 4
+        flags = struct.unpack_from(">I", data, pos)[0]
+        if not flags & 0x200:
+            raise ValueError("UnityFS encryption flag not present")
+        patched = bytearray(data)
+        struct.pack_into(">I", patched, pos, flags & ~0x200)
+        return UnityPy.load(bytes(patched))
+    except (ValueError, IndexError, struct.error) as exc:
+        raise LookupError("Could not safely retry UnityFS flag compatibility") from exc
 
 def decompress_stream(data: bytes) -> bytes:
     try:
@@ -63,6 +109,7 @@ def dump_obj_to_dict(obj_data) -> dict:
     return out
 
 def process_object_unrestricted(obj, raw_env_data: bytes):
+    t = "Unknown"
     try:
         t = obj.type.name
         data = obj.read()
@@ -157,7 +204,19 @@ def process_object_unrestricted(obj, raw_env_data: bytes):
             raw_bytes = obj.get_raw_data()
             if raw_bytes:
                 return f"{safe_name}_{t}.dat", raw_bytes, f"Other/{t}/{safe_name}.dat", f"Binary ({t})"
-    except: pass
+    except Exception as exc:
+        # A malformed or not-yet-supported Unity object should not make the
+        # whole bundle look empty. Preserve its raw serialized bytes instead.
+        try:
+            raw_bytes = obj.get_raw_data()
+            if raw_bytes:
+                path_id = getattr(obj, "path_id", "unknown")
+                safe_type = re.sub(r"[^A-Za-z0-9_.-]", "_", str(t)) or "Unknown"
+                name = f"{safe_type}_{path_id}.dat"
+                return name, raw_bytes, f"Other/{safe_type}/{name}", "Raw Unity Object"
+        except Exception:
+            pass
+        print(f"Skipping Unity object {t}: {exc}")
     return None
 
 def convert_ktx_to_png_fallback(file_bytes) -> bytes:
@@ -187,16 +246,17 @@ def convert_ktx_to_png_fallback(file_bytes) -> bytes:
 def decode_base64_url(encoded_str):
     if not encoded_str:
         return ""
+    encoded_str = unquote(encoded_str).strip()
     if encoded_str.startswith(('http://', 'https://')):
         return encoded_str
     try:
-        padding = 4 - (len(encoded_str) % 4)
-        if padding and padding < 4:
-            encoded_str += '=' * padding
-        encoded_str = encoded_str.replace('-', '+').replace('_', '/')
-        decoded_bytes = base64.b64decode(encoded_str)
-        return decoded_bytes.decode('utf-8')
-    except:
+        encoded_bytes = encoded_str.encode("ascii")
+        encoded_bytes += b"=" * (-len(encoded_bytes) % 4)
+        decoded_bytes = base64.b64decode(encoded_bytes, altchars=b"-_", validate=True)
+        decoded_url = decoded_bytes.decode("utf-8").strip()
+        if decoded_url.startswith(("http://", "https://")):
+            return decoded_url
+    except (ValueError, UnicodeDecodeError, UnicodeEncodeError):
         pass
     return encoded_str
 
@@ -233,12 +293,14 @@ def extract_from_bytes(decompressed_data: bytes, filename: str):
                 'size': len(png),
                 'data': base64.b64encode(png).decode('utf-8')
             })
-            return extracted_list, json_manifest
+            return extracted_list, json_manifest, None
         except:
             pass
 
+    load_error = None
     try:
-        env = UnityPy.load(decompressed_data)
+        configure_assetbundle_decrypt_key()
+        env = load_unity_bundle(decompressed_data)
         counter = 0
         seen_md5 = set()
         for obj in env.objects:
@@ -271,9 +333,13 @@ def extract_from_bytes(decompressed_data: bytes, filename: str):
         del env
         gc.collect()
     except Exception as e:
+        load_error = str(e)
         print(f"Error in UnityPy extraction: {e}")
+
+    if not extracted_list and load_error:
+        print(f"UnityPy could not parse {filename}: {load_error}")
         
-    return extracted_list, json_manifest
+    return extracted_list, json_manifest, load_error
 
 @app.route('/api/extract', methods=['GET', 'POST'])
 def handle_universal_extraction_pipeline():
@@ -295,9 +361,15 @@ def handle_universal_extraction_pipeline():
         filename = os.path.basename(bundle_url.split('?')[0]) or "assets"
         decompressed_data = decompress_stream(raw_bytes)
         
-        extracted_list, json_manifest = extract_from_bytes(decompressed_data, filename)
+        extracted_list, json_manifest, load_error = extract_from_bytes(decompressed_data, filename)
         if not extracted_list:
-            return jsonify({"error": "No assets found in bundle"}), 400
+            signature = decompressed_data[:8].decode("ascii", errors="replace").rstrip("\x00")
+            if "BundleFile is encrypted" in (load_error or ""):
+                return jsonify({
+                    "error": "This bundle uses Unity AssetBundle encryption. Configure the game's 16-byte key as the UNITY_ASSETBUNDLE_DECRYPT_KEY Vercel environment variable to extract it.",
+                    "code": "assetbundle_key_required",
+                }), 422
+            return jsonify({"error": "No extractable assets found in bundle", "format": signature or "unknown"}), 422
             
         if download_type == 'zip':
             mode = request.args.get('mode', 'normal')
@@ -369,9 +441,14 @@ def handle_universal_extraction_pipeline():
         raw_bytes = uploaded_file.read()
         decompressed_data = decompress_stream(raw_bytes)
         
-        extracted_list, json_manifest = extract_from_bytes(decompressed_data, uploaded_file.filename)
+        extracted_list, json_manifest, load_error = extract_from_bytes(decompressed_data, uploaded_file.filename)
         if not extracted_list:
-            return jsonify({"error": "No assets found"}), 400
+            if "BundleFile is encrypted" in (load_error or ""):
+                return jsonify({
+                    "error": "This bundle uses Unity AssetBundle encryption. Configure the game's 16-byte key as the UNITY_ASSETBUNDLE_DECRYPT_KEY Vercel environment variable to extract it.",
+                    "code": "assetbundle_key_required",
+                }), 422
+            return jsonify({"error": "No extractable assets found in bundle"}), 422
             
         GLOBAL_CACHE_REGISTRY['extracted'] = extracted_list
         
