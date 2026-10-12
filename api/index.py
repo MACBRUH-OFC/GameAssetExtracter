@@ -21,6 +21,16 @@ app = Flask(__name__)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 HTML_PATH = os.path.join(BASE_DIR, 'index.html')
 GLOBAL_CACHE_REGISTRY = {}
+EXTRACTOR_BUILD = "streamed-etc1-recovery-v1"
+
+
+@app.get('/api/version')
+def extractor_version():
+    """Expose a small live-build check for deployment verification."""
+    return jsonify({
+        "build": EXTRACTOR_BUILD,
+        "features": ["unitycn-streamed-etc1-textures", "duplicate-texture-records"],
+    })
 
 def configure_assetbundle_decrypt_key():
     """Configure UnityCN decryption from a Vercel environment secret, if set."""
