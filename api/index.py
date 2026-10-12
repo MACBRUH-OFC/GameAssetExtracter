@@ -206,6 +206,18 @@ def scan_streamed_etc1_textures(data: bytes):
     return records
 
 
+def texture_record_key(record):
+    """Use the serialized record location so duplicate names remain distinct."""
+    return (
+        record.get("metadata_offset"),
+        record.get("name"),
+        record.get("width"),
+        record.get("height"),
+        record.get("stream_offset"),
+        record.get("stream_size"),
+    )
+
+
 class HttpRangeReader:
     """Small seekable HTTP reader for opening selected files in a remote ZIP."""
     def __init__(self, url: str, block_size: int = 1024 * 1024):
@@ -280,19 +292,98 @@ BASE_APK_TEXTURE_ENTRIES = {
 }
 
 
-def recover_texture_assets_from_base_apk(texture_metadata):
-    """Recover exact matching ETC1 streams from the official APK base assets."""
-    wanted = {}
-    for record in texture_metadata:
-        entry = BASE_APK_TEXTURE_ENTRIES.get(record["name"])
-        if entry:
-            wanted.setdefault(entry, []).append(record)
-    if not wanted:
-        return [], [], []
+def recover_texture_assets_from_bundle_streams(env, texture_metadata):
+    """Decode Texture2D ETC1 payloads from the bundle's internal .resS files."""
+    stream_readers = {}
+    for bundle in getattr(env, "files", {}).values():
+        for name, reader in getattr(bundle, "files", {}).items():
+            if isinstance(name, str) and name.lower().endswith(".ress"):
+                stream_readers[os.path.basename(name).lower()] = reader
 
     extracted = []
     manifest = []
     recovered = set()
+    used_names = set()
+    for record in texture_metadata:
+        if record.get("format") != "ETC_RGB4":
+            continue
+        width, height = record.get("width"), record.get("height")
+        size, offset = record.get("stream_size"), record.get("stream_offset")
+        if not all(isinstance(value, int) for value in (width, height, size, offset)):
+            continue
+        expected_size = ((width + 3) // 4) * ((height + 3) // 4) * 8
+        if not (1 <= width <= 8192 and 1 <= height <= 8192 and size == expected_size and offset >= 0):
+            continue
+        stream_name = os.path.basename(record.get("stream_path", "")).lower()
+        reader = stream_readers.get(stream_name)
+        if reader is None or offset + size > reader.Length:
+            continue
+
+        original_position = reader.tell()
+        try:
+            reader.seek(offset)
+            payload = reader.read(size)
+        finally:
+            reader.seek(original_position)
+        if len(payload) != size:
+            continue
+
+        try:
+            pixels = texture2ddecoder.decode_etc1(payload, width, height)
+            if len(pixels) != width * height * 4:
+                continue
+            image = Image.frombytes("RGBA", (width, height), pixels, "raw", "BGRA")
+            image = image.transpose(Image.Transpose.FLIP_TOP_BOTTOM)
+            png_io = io.BytesIO()
+            image.save(png_io, format="PNG")
+        except Exception as exc:
+            print(f"Could not decode streamed ETC1 texture {record.get('name')}: {exc}")
+            continue
+
+        safe_name = re.sub(r"[^A-Za-z0-9_.-]+", "_", record.get("name") or "Texture")
+        base_name = safe_name
+        suffix = 2
+        while safe_name.lower() in used_names:
+            safe_name = f"{base_name}_{suffix}"
+            suffix += 1
+        used_names.add(safe_name.lower())
+        index = len(extracted)
+        for filename, content, label in (
+            (f"{safe_name}.png", png_io.getvalue(), "Texture Image"),
+            (f"{safe_name}.etc1", payload, "Original ETC1 Texture Data"),
+        ):
+            extracted.append({"index": index, "name": filename, "zip_path": f"Textures/{filename}", "bytes": content, "label": label})
+            manifest.append({
+                "index": index,
+                "name": filename,
+                "path": f"Textures/{filename}",
+                "label": label,
+                "size": len(content),
+                "data": base64.b64encode(content).decode("ascii"),
+            })
+            index += 1
+        recovered.add(texture_record_key(record))
+
+    return extracted, recovered
+
+
+def recover_texture_assets_from_base_apk(texture_metadata, already_recovered=()):
+    """Recover exact matching ETC1 streams from the official APK base assets."""
+    recovered = set(already_recovered)
+    wanted = {}
+    for record in texture_metadata:
+        record_key = texture_record_key(record)
+        if record_key in recovered:
+            continue
+        entry = BASE_APK_TEXTURE_ENTRIES.get(record["name"])
+        if entry:
+            wanted.setdefault(entry, []).append(record)
+    if not wanted:
+        unresolved = [r for r in texture_metadata if texture_record_key(r) not in recovered]
+        return [], [], unresolved
+
+    extracted = []
+    manifest = []
     try:
         apk_reader = HttpRangeReader("https://dl.cdn.freefiremobile.com/live/package/FreeFire.apk")
         with zipfile.ZipFile(apk_reader) as apk:
@@ -352,13 +443,13 @@ def recover_texture_assets_from_base_apk(texture_metadata):
                                 "data": base64.b64encode(content).decode("ascii"),
                             })
                             index += 1
-                        recovered.add((name, width, height, image_size))
+                        recovered.add(texture_record_key(record))
                     except Exception as exc:
                         print(f"Could not decode APK Texture2D in {entry}: {exc}")
     except Exception as exc:
         print(f"Could not open official APK by ranged read: {exc}")
 
-    unresolved = [r for r in texture_metadata if (r["name"], r["width"], r["height"], r["stream_size"]) not in recovered]
+    unresolved = [r for r in texture_metadata if texture_record_key(r) not in recovered]
     return extracted, manifest, unresolved
 
 def dump_obj_to_dict(obj_data) -> dict:
@@ -567,11 +658,13 @@ def extract_from_bytes(decompressed_data: bytes, filename: str):
                 'size': len(png),
                 'data': base64.b64encode(png).decode('utf-8')
             })
-            return extracted_list, json_manifest, None, []
+            return extracted_list, json_manifest, None, [], set()
         except:
             pass
 
     load_error = None
+    texture_metadata = scan_streamed_etc1_textures(decompressed_data)
+    recovered_stream_textures = set()
     try:
         configure_assetbundle_decrypt_key()
         env = load_unity_bundle(decompressed_data)
@@ -601,6 +694,24 @@ def extract_from_bytes(decompressed_data: bytes, filename: str):
                         'data': b64_data
                     })
                     counter += 1
+
+        # The UnityFS 0x200 flag blocks UnityPy's normal bundle parser, but
+        # after the compatibility retry it can still expose readable .resS
+        # resource streams. Recover ETC1 only from those named streams at the
+        # exact offsets and sizes recorded by each Texture2D object.
+        streamed_assets, recovered_stream_textures = recover_texture_assets_from_bundle_streams(env, texture_metadata)
+        for asset in streamed_assets:
+            asset["index"] = counter
+            json_manifest.append({
+                "index": counter,
+                "name": asset["name"],
+                "path": asset["zip_path"],
+                "label": asset["label"],
+                "size": len(asset["bytes"]),
+                "data": base64.b64encode(asset["bytes"]).decode("ascii"),
+            })
+            extracted_list.append(asset)
+            counter += 1
         
         if hasattr(env, 'objects'):
             env.objects.clear()
@@ -615,13 +726,12 @@ def extract_from_bytes(decompressed_data: bytes, filename: str):
     if not extracted_list and load_error:
         print(f"UnityPy could not parse {filename}: {load_error}")
         
-    texture_metadata = scan_streamed_etc1_textures(decompressed_data)
     if texture_metadata and not load_error and decompressed_data.startswith(b"UnityFS\0"):
         # UnityPy can swallow the per-entry UnityCN decryption error and return
         # an empty environment after the compatibility retry. Preserve the
         # failure state so API callers receive the streamed-texture diagnostics.
         load_error = "BundleFile is encrypted; UnityCN payload blocks were not decoded"
-    return extracted_list, json_manifest, load_error, texture_metadata
+    return extracted_list, json_manifest, load_error, texture_metadata, recovered_stream_textures
 
 def merge_recovered_assets(extracted_list, json_manifest, recovered_list, recovered_manifest):
     """Add recovered stream assets even when the bundle also yielded other files."""
@@ -666,10 +776,10 @@ def handle_universal_extraction_pipeline():
         decompressed_data = decompress_stream(raw_bytes)
         bundle_info = unityfs_encryption_info(decompressed_data)
         
-        extracted_list, json_manifest, load_error, texture_metadata = extract_from_bytes(decompressed_data, filename)
+        extracted_list, json_manifest, load_error, texture_metadata, recovered_stream_textures = extract_from_bytes(decompressed_data, filename)
         unresolved_textures = []
         if texture_metadata:
-            recovered_list, recovered_manifest, unresolved_textures = recover_texture_assets_from_base_apk(texture_metadata)
+            recovered_list, recovered_manifest, unresolved_textures = recover_texture_assets_from_base_apk(texture_metadata, recovered_stream_textures)
             if recovered_list:
                 extracted_list, json_manifest = merge_recovered_assets(extracted_list, json_manifest, recovered_list, recovered_manifest)
         if not extracted_list:
@@ -758,10 +868,10 @@ def handle_universal_extraction_pipeline():
         decompressed_data = decompress_stream(raw_bytes)
         bundle_info = unityfs_encryption_info(decompressed_data)
         
-        extracted_list, json_manifest, load_error, texture_metadata = extract_from_bytes(decompressed_data, uploaded_file.filename)
+        extracted_list, json_manifest, load_error, texture_metadata, recovered_stream_textures = extract_from_bytes(decompressed_data, uploaded_file.filename)
         unresolved_textures = []
         if texture_metadata:
-            recovered_list, recovered_manifest, unresolved_textures = recover_texture_assets_from_base_apk(texture_metadata)
+            recovered_list, recovered_manifest, unresolved_textures = recover_texture_assets_from_base_apk(texture_metadata, recovered_stream_textures)
             if recovered_list:
                 extracted_list, json_manifest = merge_recovered_assets(extracted_list, json_manifest, recovered_list, recovered_manifest)
         if not extracted_list:
