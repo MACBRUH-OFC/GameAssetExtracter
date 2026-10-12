@@ -11,7 +11,7 @@ import struct
 import urllib.request
 import base64
 from urllib.parse import unquote
-from flask import Flask, request, send_file, jsonify
+from flask import Flask, request, send_file, jsonify, Response, stream_with_context
 from PIL import Image
 import texture2ddecoder
 os.environ["UNITYPY_NO_GUI"] = "1"
@@ -21,7 +21,8 @@ app = Flask(__name__)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 HTML_PATH = os.path.join(BASE_DIR, 'index.html')
 GLOBAL_CACHE_REGISTRY = {}
-EXTRACTOR_BUILD = "streamed-etc1-recovery-v1"
+EXTRACTOR_BUILD = "streamed-texture-and-fsb-audio-v2"
+MAX_INLINE_ASSET_BYTES = 1_000_000
 
 
 @app.get('/api/version')
@@ -29,7 +30,7 @@ def extractor_version():
     """Expose a small live-build check for deployment verification."""
     return jsonify({
         "build": EXTRACTOR_BUILD,
-        "features": ["unitycn-streamed-etc1-textures", "duplicate-texture-records"],
+        "features": ["unitycn-streamed-etc1-textures", "duplicate-texture-records", "fsb5-audio", "large-media-streaming"],
     })
 
 def configure_assetbundle_decrypt_key():
@@ -377,6 +378,108 @@ def recover_texture_assets_from_bundle_streams(env, texture_metadata):
     return extracted, recovered
 
 
+def recover_audio_assets_from_bundle_resources(env, filename):
+    """Extract playable audio from FSB5 banks embedded in Unity resource streams."""
+    try:
+        from fmod_toolkit import raw_to_wav
+    except Exception as exc:
+        print(f"FMOD audio decoder is unavailable: {exc}")
+        return []
+
+    base_name = os.path.splitext(os.path.basename(filename))[0]
+    base_name = re.sub(r"[^A-Za-z0-9_.-]+", "_", base_name) or "Audio"
+    extracted = []
+    seen = set()
+    bank_number = 0
+
+    for bundle in getattr(env, "files", {}).values():
+        for resource_name, reader in getattr(bundle, "files", {}).items():
+            if not isinstance(resource_name, str) or not resource_name.lower().endswith((".resource", ".ress")):
+                continue
+            try:
+                original_position = reader.tell()
+                reader.seek(0)
+                resource_data = reader.read()
+                reader.seek(original_position)
+            except Exception as exc:
+                print(f"Could not read audio resource {resource_name}: {exc}")
+                continue
+
+            cursor = 0
+            while cursor < len(resource_data):
+                bank_offset = resource_data.find(b"FSB5", cursor)
+                if bank_offset < 0:
+                    break
+                bank_number += 1
+                cursor = bank_offset + 4
+                bank = resource_data[bank_offset:]
+                try:
+                    sample_base = base_name if bank_number == 1 else f"{base_name}_{bank_number}"
+                    samples = raw_to_wav(bank, sample_base, 2, 44100)
+                except Exception as exc:
+                    print(f"Could not decode FSB5 audio bank in {resource_name} at {bank_offset}: {exc}")
+                    continue
+
+                for sample_name, sample_data in samples.items():
+                    digest = hashlib.sha256(sample_data).digest()
+                    if digest in seen:
+                        continue
+                    seen.add(digest)
+                    safe_name = re.sub(r"[^A-Za-z0-9_.-]+", "_", os.path.basename(sample_name))
+                    extracted.append({
+                        "index": len(extracted),
+                        "name": safe_name,
+                        "zip_path": f"Audio/{safe_name}",
+                        "bytes": sample_data,
+                        "label": "Audio Track",
+                    })
+
+    return extracted
+
+
+def omit_large_inline_payloads(manifest):
+    """Keep large media out of JSON; callers can fetch it through the file URL."""
+    for item in manifest:
+        if item.get("size", 0) > MAX_INLINE_ASSET_BYTES:
+            item.pop("data", None)
+
+
+def stream_asset_response(item):
+    """Stream one extracted file and support browser audio seeking."""
+    data = item["bytes"]
+    size = len(data)
+    range_header = request.headers.get("Range", "")
+    start, end, status = 0, size - 1, 200
+    if range_header.startswith("bytes="):
+        try:
+            range_start, range_end = range_header[6:].split("-", 1)
+            if range_start:
+                start = int(range_start)
+                if range_end:
+                    end = min(int(range_end), size - 1)
+            else:
+                suffix_length = int(range_end)
+                start = max(0, size - suffix_length)
+            if start > end or start >= size:
+                raise ValueError("Requested byte range is outside the asset")
+            status = 206
+        except (ValueError, TypeError):
+            return Response(status=416, headers={"Content-Range": f"bytes */{size}"})
+
+    content = data[start:end + 1]
+    response = Response(
+        stream_with_context(content[i:i + 64 * 1024] for i in range(0, len(content), 64 * 1024)),
+        status=status,
+        mimetype="application/octet-stream",
+    )
+    response.headers["Content-Disposition"] = f"attachment; filename=\"{item['name']}\""
+    response.headers["Accept-Ranges"] = "bytes"
+    response.headers["Content-Length"] = str(len(content))
+    if status == 206:
+        response.headers["Content-Range"] = f"bytes {start}-{end}/{size}"
+    return response
+
+
 def recover_texture_assets_from_base_apk(texture_metadata, already_recovered=()):
     """Recover exact matching ETC1 streams from the official APK base assets."""
     recovered = set(already_recovered)
@@ -722,6 +825,25 @@ def extract_from_bytes(decompressed_data: bytes, filename: str):
             })
             extracted_list.append(asset)
             counter += 1
+
+        streamed_audio = recover_audio_assets_from_bundle_resources(env, filename)
+        known_audio = {hashlib.sha256(item["bytes"]).digest() for item in extracted_list if item.get("label") == "Audio Track"}
+        for asset in streamed_audio:
+            digest = hashlib.sha256(asset["bytes"]).digest()
+            if digest in known_audio:
+                continue
+            known_audio.add(digest)
+            asset["index"] = counter
+            json_manifest.append({
+                "index": counter,
+                "name": asset["name"],
+                "path": asset["zip_path"],
+                "label": asset["label"],
+                "size": len(asset["bytes"]),
+                "data": base64.b64encode(asset["bytes"]).decode("ascii"),
+            })
+            extracted_list.append(asset)
+            counter += 1
         
         if hasattr(env, 'objects'):
             env.objects.clear()
@@ -822,9 +944,12 @@ def handle_universal_extraction_pipeline():
             if file_idx < 0 or file_idx >= len(extracted_list):
                 return jsonify({"error": f"Invalid file index: {file_idx}"}), 400
             item = extracted_list[file_idx]
+            if len(item["bytes"]) > MAX_INLINE_ASSET_BYTES:
+                return stream_asset_response(item)
             return send_file(io.BytesIO(item['bytes']), mimetype='application/octet-stream', as_attachment=True, download_name=item['name'])
             
         # Return stateless file list (manifest)
+        omit_large_inline_payloads(json_manifest)
         for item in json_manifest:
             idx = item['index']
             item['url'] = f"/api/extract?bundle_url={bundle_url_param}&download_type=single&file_index={idx}"
@@ -833,6 +958,7 @@ def handle_universal_extraction_pipeline():
         response_data = {"files": json_manifest}
         if bundle_info and bundle_info["unitycn_encrypted"]:
             response_data.update({"partial": True, "extraction_complete": False, "code": "unitycn_payload_partially_unavailable", "content_hint": infer_bundle_content(filename)})
+        omit_large_inline_payloads(json_manifest)
         if texture_metadata:
             response_data.update({
                 "partial": bool(unresolved_textures) or bool(bundle_info and bundle_info["unitycn_encrypted"]),
@@ -868,6 +994,8 @@ def handle_universal_extraction_pipeline():
         if not GLOBAL_CACHE_REGISTRY.get('extracted') or file_idx < 0 or file_idx >= len(GLOBAL_CACHE_REGISTRY['extracted']):
             return jsonify({"error": "Index error"}), 400
         item = GLOBAL_CACHE_REGISTRY['extracted'][file_idx]
+        if len(item["bytes"]) > MAX_INLINE_ASSET_BYTES:
+            return stream_asset_response(item)
         return send_file(io.BytesIO(item['bytes']), mimetype='application/octet-stream', as_attachment=True, download_name=item['name'])
 
     if 'asset_bundle' not in request.files: return jsonify({"error": "No file"}), 400
@@ -890,7 +1018,8 @@ def handle_universal_extraction_pipeline():
             return jsonify({"error": "Bundle parsed, but no supported assets were recovered. Extraction may be incomplete if this format contains unsupported objects.", "code": "no_supported_assets_recovered", "extraction_complete": False}), 422
             
         GLOBAL_CACHE_REGISTRY['extracted'] = extracted_list
-        
+
+        omit_large_inline_payloads(json_manifest)
         for item in json_manifest:
             idx = item['index']
             item['url'] = f"/api/extract?download_type=single&file_index={idx}"
