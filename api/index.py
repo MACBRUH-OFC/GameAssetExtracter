@@ -36,11 +36,12 @@ def configure_assetbundle_decrypt_key():
     return True
 
 def load_unity_bundle(data: bytes):
-    """Load UnityFS bundles, retrying the UnityCN flag collision seen in live patches.
+    """Best-effort salvage of readable entries from UnityCN bundles.
 
-    Some UnityCN patch bundles mark flag 0x200, which older UnityPy versions
-    interpret as encryption. Only retry after the normal parser reports that
-    exact condition; the original input bytes are never modified.
+    Clearing the old-engine 0x200 encryption flag in a private copy lets
+    UnityPy inspect unencrypted bundle metadata and any readable serialized
+    entries. It does not decrypt protected CAB blocks, so callers must treat
+    zero or partial objects as an incomplete extraction.
     """
     try:
         return UnityPy.load(data)
@@ -366,8 +367,8 @@ def handle_universal_extraction_pipeline():
             signature = decompressed_data[:8].decode("ascii", errors="replace").rstrip("\x00")
             if "BundleFile is encrypted" in (load_error or ""):
                 return jsonify({
-                    "error": "This bundle uses Unity AssetBundle encryption. Configure the game's 16-byte key as the UNITY_ASSETBUNDLE_DECRYPT_KEY Vercel environment variable to extract it.",
-                    "code": "assetbundle_key_required",
+                    "error": "This UnityCN bundle could not be decoded; no extractable assets were recovered.",
+                    "code": "unitycn_payload_unavailable",
                 }), 422
             return jsonify({"error": "No extractable assets found in bundle", "format": signature or "unknown"}), 422
             
@@ -445,8 +446,8 @@ def handle_universal_extraction_pipeline():
         if not extracted_list:
             if "BundleFile is encrypted" in (load_error or ""):
                 return jsonify({
-                    "error": "This bundle uses Unity AssetBundle encryption. Configure the game's 16-byte key as the UNITY_ASSETBUNDLE_DECRYPT_KEY Vercel environment variable to extract it.",
-                    "code": "assetbundle_key_required",
+                    "error": "This UnityCN bundle could not be decoded; no extractable assets were recovered.",
+                    "code": "unitycn_payload_unavailable",
                 }), 422
             return jsonify({"error": "No extractable assets found in bundle"}), 422
             
