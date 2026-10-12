@@ -35,6 +35,27 @@ def configure_assetbundle_decrypt_key():
         raise ValueError("UNITY_ASSETBUNDLE_DECRYPT_KEY must be a 16-byte key or 32 hexadecimal characters") from exc
     return True
 
+def unityfs_encryption_info(data: bytes):
+    """Read UnityFS header metadata and identify legacy UnityCN encryption."""
+    if not data.startswith(b"UnityFS\0"):
+        return None
+    try:
+        pos = 12
+        versions = []
+        for _ in range(2):
+            end = data.index(b"\0", pos)
+            versions.append(data[pos:end].decode("ascii", "replace"))
+            pos = end + 1
+        pos += 16
+        flags = struct.unpack_from(">I", data, pos)[0]
+        match = re.match(r"(\d+)\.", versions[-1])
+        major = int(match.group(1)) if match else 0
+        # The 2018 bundles in this update use UnityCN's legacy 0x200 flag.
+        # On newer Unity versions that bit can mean alignment instead.
+        return {"version": versions[-1], "flags": flags, "unitycn_encrypted": bool(flags & 0x200) and major < 2020}
+    except (ValueError, IndexError, struct.error):
+        return None
+
 def load_unity_bundle(data: bytes):
     """Best-effort salvage of readable entries from UnityCN bundles.
 
@@ -493,6 +514,7 @@ def download_bundle_from_url(url):
 def extract_from_bytes(decompressed_data: bytes, filename: str):
     extracted_list = []
     json_manifest = []
+    bundle_info = unityfs_encryption_info(decompressed_data)
     
     if decompressed_data.startswith(b'\xABKTX 11\xBB\r\n\x1A\n'):
         try:
@@ -556,16 +578,40 @@ def extract_from_bytes(decompressed_data: bytes, filename: str):
         load_error = str(e)
         print(f"Error in UnityPy extraction: {e}")
 
+    if not extracted_list and bundle_info and bundle_info["unitycn_encrypted"]:
+        load_error = "BundleFile is encrypted; UnityCN payload blocks were not decoded"
     if not extracted_list and load_error:
         print(f"UnityPy could not parse {filename}: {load_error}")
         
-    texture_metadata = scan_streamed_etc1_textures(decompressed_data) if not extracted_list else []
+    texture_metadata = scan_streamed_etc1_textures(decompressed_data)
     if texture_metadata and not load_error and decompressed_data.startswith(b"UnityFS\0"):
         # UnityPy can swallow the per-entry UnityCN decryption error and return
         # an empty environment after the compatibility retry. Preserve the
         # failure state so API callers receive the streamed-texture diagnostics.
         load_error = "BundleFile is encrypted; UnityCN payload blocks were not decoded"
     return extracted_list, json_manifest, load_error, texture_metadata
+
+def merge_recovered_assets(extracted_list, json_manifest, recovered_list, recovered_manifest):
+    """Add recovered stream assets even when the bundle also yielded other files."""
+    known = {hashlib.md5(item["bytes"]).hexdigest() for item in extracted_list}
+    next_index = max((item.get("index", -1) for item in extracted_list), default=-1) + 1
+    for asset in recovered_list:
+        digest = hashlib.md5(asset["bytes"]).hexdigest()
+        if digest in known:
+            continue
+        known.add(digest)
+        asset["index"] = next_index
+        next_index += 1
+        extracted_list.append(asset)
+        json_manifest.append({
+            "index": asset["index"],
+            "name": asset["name"],
+            "path": asset["zip_path"],
+            "label": asset.get("label", "Recovered Asset"),
+            "size": len(asset["bytes"]),
+            "data": base64.b64encode(asset["bytes"]).decode("ascii"),
+        })
+    return extracted_list, json_manifest
 
 @app.route('/api/extract', methods=['GET', 'POST'])
 def handle_universal_extraction_pipeline():
@@ -586,13 +632,14 @@ def handle_universal_extraction_pipeline():
         
         filename = os.path.basename(bundle_url.split('?')[0]) or "assets"
         decompressed_data = decompress_stream(raw_bytes)
+        bundle_info = unityfs_encryption_info(decompressed_data)
         
         extracted_list, json_manifest, load_error, texture_metadata = extract_from_bytes(decompressed_data, filename)
         unresolved_textures = []
-        if not extracted_list and texture_metadata:
+        if texture_metadata:
             recovered_list, recovered_manifest, unresolved_textures = recover_texture_assets_from_base_apk(texture_metadata)
             if recovered_list:
-                extracted_list, json_manifest = recovered_list, recovered_manifest
+                extracted_list, json_manifest = merge_recovered_assets(extracted_list, json_manifest, recovered_list, recovered_manifest)
         if not extracted_list:
             signature = decompressed_data[:8].decode("ascii", errors="replace").rstrip("\x00")
             if "BundleFile is encrypted" in (load_error or ""):
@@ -604,11 +651,15 @@ def handle_universal_extraction_pipeline():
                     )
                     detail = f" Found {len(texture_metadata)} texture record(s): {found}. Pixel data is referenced from streamed .resS resources, which this bundle parse did not recover."
                 return jsonify({
-                    "error": "This UnityCN bundle could not be decoded; no pixel assets were recovered." + detail,
+                    "error": "UnityCN-encrypted UnityFS bundle detected. Payload extraction did not complete; this is not a confirmed empty-asset result." + detail,
                     "code": "unitycn_payload_unavailable",
+                    "bundle_format": "UnityFS",
+                    "bundle_version": (unityfs_encryption_info(decompressed_data) or {}).get("version"),
+                    "encryption_flags": (unityfs_encryption_info(decompressed_data) or {}).get("flags"),
+                    "extraction_complete": False,
                     "detected_textures": texture_metadata,
                 }), 422
-            return jsonify({"error": "No extractable assets found in bundle", "format": signature or "unknown"}), 422
+            return jsonify({"error": "Bundle parsed, but no supported assets were recovered. Extraction may be incomplete if this format contains unsupported objects.", "code": "no_supported_assets_recovered", "format": signature or "unknown", "extraction_complete": False}), 422
             
         if download_type == 'zip':
             mode = request.args.get('mode', 'normal')
@@ -643,9 +694,11 @@ def handle_universal_extraction_pipeline():
             item['preview_url'] = f"/api/extract?bundle_url={bundle_url_param}&download_type=single&file_index={idx}"
             
         response_data = {"files": json_manifest}
+        if bundle_info and bundle_info["unitycn_encrypted"]:
+            response_data.update({"partial": True, "extraction_complete": False, "code": "unitycn_payload_partially_unavailable"})
         if texture_metadata:
             response_data.update({
-                "partial": bool(unresolved_textures),
+                "partial": bool(unresolved_textures) or bool(bundle_info and bundle_info["unitycn_encrypted"]),
                 "detected_textures": texture_metadata,
                 "unresolved_textures": unresolved_textures,
             })
@@ -686,13 +739,14 @@ def handle_universal_extraction_pipeline():
         GLOBAL_CACHE_REGISTRY['original_name'] = uploaded_file.filename
         raw_bytes = uploaded_file.read()
         decompressed_data = decompress_stream(raw_bytes)
+        bundle_info = unityfs_encryption_info(decompressed_data)
         
         extracted_list, json_manifest, load_error, texture_metadata = extract_from_bytes(decompressed_data, uploaded_file.filename)
         unresolved_textures = []
-        if not extracted_list and texture_metadata:
+        if texture_metadata:
             recovered_list, recovered_manifest, unresolved_textures = recover_texture_assets_from_base_apk(texture_metadata)
             if recovered_list:
-                extracted_list, json_manifest = recovered_list, recovered_manifest
+                extracted_list, json_manifest = merge_recovered_assets(extracted_list, json_manifest, recovered_list, recovered_manifest)
         if not extracted_list:
             if "BundleFile is encrypted" in (load_error or ""):
                 detail = ""
@@ -703,11 +757,15 @@ def handle_universal_extraction_pipeline():
                     )
                     detail = f" Found {len(texture_metadata)} texture record(s): {found}. Pixel data is referenced from streamed .resS resources, which this bundle parse did not recover."
                 return jsonify({
-                    "error": "This UnityCN bundle could not be decoded; no pixel assets were recovered." + detail,
+                    "error": "UnityCN-encrypted UnityFS bundle detected. Payload extraction did not complete; this is not a confirmed empty-asset result." + detail,
                     "code": "unitycn_payload_unavailable",
+                    "bundle_format": "UnityFS",
+                    "bundle_version": (unityfs_encryption_info(decompressed_data) or {}).get("version"),
+                    "encryption_flags": (unityfs_encryption_info(decompressed_data) or {}).get("flags"),
+                    "extraction_complete": False,
                     "detected_textures": texture_metadata,
                 }), 422
-            return jsonify({"error": "No extractable assets found in bundle"}), 422
+            return jsonify({"error": "Bundle parsed, but no supported assets were recovered. Extraction may be incomplete if this format contains unsupported objects.", "code": "no_supported_assets_recovered", "extraction_complete": False}), 422
             
         GLOBAL_CACHE_REGISTRY['extracted'] = extracted_list
         
@@ -717,9 +775,11 @@ def handle_universal_extraction_pipeline():
             item['preview_url'] = f"/api/extract?download_type=single&file_index={idx}"
             
         response_data = {"files": json_manifest}
+        if bundle_info and bundle_info["unitycn_encrypted"]:
+            response_data.update({"partial": True, "extraction_complete": False, "code": "unitycn_payload_partially_unavailable"})
         if texture_metadata:
             response_data.update({
-                "partial": bool(unresolved_textures),
+                "partial": bool(unresolved_textures) or bool(bundle_info and bundle_info["unitycn_encrypted"]),
                 "detected_textures": texture_metadata,
                 "unresolved_textures": unresolved_textures,
             })
