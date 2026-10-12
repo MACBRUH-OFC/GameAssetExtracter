@@ -152,6 +152,162 @@ def scan_streamed_etc1_textures(data: bytes):
         })
     return records
 
+
+class HttpRangeReader:
+    """Small seekable HTTP reader for opening selected files in a remote ZIP."""
+    def __init__(self, url: str, block_size: int = 1024 * 1024):
+        self.url = url
+        self.block_size = block_size
+        self.position = 0
+        self.blocks = {}
+        request = urllib.request.Request(url, method="HEAD", headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(request, timeout=30) as response:
+            self.size = int(response.headers["Content-Length"])
+
+    def seekable(self):
+        return True
+
+    def readable(self):
+        return True
+
+    def seek(self, offset, whence=0):
+        target = offset if whence == 0 else self.position + offset if whence == 1 else self.size + offset
+        self.position = max(0, min(self.size, target))
+        return self.position
+
+    def tell(self):
+        return self.position
+
+    def read(self, size=-1):
+        if size is None or size < 0:
+            size = self.size - self.position
+        size = min(size, self.size - self.position)
+        output = bytearray()
+        while size:
+            block_index = self.position // self.block_size
+            block_start = block_index * self.block_size
+            if block_index not in self.blocks:
+                block_end = min(self.size, block_start + self.block_size) - 1
+                request = urllib.request.Request(
+                    self.url,
+                    headers={"Range": f"bytes={block_start}-{block_end}", "User-Agent": "Mozilla/5.0"},
+                )
+                with urllib.request.urlopen(request, timeout=30) as response:
+                    if response.status != 206:
+                        raise IOError("APK server does not support ranged reads")
+                    self.blocks[block_index] = response.read()
+            block = self.blocks[block_index]
+            offset = self.position - block_start
+            count = min(size, len(block) - offset)
+            if count <= 0:
+                break
+            output.extend(block[offset:offset + count])
+            self.position += count
+            size -= count
+        return bytes(output)
+
+
+# Stable entries from the official Free Fire APK. Every use is checked against
+# the Unity Texture2D name, dimensions, and ETC1 byte count before extraction.
+BASE_APK_TEXTURE_ENTRIES = {
+    "UIFX_Glow13": "assets/bin/Data/866fa08ca97b0cc49817779188e073e5",
+    "UIFX_Glow16": "assets/bin/Data/faa49e011d8989142886a7efa9803b94",
+    "UIFX_Mask2": "assets/bin/Data/0f01f22a5e107d94a8f6616bfcc14c61",
+    "UIFX_Mask206_Clamp": "assets/bin/Data/af5500e4da10cea4ab979ecdaf745d26",
+    "UIFX_Mask223_Clamp": "assets/bin/Data/5bfecb6b26d1ea8439024436b26cebde",
+    "UIFX_Mask41_clamp": "assets/bin/Data/5b32b11d915d3d54fadc8aa33f3319e8",
+    "UIFX_Mask53_Clamp": "assets/bin/Data/16ebc41ff7472174db69197c095f7369",
+    "UIFX_Mask64_Clamp": "assets/bin/Data/333f6dc19d777cd4ca2738b626cc5404",
+    "UIFX_Mask75": "assets/bin/Data/1299a455c74057e47a493611584ba8d5",
+    "UIFX_Noise21": "assets/bin/Data/e970c8b7b4cfa6d4e9a30b3356e4a0d8",
+    "UIFX_Noise3": "assets/bin/Data/0e49ae35286c98a44a73de9a4dc519d8",
+    "UIFX_Noise33": "assets/bin/Data/f22548d62bbc90f46acdd9c39d708a93",
+    "UIFX_Noise54": "assets/bin/Data/c4d13bbbebd7679459e622618d37b2fe",
+    "UIFX_Noise6": "assets/bin/Data/268dc7b9d7d6f5c478be95956251ddec",
+}
+
+
+def recover_texture_assets_from_base_apk(texture_metadata):
+    """Recover exact matching ETC1 streams from the official APK base assets."""
+    wanted = {}
+    for record in texture_metadata:
+        entry = BASE_APK_TEXTURE_ENTRIES.get(record["name"])
+        if entry:
+            wanted.setdefault(entry, []).append(record)
+    if not wanted:
+        return [], [], []
+
+    extracted = []
+    manifest = []
+    recovered = set()
+    try:
+        apk_reader = HttpRangeReader("https://dl.cdn.freefiremobile.com/live/package/FreeFire.apk")
+        with zipfile.ZipFile(apk_reader) as apk:
+            for entry, records in wanted.items():
+                try:
+                    raw_asset = apk.read(entry)
+                    asset_env = UnityPy.load(raw_asset)
+                except Exception as exc:
+                    print(f"Could not read APK texture entry {entry}: {exc}")
+                    continue
+
+                for obj in asset_env.objects:
+                    if obj.type.name != "Texture2D":
+                        continue
+                    try:
+                        tree = obj.read_typetree(check_read=False)
+                        name = tree.get("m_Name")
+                        width = tree.get("m_Width")
+                        height = tree.get("m_Height")
+                        image_size = tree.get("m_CompleteImageSize")
+                        if not (isinstance(name, str) and isinstance(width, int) and
+                                isinstance(height, int) and isinstance(image_size, int) and
+                                1 <= width <= 8192 and 1 <= height <= 8192):
+                            continue
+                        expected_size = ((width + 3) // 4) * ((height + 3) // 4) * 8
+                        if image_size != expected_size:
+                            continue
+                        record = next((r for r in records if
+                            r["name"] == name and r["width"] == width and
+                            r["height"] == height and r["stream_size"] == image_size), None)
+                        if not record:
+                            continue
+
+                        object_bytes = obj.get_raw_data()
+                        if len(object_bytes) - image_size not in (128, 132, 136):
+                            continue
+                        payload = object_bytes[-image_size:]
+                        pixels = texture2ddecoder.decode_etc1(payload, width, height)
+                        image_io = io.BytesIO()
+                        image = Image.frombytes("RGBA", (width, height), pixels, "raw", "BGRA")
+                        image.transpose(Image.Transpose.FLIP_TOP_BOTTOM).save(image_io, format="PNG")
+                        safe_name = re.sub(r"[^A-Za-z0-9_.-]+", "_", name)
+                        index = len(extracted)
+                        files = [
+                            (f"{safe_name}.png", image_io.getvalue(), "Texture Image"),
+                            (f"{safe_name}.etc1", payload, "Original ETC1 Texture Data"),
+                        ]
+                        for filename, content, label in files:
+                            zip_path = f"Textures/{filename}"
+                            extracted.append({"index": index, "name": filename, "zip_path": zip_path, "bytes": content, "label": label})
+                            manifest.append({
+                                "index": index,
+                                "name": filename,
+                                "path": zip_path,
+                                "label": label,
+                                "size": len(content),
+                                "data": base64.b64encode(content).decode("ascii"),
+                            })
+                            index += 1
+                        recovered.add((name, width, height, image_size))
+                    except Exception as exc:
+                        print(f"Could not decode APK Texture2D in {entry}: {exc}")
+    except Exception as exc:
+        print(f"Could not open official APK by ranged read: {exc}")
+
+    unresolved = [r for r in texture_metadata if (r["name"], r["width"], r["height"], r["stream_size"]) not in recovered]
+    return extracted, manifest, unresolved
+
 def dump_obj_to_dict(obj_data) -> dict:
     out = {}
     try:
@@ -432,6 +588,11 @@ def handle_universal_extraction_pipeline():
         decompressed_data = decompress_stream(raw_bytes)
         
         extracted_list, json_manifest, load_error, texture_metadata = extract_from_bytes(decompressed_data, filename)
+        unresolved_textures = []
+        if not extracted_list and texture_metadata:
+            recovered_list, recovered_manifest, unresolved_textures = recover_texture_assets_from_base_apk(texture_metadata)
+            if recovered_list:
+                extracted_list, json_manifest = recovered_list, recovered_manifest
         if not extracted_list:
             signature = decompressed_data[:8].decode("ascii", errors="replace").rstrip("\x00")
             if "BundleFile is encrypted" in (load_error or ""):
@@ -481,7 +642,14 @@ def handle_universal_extraction_pipeline():
             item['url'] = f"/api/extract?bundle_url={bundle_url_param}&download_type=single&file_index={idx}"
             item['preview_url'] = f"/api/extract?bundle_url={bundle_url_param}&download_type=single&file_index={idx}"
             
-        return jsonify({"files": json_manifest})
+        response_data = {"files": json_manifest}
+        if texture_metadata:
+            response_data.update({
+                "partial": bool(unresolved_textures),
+                "detected_textures": texture_metadata,
+                "unresolved_textures": unresolved_textures,
+            })
+        return jsonify(response_data)
 
     # Stateful Upload Mode (for main web UI)
     if download_type == 'zip':
@@ -520,6 +688,11 @@ def handle_universal_extraction_pipeline():
         decompressed_data = decompress_stream(raw_bytes)
         
         extracted_list, json_manifest, load_error, texture_metadata = extract_from_bytes(decompressed_data, uploaded_file.filename)
+        unresolved_textures = []
+        if not extracted_list and texture_metadata:
+            recovered_list, recovered_manifest, unresolved_textures = recover_texture_assets_from_base_apk(texture_metadata)
+            if recovered_list:
+                extracted_list, json_manifest = recovered_list, recovered_manifest
         if not extracted_list:
             if "BundleFile is encrypted" in (load_error or ""):
                 detail = ""
@@ -543,7 +716,14 @@ def handle_universal_extraction_pipeline():
             item['url'] = f"/api/extract?download_type=single&file_index={idx}"
             item['preview_url'] = f"/api/extract?download_type=single&file_index={idx}"
             
-        return jsonify({"files": json_manifest})
+        response_data = {"files": json_manifest}
+        if texture_metadata:
+            response_data.update({
+                "partial": bool(unresolved_textures),
+                "detected_textures": texture_metadata,
+                "unresolved_textures": unresolved_textures,
+            })
+        return jsonify(response_data)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
