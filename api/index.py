@@ -13,6 +13,7 @@ import base64
 from urllib.parse import unquote
 from flask import Flask, request, send_file, jsonify, Response, stream_with_context
 from PIL import Image
+import numpy as np
 import texture2ddecoder
 os.environ["UNITYPY_NO_GUI"] = "1"
 import UnityPy
@@ -21,7 +22,7 @@ app = Flask(__name__)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 HTML_PATH = os.path.join(BASE_DIR, 'index.html')
 GLOBAL_CACHE_REGISTRY = {}
-EXTRACTOR_BUILD = "streamed-texture-and-fsb-audio-v2"
+EXTRACTOR_BUILD = "streamed-texture-and-fsb-audio-v3"
 MAX_INLINE_ASSET_BYTES = 1_000_000
 
 
@@ -30,7 +31,7 @@ def extractor_version():
     """Expose a small live-build check for deployment verification."""
     return jsonify({
         "build": EXTRACTOR_BUILD,
-        "features": ["unitycn-streamed-etc1-textures", "duplicate-texture-records", "fsb5-audio", "large-media-streaming"],
+        "features": ["unitycn-streamed-etc1-textures", "duplicate-texture-records", "etc1-stream-offset-resynchronization", "fsb5-audio", "large-media-streaming"],
     })
 
 def configure_assetbundle_decrypt_key():
@@ -229,6 +230,47 @@ def texture_record_key(record):
     )
 
 
+def decode_streamed_etc1_payload(reader, offset, size, width, height):
+    """Decode ETC1 bytes and repair a small stream offset skew when clearly proven.
+
+    Some UnityCN bundles record a stream offset two bytes before the ETC1 block
+    data. A wrong phase decodes into high-entropy noise. Test byte alignments
+    only for those suspicious decodes, and accept a correction only when local
+    pixel continuity improves substantially; this leaves intentional noise
+    maps and normal ETC1 payloads untouched.
+    """
+    def decode_at(delta):
+        reader.seek(offset + delta)
+        payload = reader.read(size)
+        if len(payload) != size:
+            return None
+        pixels = texture2ddecoder.decode_etc1(payload, width, height)
+        if len(pixels) != width * height * 4:
+            return None
+        rgb = np.frombuffer(pixels, dtype=np.uint8).reshape(height, width, 4)[:, :, :3].astype(np.int16)
+        horizontal = np.abs(rgb[:, 1:] - rgb[:, :-1]).mean()
+        vertical = np.abs(rgb[1:] - rgb[:-1]).mean()
+        return float((horizontal + vertical) / 2), payload, pixels
+
+    baseline = decode_at(0)
+    if baseline is None:
+        return None
+    baseline_score, baseline_payload, baseline_pixels = baseline
+    if baseline_score < 28:
+        return baseline_payload, baseline_pixels, 0
+
+    best = baseline
+    best_delta = 0
+    for delta in range(1, 8):
+        candidate = decode_at(delta)
+        if candidate is not None and candidate[0] < best[0]:
+            best, best_delta = candidate, delta
+
+    if best_delta and best[0] <= min(16, baseline_score * 0.35):
+        return best[1], best[2], best_delta
+    return baseline_payload, baseline_pixels, 0
+
+
 class HttpRangeReader:
     """Small seekable HTTP reader for opening selected files in a remote ZIP."""
     def __init__(self, url: str, block_size: int = 1024 * 1024):
@@ -330,19 +372,17 @@ def recover_texture_assets_from_bundle_streams(env, texture_metadata):
         if reader is None or offset + size > reader.Length:
             continue
 
-        original_position = reader.tell()
         try:
-            reader.seek(offset)
-            payload = reader.read(size)
-        finally:
-            reader.seek(original_position)
-        if len(payload) != size:
-            continue
-
-        try:
-            pixels = texture2ddecoder.decode_etc1(payload, width, height)
-            if len(pixels) != width * height * 4:
+            original_position = reader.tell()
+            try:
+                decoded = decode_streamed_etc1_payload(reader, offset, size, width, height)
+            finally:
+                reader.seek(original_position)
+            if decoded is None:
                 continue
+            payload, pixels, offset_adjustment = decoded
+            if offset_adjustment:
+                record["stream_offset_adjustment"] = offset_adjustment
             image = Image.frombytes("RGBA", (width, height), pixels, "raw", "BGRA")
             image = image.transpose(Image.Transpose.FLIP_TOP_BOTTOM)
             png_io = io.BytesIO()
